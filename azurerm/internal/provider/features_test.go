@@ -29,8 +29,8 @@ func TestExpandFeatures(t *testing.T) {
 					DeleteNestedItemsDuringDeletion: true,
 				},
 				VirtualMachine: features.VirtualMachineFeatures{
-					DeleteDataDiskOnDeletion: true,
-					DeleteOSDiskOnDeletion:   true,
+					DeleteDataDisksOnDeletion: true,
+					DeleteOSDiskOnDeletion:    true,
 				},
 				VirtualMachineScaleSet: features.VirtualMachineScaleSetFeatures{
 					RollInstancesWhenRequired: true,
@@ -59,9 +59,9 @@ func TestExpandFeatures(t *testing.T) {
 					},
 					"virtual_machine": []interface{}{
 						map[string]interface{}{
-							"delete_data_disk_on_deletion": true,
-							"delete_os_disk_on_deletion":   true,
-							"graceful_shutdown":            true,
+							"delete_data_disks_on_deletion": true,
+							"delete_os_disk_on_deletion":    true,
+							"graceful_shutdown":             true,
 						},
 					},
 					"virtual_machine_scale_set": []interface{}{
@@ -83,9 +83,9 @@ func TestExpandFeatures(t *testing.T) {
 					DeleteNestedItemsDuringDeletion: true,
 				},
 				VirtualMachine: features.VirtualMachineFeatures{
-					DeleteDataDiskOnDeletion: true,
-					DeleteOSDiskOnDeletion:   true,
-					GracefulShutdown:         true,
+					DeleteDataDisksOnDeletion: true,
+					DeleteOSDiskOnDeletion:    true,
+					GracefulShutdown:          true,
 				},
 				VirtualMachineScaleSet: features.VirtualMachineScaleSetFeatures{
 					RollInstancesWhenRequired: true,
@@ -98,9 +98,9 @@ func TestExpandFeatures(t *testing.T) {
 				map[string]interface{}{
 					"virtual_machine": []interface{}{
 						map[string]interface{}{
-							"delete_data_disk_on_deletion": false,
-							"delete_os_disk_on_deletion":   false,
-							"graceful_shutdown":            false,
+							"delete_data_disks_on_deletion": false,
+							"delete_os_disk_on_deletion":    false,
+							"graceful_shutdown":             false,
 						},
 					},
 					"network_locking": []interface{}{
@@ -138,9 +138,9 @@ func TestExpandFeatures(t *testing.T) {
 					DeleteNestedItemsDuringDeletion: false,
 				},
 				VirtualMachine: features.VirtualMachineFeatures{
-					DeleteDataDiskOnDeletion: false,
-					DeleteOSDiskOnDeletion:   false,
-					GracefulShutdown:         false,
+					DeleteDataDisksOnDeletion: false,
+					DeleteOSDiskOnDeletion:    false,
+					GracefulShutdown:          false,
 				},
 				VirtualMachineScaleSet: features.VirtualMachineScaleSetFeatures{
 					RollInstancesWhenRequired: false,
@@ -374,9 +374,9 @@ func TestExpandFeaturesVirtualMachine(t *testing.T) {
 			},
 			Expected: features.UserFeatures{
 				VirtualMachine: features.VirtualMachineFeatures{
-					DeleteDataDiskOnDeletion: true,
-					DeleteOSDiskOnDeletion:   true,
-					GracefulShutdown:         false,
+					DeleteDataDisksOnDeletion: true,
+					DeleteOSDiskOnDeletion:    true,
+					GracefulShutdown:          false,
 				},
 			},
 		},
@@ -386,18 +386,18 @@ func TestExpandFeaturesVirtualMachine(t *testing.T) {
 				map[string]interface{}{
 					"virtual_machine": []interface{}{
 						map[string]interface{}{
-							"delete_data_disk_on_deletion": true,
-							"delete_os_disk_on_deletion":   true,
-							"graceful_shutdown":            true,
+							"delete_data_disks_on_deletion": true,
+							"delete_os_disk_on_deletion":    true,
+							"graceful_shutdown":             true,
 						},
 					},
 				},
 			},
 			Expected: features.UserFeatures{
 				VirtualMachine: features.VirtualMachineFeatures{
-					DeleteDataDiskOnDeletion: true,
-					DeleteOSDiskOnDeletion:   true,
-					GracefulShutdown:         true,
+					DeleteDataDisksOnDeletion: true,
+					DeleteOSDiskOnDeletion:    true,
+					GracefulShutdown:          true,
 				},
 			},
 		},
@@ -407,18 +407,18 @@ func TestExpandFeaturesVirtualMachine(t *testing.T) {
 				map[string]interface{}{
 					"virtual_machine": []interface{}{
 						map[string]interface{}{
-							"delete_data_disk_on_deletion": false,
-							"delete_os_disk_on_deletion":   false,
-							"graceful_shutdown":            false,
+							"delete_data_disks_on_deletion": false,
+							"delete_os_disk_on_deletion":    false,
+							"graceful_shutdown":             false,
 						},
 					},
 				},
 			},
 			Expected: features.UserFeatures{
 				VirtualMachine: features.VirtualMachineFeatures{
-					DeleteDataDiskOnDeletion: false,
-					DeleteOSDiskOnDeletion:   false,
-					GracefulShutdown:         false,
+					DeleteDataDisksOnDeletion: false,
+					DeleteOSDiskOnDeletion:    false,
+					GracefulShutdown:          false,
 				},
 			},
 		},
