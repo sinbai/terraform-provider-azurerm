@@ -22,10 +22,12 @@ var _ sdk.ResourceWithUpdate = BackendAddressPoolAddressResource{}
 type BackendAddressPoolAddressResource struct{}
 
 type BackendAddressPoolAddressModel struct {
-	Name                 string `tfschema:"name"`
-	BackendAddressPoolId string `tfschema:"backend_address_pool_id"`
-	VirtualNetworkId     string `tfschema:"virtual_network_id"`
-	IPAddress            string `tfschema:"ip_address"`
+	Name                      string `tfschema:"name"`
+	BackendAddressPoolId      string `tfschema:"backend_address_pool_id"`
+	VirtualNetworkId          string `tfschema:"virtual_network_id"`
+	IPAddress                 string `tfschema:"ip_address"`
+	FrontendIpConfigurationId string `tfschema:"frontend_ip_configuration_id"`
+	SubnetId                  string `tfschema:"subnet_id"`
 }
 
 func (r BackendAddressPoolAddressResource) Arguments() map[string]*pluginsdk.Schema {
@@ -52,8 +54,21 @@ func (r BackendAddressPoolAddressResource) Arguments() map[string]*pluginsdk.Sch
 
 		"ip_address": {
 			Type:         pluginsdk.TypeString,
-			Required:     true,
+			Optional:     true,
+			Computed:     true,
 			ValidateFunc: validation.IsIPAddress,
+		},
+
+		"frontend_ip_configuration_id": {
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			ValidateFunc: validate.LoadBalancerFrontendIpConfigurationID,
+		},
+
+		"subnet_id": {
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			ValidateFunc: networkValidate.SubnetID,
 		},
 	}
 }
@@ -102,6 +117,10 @@ func (r BackendAddressPoolAddressResource) Create() sdk.ResourceFunc {
 				return fmt.Errorf("Backend Addresses are only supported on Standard SKU Load Balancers")
 			}
 
+			if lb.Sku.Tier == network.LoadBalancerSkuTierRegional && model.IPAddress == "" {
+				return fmt.Errorf("IP Address is required on Regional SKU Tier Load Balancers")
+			}
+
 			id := parse.NewBackendAddressPoolAddressID(subscriptionId, poolId.ResourceGroup, poolId.LoadBalancerName, poolId.BackendAddressPoolName, model.Name)
 			pool, err := client.Get(ctx, poolId.ResourceGroup, poolId.LoadBalancerName, poolId.BackendAddressPoolName)
 			if err != nil {
@@ -127,13 +146,30 @@ func (r BackendAddressPoolAddressResource) Create() sdk.ResourceFunc {
 				}
 			}
 
-			addresses = append(addresses, network.LoadBalancerBackendAddress{
-				LoadBalancerBackendAddressPropertiesFormat: &network.LoadBalancerBackendAddressPropertiesFormat{
-					IPAddress: utils.String(model.IPAddress),
-					VirtualNetwork: &network.SubResource{
-						ID: utils.String(model.VirtualNetworkId),
-					},
+			backendAddressParameters := &network.LoadBalancerBackendAddressPropertiesFormat{
+				VirtualNetwork: &network.SubResource{
+					ID: utils.String(model.VirtualNetworkId),
 				},
+			}
+
+			if model.IPAddress != "" {
+				backendAddressParameters.IPAddress = utils.String(model.IPAddress)
+			}
+
+			if model.FrontendIpConfigurationId != "" {
+				backendAddressParameters.LoadBalancerFrontendIPConfiguration = &network.SubResource{
+					ID: utils.String(model.FrontendIpConfigurationId),
+				}
+			}
+
+			if model.SubnetId != "" {
+				backendAddressParameters.Subnet = &network.SubResource{
+					ID: utils.String(model.SubnetId),
+				}
+			}
+
+			addresses = append(addresses, network.LoadBalancerBackendAddress{
+				LoadBalancerBackendAddressPropertiesFormat: backendAddressParameters,
 				Name: utils.String(id.AddressName),
 			})
 			pool.BackendAddressPoolPropertiesFormat.LoadBalancerBackendAddresses = &addresses
@@ -202,6 +238,14 @@ func (r BackendAddressPoolAddressResource) Read() sdk.ResourceFunc {
 				if props.VirtualNetwork != nil && props.VirtualNetwork.ID != nil {
 					model.VirtualNetworkId = *props.VirtualNetwork.ID
 				}
+
+				if props.LoadBalancerFrontendIPConfiguration != nil && props.LoadBalancerFrontendIPConfiguration.ID != nil {
+					model.FrontendIpConfigurationId = *props.LoadBalancerFrontendIPConfiguration.ID
+				}
+
+				if props.Subnet != nil && props.Subnet.ID != nil {
+					model.SubnetId = *props.Subnet.ID
+				}
 			}
 
 			return metadata.Encode(&model)
@@ -255,11 +299,67 @@ func (r BackendAddressPoolAddressResource) Delete() sdk.ResourceFunc {
 			if err := future.WaitForCompletionRef(ctx, client.Client); err != nil {
 				return fmt.Errorf("waiting for removal of %s: %+v", *id, err)
 			}
+
+			//time.Sleep(2*time.Minute)
+			//// there appears to be an eventual consistency issue here
+			//timeout, _ := ctx.Deadline()
+			//log.Printf("[DEBUG] Waiting for %s to be eventually deleted", *id)
+			//stateConf := &pluginsdk.StateChangeConf{
+			//	Pending:                   []string{"Exists"},
+			//	Target:                    []string{"NotFound"},
+			//	Refresh:                   loadbalancerBackendAddressDeleteStateRefreshFunc(ctx, client, *id),
+			//	MinTimeout:                10 * time.Second,
+			//	ContinuousTargetOccurence: 10,
+			//	Timeout:                   time.Until(timeout),
+			//}
+			//
+			//if _, err := stateConf.WaitForStateContext(ctx); err != nil {
+			//	return fmt.Errorf("waiting for %s to be deleted: %+v", *id, err)
+			//}
+
 			return nil
 		},
 		Timeout: 30 * time.Minute,
 	}
 }
+
+//func loadbalancerBackendAddressDeleteStateRefreshFunc(ctx context.Context, client *network.LoadBalancerBackendAddressPoolsClient, id parse.BackendAddressPoolAddressId) pluginsdk.StateRefreshFunc {
+//	// Whilst the load balancer backend address is deleted quickly, it appears it's not actually finished replicating at this time
+//	// so the deletion of the parent Shared Image fails with "can not delete until nested resources are deleted"
+//	// ergo we need to poll on this for a bit
+//	return func() (interface{}, string, error) {
+//		pool, err := client.Get(ctx, id.ResourceGroup, id.LoadBalancerName, id.BackendAddressPoolName)
+//		if err != nil {
+//			return nil, "", fmt.Errorf("failed to poll to check if the load balancer backend address has been deleted: %+v", err)
+//		}
+//		if pool.BackendAddressPoolPropertiesFormat == nil {
+//			return "NotFound", "NotFound", nil
+//		}
+//
+//		exist := false
+//		if pool.BackendAddressPoolPropertiesFormat.LoadBalancerBackendAddresses != nil {
+//			for _, address := range *pool.BackendAddressPoolPropertiesFormat.LoadBalancerBackendAddresses {
+//				if address.Name == nil {
+//					continue
+//				}
+//
+//				if *address.Name == id.AddressName {
+//					exist = true
+//					break
+//				}
+//			}
+//
+//			if !exist {
+//				return "NotFound", "NotFound", nil
+//			}
+//
+//		}else{
+//			return "NotFound", "NotFound", nil
+//		}
+//
+//		return pool, "Exists", nil
+//	}
+//}
 
 func (r BackendAddressPoolAddressResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return validate.BackendAddressPoolAddressID
@@ -309,13 +409,30 @@ func (r BackendAddressPoolAddressResource) Update() sdk.ResourceFunc {
 				return fmt.Errorf("%s was not found", *id)
 			}
 
-			addresses[index] = network.LoadBalancerBackendAddress{
-				LoadBalancerBackendAddressPropertiesFormat: &network.LoadBalancerBackendAddressPropertiesFormat{
-					IPAddress: utils.String(model.IPAddress),
-					VirtualNetwork: &network.SubResource{
-						ID: utils.String(model.VirtualNetworkId),
-					},
+			backendAddressParameters := &network.LoadBalancerBackendAddressPropertiesFormat{
+				VirtualNetwork: &network.SubResource{
+					ID: utils.String(model.VirtualNetworkId),
 				},
+			}
+
+			if model.IPAddress != "" {
+				backendAddressParameters.IPAddress = utils.String(model.IPAddress)
+			}
+
+			if model.FrontendIpConfigurationId != "" {
+				backendAddressParameters.LoadBalancerFrontendIPConfiguration = &network.SubResource{
+					ID: utils.String(model.FrontendIpConfigurationId),
+				}
+			}
+
+			if model.SubnetId != "" {
+				backendAddressParameters.Subnet = &network.SubResource{
+					ID: utils.String(model.SubnetId),
+				}
+			}
+
+			addresses[index] = network.LoadBalancerBackendAddress{
+				LoadBalancerBackendAddressPropertiesFormat: backendAddressParameters,
 				Name: utils.String(id.AddressName),
 			}
 			pool.BackendAddressPoolPropertiesFormat.LoadBalancerBackendAddresses = &addresses

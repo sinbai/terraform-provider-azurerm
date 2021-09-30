@@ -3,10 +3,6 @@ package loadbalancer
 import (
 	"context"
 	"fmt"
-	"log"
-	"strings"
-	"time"
-
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2021-02-01/network"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/azure"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/tf"
@@ -19,6 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/timeouts"
 	"github.com/hashicorp/terraform-provider-azurerm/utils"
+	"log"
+	"strings"
+	"time"
 )
 
 func resourceArmLoadBalancer() *pluginsdk.Resource {
@@ -59,6 +58,19 @@ func resourceArmLoadBalancer() *pluginsdk.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					string(network.LoadBalancerSkuNameBasic),
 					string(network.LoadBalancerSkuNameStandard),
+					string(network.LoadBalancerSkuNameGateway),
+				}, true),
+				DiffSuppressFunc: suppress.CaseDifference,
+			},
+
+			"sku_tier": {
+				Type:     pluginsdk.TypeString,
+				Optional: true,
+				Default:  string(network.LoadBalancerSkuTierRegional),
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					string(network.LoadBalancerSkuTierRegional),
+					string(network.LoadBalancerSkuTierGlobal),
 				}, true),
 				DiffSuppressFunc: suppress.CaseDifference,
 			},
@@ -252,10 +264,22 @@ func resourceArmLoadBalancerCreateUpdate(d *pluginsdk.ResourceData, meta interfa
 		}
 	}
 
+	if v, ok := d.GetOk("sku_tier"); ok {
+		if strings.ToLower(v.(string)) == strings.ToLower(string(network.LoadBalancerSkuTierGlobal)) {
+			if v1, ok := d.GetOk("sku"); ok {
+				if strings.ToLower(v1.(string)) != strings.ToLower(string(network.LoadBalancerSkuNameStandard)) {
+					return fmt.Errorf("global load balancing is only supported for standard SKU load balancers %q (Resource Group %q)", id.Name, id.ResourceGroup)
+				}
+			}
+		}
+	}
+
 	location := azure.NormalizeLocation(d.Get("location").(string))
 	sku := network.LoadBalancerSku{
 		Name: network.LoadBalancerSkuName(d.Get("sku").(string)),
+		Tier: network.LoadBalancerSkuTier(d.Get("sku_tier").(string)),
 	}
+
 	t := d.Get("tags").(map[string]interface{})
 	expandedTags := tags.Expand(t)
 
@@ -319,6 +343,7 @@ func resourceArmLoadBalancerRead(d *pluginsdk.ResourceData, meta interface{}) er
 
 	if sku := resp.Sku; sku != nil {
 		d.Set("sku", string(sku.Name))
+		d.Set("sku_tier", string(sku.Tier))
 	}
 
 	if props := resp.LoadBalancerPropertiesFormat; props != nil {

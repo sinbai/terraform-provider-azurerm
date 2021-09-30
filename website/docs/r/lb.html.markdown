@@ -46,8 +46,9 @@ The following arguments are supported:
 * `location` - (Required) Specifies the supported Azure Region where the Load Balancer should be created.
 * `frontend_ip_configuration` - (Optional) One or multiple `frontend_ip_configuration` blocks as documented below.
 * `sku` - (Optional) The SKU of the Azure Load Balancer. Accepted values are `Basic` and `Standard`. Defaults to `Basic`.
+* `sku_tier` - (Optional) The Tier of the Azure Load Balancer SKU. Accepted values are `Global` and `Regional`. Defaults to `Regional`.* -> **NOTE:** `ip_address` is required when the tier of Load Balancer SKU is set to `Regional`.
 
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+-> **NOTE:** The `Global` SKU Tier on Azure Load Balancer is only supported for `Standard` SKU Azure Load Balancer.
 
 `frontend_ip_configuration` supports the following:
 

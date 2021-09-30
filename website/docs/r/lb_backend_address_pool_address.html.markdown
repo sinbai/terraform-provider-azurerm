@@ -46,11 +46,19 @@ The following arguments are supported:
 
 * `backend_address_pool_id` - (Required) The ID of the Backend Address Pool. Changing this forces a new Backend Address Pool Address to be created.
 
-* `ip_address` - (Required) The Static IP Address which should be allocated to this Backend Address Pool.
-
 * `name` - (Required) The name which should be used for this Backend Address Pool Address. Changing this forces a new Backend Address Pool Address to be created.
 
 * `virtual_network_id` - (Required) The ID of the Virtual Network within which the Backend Address Pool should exist.
+
+* `ip_address` - (Optional) The Static IP Address which should be allocated to this Backend Address Pool.
+
+-> **NOTE:** `ip_address` is required when the tier of Load Balancer SKU is set to `Regional`.
+
+* `frontend_ip_configuration_id` - (Optional) The Frontend IP Configuration defined in `Regional` SKU tier Load Balancer.
+
+* `subnet_id` - (Optional) The ID of the Subnet within which the Backend Address Pool should exist.
+
+-> **NOTE:** `frontend_ip_configuration_id` is required when `subnet_id` is set.
 
 ## Attributes Reference
 

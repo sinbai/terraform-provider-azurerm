@@ -3,6 +3,8 @@ package loadbalancer_test
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-azurerm/helpers/azure"
+	"os"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2021-02-01/network"
@@ -25,6 +27,45 @@ func TestAccBackendAddressPoolAddressBasic(t *testing.T) {
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccBackendAddressPoolAddressWithFrontendIPConfigAndSubnet(t *testing.T) {
+	skip(t)
+
+	data := acceptance.BuildTestData(t, "azurerm_lb_backend_address_pool_address", "test")
+	r := BackendAddressPoolAddressResourceTests{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.withFEIPConfigAndSubnet(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccBackendAddressPoolAddressWithFrontendIPConfigAndSubnetUpdate(t *testing.T) {
+	skip(t)
+
+	data := acceptance.BuildTestData(t, "azurerm_lb_backend_address_pool_address", "test")
+	r := BackendAddressPoolAddressResourceTests{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.withFEIPConfigAndSubnet(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.updateFEIPConfigAndSubnet(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -177,7 +218,7 @@ func (BackendAddressPoolAddressResourceTests) backendAddressPoolHasAddresses(exp
 }
 
 func (t BackendAddressPoolAddressResourceTests) basic(data acceptance.TestData) string {
-	template := t.template(data)
+	template := t.template(data, string(network.LoadBalancerSkuTierRegional))
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
@@ -192,6 +233,133 @@ resource "azurerm_lb_backend_address_pool_address" "test" {
   ip_address              = "191.168.0.1"
 }
 `, template)
+}
+
+func (t BackendAddressPoolAddressResourceTests) withFEIPConfigAndSubnet(data acceptance.TestData) string {
+	template := t.template(data, string(network.LoadBalancerSkuTierGlobal))
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {}
+}
+
+%s
+
+resource "azurerm_subnet" "test" {
+  name                 = "acctest-subnet-%d"
+  resource_group_name  = azurerm_resource_group.test.name
+  virtual_network_name = azurerm_virtual_network.test.name
+  address_prefixes       = ["192.168.1.0/24"]
+}
+
+resource "azurerm_public_ip" "test1" {
+  name                = "acctest-pip-%d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  sku_tier            = "Regional"
+}
+
+
+resource "azurerm_public_ip" "test2" {
+  name                = "acctest-another-pip-%d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  sku_tier            = "Regional"
+}
+
+resource "azurerm_lb" "test1" {
+  name                = "acctest-lb-%d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  sku                 = "Standard"
+  sku_tier            = "Regional"
+
+  frontend_ip_configuration {
+    name                 = "feip1"
+    public_ip_address_id = azurerm_public_ip.test1.id
+  }
+
+  frontend_ip_configuration {
+    name                 = "feip2"
+    public_ip_address_id = azurerm_public_ip.test2.id
+  }
+}
+
+resource "azurerm_lb_backend_address_pool_address" "test" {
+  name                         = "acctest-Address"
+  backend_address_pool_id      = azurerm_lb_backend_address_pool.test.id
+  virtual_network_id           = azurerm_virtual_network.test.id
+  frontend_ip_configuration_id = azurerm_lb.test1.frontend_ip_configuration[0].id
+  subnet_id                    = azurerm_subnet.test.id
+}
+`, template, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger)
+}
+
+func (t BackendAddressPoolAddressResourceTests) updateFEIPConfigAndSubnet(data acceptance.TestData) string {
+	template := t.template(data, string(network.LoadBalancerSkuTierGlobal))
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {}
+}
+
+%s
+
+resource "azurerm_subnet" "test1" {
+  name                 = "acctest-another-subnet-%d"
+  resource_group_name  = azurerm_resource_group.test.name
+  virtual_network_name = azurerm_virtual_network.test.name
+  address_prefixes       = ["192.168.1.0/24"]
+}
+
+resource "azurerm_public_ip" "test1" {
+  name                = "acctest-pip-%d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  sku_tier            = "Regional"
+}
+
+
+resource "azurerm_public_ip" "test2" {
+  name                = "acctest-another-pip-%d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  sku_tier            = "Regional"
+}
+
+resource "azurerm_lb" "test1" {
+  name                = "acctest-lb-%d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  sku                 = "Standard"
+  sku_tier            = "Regional"
+
+  frontend_ip_configuration {
+    name                 = "feip1"
+    public_ip_address_id = azurerm_public_ip.test1.id
+  }
+
+  frontend_ip_configuration {
+    name                 = "feip2"
+    public_ip_address_id = azurerm_public_ip.test2.id
+  }
+}
+
+resource "azurerm_lb_backend_address_pool_address" "test" {
+  name                         = "acctest-Address"
+  backend_address_pool_id      = azurerm_lb_backend_address_pool.test.id
+  virtual_network_id           = azurerm_virtual_network.test.id
+  frontend_ip_configuration_id = azurerm_lb.test1.frontend_ip_configuration[1].id
+  subnet_id                    = azurerm_subnet.test1.id
+}
+
+`, template, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
 
 func (t BackendAddressPoolAddressResourceTests) requiresImport(data acceptance.TestData) string {
@@ -209,7 +377,7 @@ resource "azurerm_lb_backend_address_pool_address" "import" {
 }
 
 func (t BackendAddressPoolAddressResourceTests) update(data acceptance.TestData) string {
-	template := t.template(data)
+	template := t.template(data, string(network.LoadBalancerSkuTierRegional))
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
@@ -226,7 +394,7 @@ resource "azurerm_lb_backend_address_pool_address" "test" {
 `, template)
 }
 
-func (BackendAddressPoolAddressResourceTests) template(data acceptance.TestData) string {
+func (BackendAddressPoolAddressResourceTests) template(data acceptance.TestData, lbSkuTier string) string {
 	return fmt.Sprintf(`
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-%d"
@@ -246,6 +414,7 @@ resource "azurerm_public_ip" "test" {
   resource_group_name = azurerm_resource_group.test.name
   allocation_method   = "Static"
   sku                 = "Standard"
+  sku_tier            = "%s"
 }
 
 resource "azurerm_lb" "test" {
@@ -253,6 +422,7 @@ resource "azurerm_lb" "test" {
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   sku                 = "Standard"
+  sku_tier            = "%s"
 
   frontend_ip_configuration {
     name                 = "feip"
@@ -264,5 +434,23 @@ resource "azurerm_lb_backend_address_pool" "test" {
   name            = "internal"
   loadbalancer_id = azurerm_lb.test.id
 }
-`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.RandomInteger)
+`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, lbSkuTier, data.RandomInteger, lbSkuTier)
+}
+
+func skip(t *testing.T) {
+	supportedLocs := map[string]int{
+		azure.NormalizeLocation("East US 2"):      1,
+		azure.NormalizeLocation("West US"):        2,
+		azure.NormalizeLocation("West Europe"):    3,
+		azure.NormalizeLocation("Southeast Asia"): 4,
+		azure.NormalizeLocation("Central US"):     5,
+		azure.NormalizeLocation("North Europe"):   6,
+		azure.NormalizeLocation("East Asia"):      7,
+	}
+
+	location := os.Getenv("ARM_TEST_LOCATION")
+
+	if _, ok := supportedLocs[azure.NormalizeLocation(location)]; !ok {
+		t.Skip(fmt.Sprintf("Skipping as the cross-region load balancer or Public IP in Global tier can only be deployed to %q regions", "East US 2,West US,West Europe,Southeast Asia,Central US,North Europe,East Asia"))
+	}
 }

@@ -32,6 +32,21 @@ func TestAccAzureRMLoadBalancerNatPool_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMLoadBalancerNatPool_complete(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_lb_nat_pool", "test")
+	r := LoadBalancerNatPool{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.complete(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccAzureRMLoadBalancerNatPool_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_lb_nat_pool", "test")
 	r := LoadBalancerNatPool{}
@@ -199,6 +214,54 @@ resource "azurerm_lb_nat_pool" "test" {
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
 
+func (r LoadBalancerNatPool) complete(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_resource_group" "test" {
+  name     = "acctestRG-%d"
+  location = "%s"
+}
+
+resource "azurerm_public_ip" "test" {
+  name                = "test-ip-%d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+resource "azurerm_lb" "test" {
+  name                = "arm-test-loadbalancer-%d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  sku                = "Standard"
+
+  frontend_ip_configuration {
+    name                 = "one-%d"
+    public_ip_address_id = azurerm_public_ip.test.id
+  }
+}
+
+resource "azurerm_lb_nat_pool" "test" {
+  resource_group_name            = azurerm_resource_group.test.name
+  loadbalancer_id                = azurerm_lb.test.id
+  name                           = "NatPool-%d"
+  protocol                       = "Tcp"
+  frontend_port_start            = 80
+  frontend_port_end              = 81
+  backend_port                   = 3389
+  frontend_ip_configuration_name = "one-%d"
+
+  enable_floating_ip      = true
+  enable_tcp_reset        = true
+  #idle_timeout_in_minutes = 10
+}
+`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger)
+}
+
 func (r LoadBalancerNatPool) requiresImport(data acceptance.TestData) string {
 	template := r.basic(data)
 	return fmt.Sprintf(`
@@ -322,6 +385,10 @@ resource "azurerm_lb_nat_pool" "test2" {
   frontend_port_end              = 83
   backend_port                   = 3391
   frontend_ip_configuration_name = "one-%d"
+
+  enable_floating_ip      = true
+  enable_tcp_reset        = true
+  idle_timeout_in_minutes = 10
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data.RandomInteger, data2.RandomInteger, data.RandomInteger)
 }
