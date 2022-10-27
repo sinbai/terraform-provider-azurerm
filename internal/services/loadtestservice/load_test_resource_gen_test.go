@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/go-azure-sdk/resource-manager/loadtestservice/2021-12-01-preview/loadtests"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/loadtestservice/2022-12-01/loadtests"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -130,8 +130,54 @@ resource "azurerm_load_test" "import" {
 
 func (r LoadTestTestResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_user_assigned_identity" "test" {
+  name                = "acctestuai-%[2]d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+}
+
+resource "azurerm_key_vault" "test" {
+  name                     = "vault%[2]d"
+  location                 = azurerm_resource_group.test.location
+  resource_group_name      = azurerm_resource_group.test.name
+  tenant_id                = data.azurerm_client_config.current.tenant_id
+  sku_name                 = "standard"
+  purge_protection_enabled = true
+
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+    key_permissions = [
+      "Get", "Create", "Delete", "List", "Restore", "Recover", "UnwrapKey", "WrapKey", "Purge", "Encrypt", "Decrypt", "Sign", "Verify"
+    ]
+    secret_permissions = [
+      "Get",
+    ]
+  }
+
+  access_policy {
+    tenant_id = azurerm_user_assigned_identity.test.tenant_id
+    object_id = azurerm_user_assigned_identity.test.principal_id
+    key_permissions = [
+      "Get", "Create", "Delete", "List", "Restore", "Recover", "UnwrapKey", "WrapKey", "Purge", "Encrypt", "Decrypt", "Sign", "Verify"
+    ]
+    secret_permissions = [
+      "Get",
+    ]
+  }
+}
+
+resource "azurerm_key_vault_key" "test" {
+  name         = "acctestkvkey-%[2]d"
+  key_vault_id = azurerm_key_vault.test.id
+  key_type     = "RSA"
+  key_size     = 2048
+  key_opts     = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
+}
 
 resource "azurerm_load_test" "test" {
   location            = azurerm_resource_group.test.location
@@ -140,7 +186,15 @@ resource "azurerm_load_test" "test" {
   description         = "foo"
 
   identity {
-    type = "SystemAssigned"
+    type = "SystemAssigned, UserAssigned"
+    identity_ids = [
+      azurerm_user_assigned_identity.test.id,
+    ]
+  }
+
+  customer_managed_key {
+    key_vault_key_id          = azurerm_key_vault_key.test.id
+    user_assigned_identity_id = azurerm_user_assigned_identity.test.id
   }
 
   tags = {
@@ -148,13 +202,18 @@ resource "azurerm_load_test" "test" {
     test = "Acceptance"
   }
 }
-`, r.template(data))
+`, r.template(data), data.RandomInteger)
 }
 
 func (r LoadTestTestResource) template(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
-  features {}
+  features {
+    key_vault {
+      purge_soft_delete_on_destroy       = false
+      purge_soft_deleted_keys_on_destroy = false
+    }
+  }
 }
 
 locals {
