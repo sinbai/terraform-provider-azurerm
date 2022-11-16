@@ -32,11 +32,32 @@ The following arguments are supported:
 
 * `resource_group_name` - (Required) Specifies the name of the Resource Group within which this Load Test should exist. Changing this forces a new Load Test to be created.
 
+* `customer_managed_key` - (Optional) A `customer_managed_key` block as defined below.
+
 * `description` - (Optional) Description of the resource. Changing this forces a new Load Test to be created.
 
-* `identity` - (Optional) Specifies the Managed Identity which should be assigned to this Load Test.
+* `identity` - (Optional) An `identity` block as defined below.
 
 * `tags` - (Optional) A mapping of tags which should be assigned to the Load Test.
+
+---
+
+An `identity` block supports the following:
+
+* `type` - (Required) Specifies the type of Managed Service Identity that should be configured on this Load Test. Possible values are `SystemAssigned`, `UserAssigned`, `SystemAssigned, UserAssigned` (to enable both).
+
+* `identity_ids` - (Optional) Specifies a list of User Assigned Managed Identity IDs to be assigned to this Load Test.
+
+~> **NOTE:** This is required when `type` is set to `UserAssigned` or `SystemAssigned, UserAssigned`.
+
+---
+
+A `customer_managed_key` block supports the following:
+
+* `key_vault_key_id` - (Required) The ID of the Key Vault Key which should be used to Encrypt the data in this Load Test.
+
+* `user_assigned_identity_id` - (Required) The ID of the User Assigned Identity that has access to the key.
+
 
 ## Attributes Reference
 

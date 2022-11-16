@@ -977,13 +977,6 @@ func resourceMsSqlDatabaseSchema() map[string]*pluginsdk.Schema {
 			Type:     pluginsdk.TypeString,
 			Optional: true,
 			Default:  string(sql.CurrentBackupStorageRedundancyGeo),
-			DiffSuppressFunc: func(k, old, new string, d *pluginsdk.ResourceData) bool {
-				createMode := d.Get("create_mode").(string)
-				if new == "" && createMode != "" && createMode != string(sql.CreateModeOnlineSecondary) {
-					return true
-				}
-				return false
-			},
 			ValidateFunc: validation.StringInSlice([]string{
 				string(sql.CurrentBackupStorageRedundancyGeo),
 				string(sql.CurrentBackupStorageRedundancyLocal),
