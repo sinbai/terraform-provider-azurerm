@@ -405,12 +405,10 @@ func (CognitiveAccountResource) basic(data acceptance.TestData) string {
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%d"
   location = "%s"
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                = "acctestcogacc-%d"
   location            = azurerm_resource_group.test.location
@@ -426,12 +424,10 @@ func (CognitiveAccountResource) identitySystemAssigned(data acceptance.TestData)
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%d"
   location = "%s"
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                = "acctestcogacc-%d"
   location            = azurerm_resource_group.test.location
@@ -450,18 +446,15 @@ func (CognitiveAccountResource) identityUserAssigned(data acceptance.TestData) s
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%d"
   location = "%s"
 }
-
 resource "azurerm_user_assigned_identity" "test" {
   name                = "acctestUAI-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                = "acctestcogacc-%d"
   location            = azurerm_resource_group.test.location
@@ -483,18 +476,15 @@ func (CognitiveAccountResource) identitySystemAssignedUserAssigned(data acceptan
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%d"
   location = "%s"
 }
-
 resource "azurerm_user_assigned_identity" "test" {
   name                = "acctestUAI-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                = "acctestcogacc-%d"
   location            = azurerm_resource_group.test.location
@@ -516,12 +506,10 @@ func (CognitiveAccountResource) speechServices(data acceptance.TestData) string 
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%d"
   location = "%s"
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                = "acctestcogacc-%d"
   location            = azurerm_resource_group.test.location
@@ -537,38 +525,31 @@ func (CognitiveAccountResource) speechServicesWithStorage(data acceptance.TestDa
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%d"
   location = "%s"
 }
-
 resource "azurerm_storage_account" "test" {
   name                = "acctestrg%d"
   resource_group_name = azurerm_resource_group.test.name
-
   location                 = azurerm_resource_group.test.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }
-
 resource "azurerm_user_assigned_identity" "test" {
   name                = "acctest-identity-%d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                = "acctestcogacc-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   kind                = "SpeechServices"
   sku_name            = "S0"
-
   identity {
     type = "SystemAssigned"
   }
-
   storage {
     storage_account_id = azurerm_storage_account.test.id
     identity_client_id = azurerm_user_assigned_identity.test.client_id
@@ -581,7 +562,6 @@ func (CognitiveAccountResource) requiresImport(data acceptance.TestData) string 
 	template := CognitiveAccountResource{}.basic(data)
 	return fmt.Sprintf(`
 %s
-
 resource "azurerm_cognitive_account" "import" {
   name                = azurerm_cognitive_account.test.name
   location            = azurerm_cognitive_account.test.location
@@ -598,24 +578,20 @@ func (CognitiveAccountResource) complete(data acceptance.TestData) string {
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%d"
   location = "%s"
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                = "acctestcogacc-%d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   kind                = "Face"
   sku_name            = "S0"
-
   fqdns                         = ["foo.com", "bar.com"]
   public_network_access_enabled = false
   local_auth_enabled            = false
   %s
-
   tags = {
     Acceptance = "Test"
   }
@@ -628,12 +604,10 @@ func (CognitiveAccountResource) qnaRuntimeEndpoint(data acceptance.TestData, url
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%d"
   location = "%s"
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                 = "acctestcogacc-%d"
   location             = azurerm_resource_group.test.location
@@ -650,12 +624,10 @@ func (CognitiveAccountResource) qnaRuntimeEndpointUnspecified(data acceptance.Te
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%d"
   location = "%s"
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                = "acctestcogacc-%d"
   location            = azurerm_resource_group.test.location
@@ -671,19 +643,16 @@ func (CognitiveAccountResource) customQuestionAnsweringSearchServiceId(data acce
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%[1]d"
   location = "%[2]s"
 }
-
 resource "azurerm_search_service" "test" {
   name                = "acctestsearchacc-%[1]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
   sku                 = "standard"
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                                         = "acctestcogacc-%[1]d"
   location                                     = azurerm_resource_group.test.location
@@ -701,26 +670,22 @@ func (CognitiveAccountResource) customQuestionAnsweringSearchServiceIdUpdated(da
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%[1]d"
   location = "%[2]s"
 }
-
 resource "azurerm_search_service" "test" {
   name                = "acctestsearchacc-%[1]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
   sku                 = "standard"
 }
-
 resource "azurerm_search_service" "test2" {
   name                = "acctestsearchacc2-%[1]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
   sku                 = "standard"
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                                         = "acctestcogacc-%[1]d"
   location                                     = azurerm_resource_group.test.location
@@ -738,26 +703,22 @@ func (CognitiveAccountResource) customQuestionAnsweringSearchServiceIdRemoved(da
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%[1]d"
   location = "%[2]s"
 }
-
 resource "azurerm_search_service" "test" {
   name                = "acctestsearchacc-%[1]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
   sku                 = "standard"
 }
-
 resource "azurerm_search_service" "test2" {
   name                = "acctestsearchacc2-%[1]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
   sku                 = "standard"
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                = "acctestcogacc-%[1]d"
   location            = azurerm_resource_group.test.location
@@ -773,12 +734,10 @@ func (CognitiveAccountResource) cognitiveServices(data acceptance.TestData) stri
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%d"
   location = "%s"
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                = "acctestcogacc-%d"
   location            = azurerm_resource_group.test.location
@@ -877,12 +836,10 @@ func (CognitiveAccountResource) withMultipleCognitiveAccounts(data acceptance.Te
 provider "azurerm" {
   features {}
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%d"
   location = "%s"
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                = "acctestcogacc-%d"
   location            = azurerm_resource_group.test.location
@@ -890,7 +847,6 @@ resource "azurerm_cognitive_account" "test" {
   kind                = "CustomVision.Prediction"
   sku_name            = "S0"
 }
-
 resource "azurerm_cognitive_account" "test2" {
   name                = "acctestcogacc2-%d"
   location            = azurerm_resource_group.test.location
@@ -904,7 +860,6 @@ resource "azurerm_cognitive_account" "test2" {
 func (r CognitiveAccountResource) networkAcls(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %s
-
 resource "azurerm_cognitive_account" "test" {
   name                  = "acctestcogacc-%d"
   location              = azurerm_resource_group.test.location
@@ -912,7 +867,6 @@ resource "azurerm_cognitive_account" "test" {
   kind                  = "Face"
   sku_name              = "S0"
   custom_subdomain_name = "acctestcogacc-%d"
-
   network_acls {
     default_action = "Deny"
     virtual_network_rules {
@@ -936,7 +890,6 @@ resource "azurerm_cognitive_account" "test" {
   kind                  = "Face"
   sku_name              = "S0"
   custom_subdomain_name = "acctestcogacc-%d"
-
   network_acls {
     default_action = "Allow"
     ip_rules       = ["123.0.0.101"]
@@ -954,7 +907,6 @@ resource "azurerm_cognitive_account" "test" {
 func (r CognitiveAccountResource) networkAclsVirtualNetworkRules(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %s
-
 resource "azurerm_cognitive_account" "test" {
   name                  = "acctestcogacc-%d"
   location              = azurerm_resource_group.test.location
@@ -962,7 +914,6 @@ resource "azurerm_cognitive_account" "test" {
   kind                  = "Face"
   sku_name              = "S0"
   custom_subdomain_name = "acctestcogacc-%d"
-
   network_acls {
     default_action = "Deny"
     virtual_network_rules {
@@ -972,7 +923,6 @@ resource "azurerm_cognitive_account" "test" {
       subnet_id                            = azurerm_subnet.test_b.id
       ignore_missing_vnet_service_endpoint = true
     }
-
   }
 }
 `, r.networkAclsTemplate(data), data.RandomInteger, data.RandomInteger)
@@ -988,7 +938,6 @@ resource "azurerm_cognitive_account" "test" {
   kind                  = "Face"
   sku_name              = "S0"
   custom_subdomain_name = "acctestcogacc-%d"
-
   network_acls {
     default_action = "Allow"
     ip_rules       = ["123.0.0.101"]
@@ -1006,22 +955,18 @@ func (CognitiveAccountResource) networkAclsTemplate(data acceptance.TestData) st
 provider "azurerm" {
   features {}
 }
-
 data "azurerm_client_config" "current" {
 }
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%d"
   location = "%s"
 }
-
 resource "azurerm_virtual_network" "test" {
   name                = "acctestvirtnet%d"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
 }
-
 resource "azurerm_subnet" "test_a" {
   name                 = "acctestsubneta%d"
   resource_group_name  = azurerm_resource_group.test.name
@@ -1029,7 +974,6 @@ resource "azurerm_subnet" "test_a" {
   address_prefixes     = ["10.0.2.0/24"]
   service_endpoints    = ["Microsoft.CognitiveServices"]
 }
-
 resource "azurerm_subnet" "test_b" {
   name                 = "acctestsubnetb%d"
   resource_group_name  = azurerm_resource_group.test.name
@@ -1050,20 +994,16 @@ provider "azurerm" {
     }
   }
 }
-
 data "azurerm_client_config" "current" {}
-
 resource "azurerm_resource_group" "test" {
   name     = "acctestRG-cognitive-%d"
   location = "%s"
 }
-
 resource "azurerm_user_assigned_identity" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
   name                = "%s"
 }
-
 resource "azurerm_key_vault" "test" {
   name                     = "acctestkv%s"
   location                 = azurerm_resource_group.test.location
@@ -1071,7 +1011,6 @@ resource "azurerm_key_vault" "test" {
   tenant_id                = data.azurerm_client_config.current.tenant_id
   sku_name                 = "standard"
   purge_protection_enabled = true
-
   access_policy {
     tenant_id = data.azurerm_client_config.current.tenant_id
     object_id = data.azurerm_client_config.current.object_id
@@ -1082,7 +1021,6 @@ resource "azurerm_key_vault" "test" {
       "Get",
     ]
   }
-
   access_policy {
     tenant_id = azurerm_user_assigned_identity.test.tenant_id
     object_id = azurerm_user_assigned_identity.test.principal_id
@@ -1094,7 +1032,6 @@ resource "azurerm_key_vault" "test" {
     ]
   }
 }
-
 resource "azurerm_key_vault_key" "test" {
   name         = "acctestkvkey%s"
   key_vault_id = azurerm_key_vault.test.id
@@ -1102,7 +1039,6 @@ resource "azurerm_key_vault_key" "test" {
   key_size     = 2048
   key_opts     = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
 }
-
 resource "azurerm_cognitive_account" "test" {
   name                  = "acctest-cogacc-%d"
   location              = azurerm_resource_group.test.location
@@ -1110,14 +1046,12 @@ resource "azurerm_cognitive_account" "test" {
   kind                  = "SpeechServices"
   sku_name              = "S0"
   custom_subdomain_name = "acctest-cogacc-%d"
-
   identity {
     type = "SystemAssigned, UserAssigned"
     identity_ids = [
       azurerm_user_assigned_identity.test.id
     ]
   }
-
   customer_managed_key {
     key_vault_key_id   = azurerm_key_vault_key.test.id
     identity_client_id = azurerm_user_assigned_identity.test.client_id

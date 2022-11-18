@@ -271,11 +271,6 @@ func resourceCognitiveAccount() *pluginsdk.Resource {
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
-			"dynamic_throttling_enabled": {
-				Type:     pluginsdk.TypeBool,
-				Optional: true,
-			},
-
 			"storage": {
 				Type:     pluginsdk.TypeList,
 				Optional: true,
@@ -384,7 +379,6 @@ func resourceCognitiveAccountCreate(d *pluginsdk.ResourceData, meta interface{})
 			PublicNetworkAccess:           &publicNetworkAccess,
 			UserOwnedStorage:              expandCognitiveAccountStorage(d.Get("storage").([]interface{})),
 			RestrictOutboundNetworkAccess: utils.Bool(d.Get("outbound_network_access_restricted").(bool)),
-			DynamicThrottlingEnabled:      utils.Bool(d.Get("dynamic_throttling_enabled").(bool)),
 			DisableLocalAuth:              utils.Bool(!d.Get("local_auth_enabled").(bool)),
 			DynamicThrottlingEnabled:      utils.Bool(d.Get("dynamic_throttling_enabled").(bool)),
 			Encryption:                    expandCognitiveAccountCustomerManagedKey(d.Get("customer_managed_key").([]interface{})),
@@ -470,7 +464,6 @@ func resourceCognitiveAccountUpdate(d *pluginsdk.ResourceData, meta interface{})
 			PublicNetworkAccess:           &publicNetworkAccess,
 			UserOwnedStorage:              expandCognitiveAccountStorage(d.Get("storage").([]interface{})),
 			RestrictOutboundNetworkAccess: utils.Bool(d.Get("outbound_network_access_restricted").(bool)),
-			DynamicThrottlingEnabled:      utils.Bool(d.Get("dynamic_throttling_enabled").(bool)),
 			DisableLocalAuth:              utils.Bool(!d.Get("local_auth_enabled").(bool)),
 			DynamicThrottlingEnabled:      utils.Bool(d.Get("dynamic_throttling_enabled").(bool)),
 			Encryption:                    expandCognitiveAccountCustomerManagedKey(d.Get("customer_managed_key").([]interface{})),
@@ -589,12 +582,6 @@ func resourceCognitiveAccountRead(d *pluginsdk.ResourceData, meta interface{}) e
 			}
 			//lintignore:R001
 			d.Set("outbound_network_access_restricted", outboundNetworkAccessRestricted)
-
-			dynamicThrottlingEnabled := false
-			if props.DynamicThrottlingEnabled != nil {
-				dynamicThrottlingEnabled = *props.DynamicThrottlingEnabled
-			}
-			d.Set("dynamic_throttling_enabled", dynamicThrottlingEnabled)
 
 			localAuthEnabled := true
 			if props.DisableLocalAuth != nil {

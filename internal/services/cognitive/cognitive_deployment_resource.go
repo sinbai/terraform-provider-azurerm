@@ -49,7 +49,6 @@ type RequestMatchPatternModel struct {
 	Method string `tfschema:"method"`
 	Path   string `tfschema:"path"`
 }
-
 type DeploymentScaleSettingsModel struct {
 	ActiveCapacity int64                           `tfschema:"active_capacity"`
 	Capacity       int64                           `tfschema:"capacity"`
@@ -94,79 +93,6 @@ func (r cognitiveDeploymentResource) Arguments() map[string]*pluginsdk.Schema {
 			MaxItems: 1,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
-					"call_rate_limit": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-						MaxItems: 1,
-						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"count": {
-									Type:     pluginsdk.TypeFloat,
-									Optional: true,
-								},
-
-								"renewal_period": {
-									Type:     pluginsdk.TypeFloat,
-									Optional: true,
-								},
-
-								"rules": {
-									Type:     pluginsdk.TypeList,
-									Optional: true,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"count": {
-												Type:     pluginsdk.TypeFloat,
-												Optional: true,
-											},
-
-											"dynamic_throttling_enabled": {
-												Type:     pluginsdk.TypeBool,
-												Optional: true,
-											},
-
-											"key": {
-												Type:         pluginsdk.TypeString,
-												Optional:     true,
-												ValidateFunc: validation.StringIsNotEmpty,
-											},
-
-											"match_patterns": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"method": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"path": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-													},
-												},
-											},
-
-											"min_count": {
-												Type:     pluginsdk.TypeFloat,
-												Optional: true,
-											},
-
-											"renewal_period": {
-												Type:     pluginsdk.TypeFloat,
-												Optional: true,
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-
 					"format": {
 						Type:         pluginsdk.TypeString,
 						Optional:     true,

@@ -86,7 +86,7 @@ func (r cognitiveCommitmentPlanResource) Exists(ctx context.Context, clients *cl
 		return nil, err
 	}
 
-	client := clients.cognitive.CommitmentPlansClient
+	client := clients.Cognitive.CommitmentPlansClient
 	resp, err := client.Get(ctx, *id)
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
