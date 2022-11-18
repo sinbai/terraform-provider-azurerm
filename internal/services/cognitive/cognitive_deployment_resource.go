@@ -1,0 +1,696 @@
+package cognitive
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/cognitive/2022-10-01/cognitiveservicesaccounts"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/cognitive/2022-10-01/deployments"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
+)
+
+type cognitiveDeploymentModel struct {
+	Name               string                         `tfschema:"name"`
+	CognitiveAccountId string                         `tfschema:"cognitive_account_id"`
+	Model              []DeploymentModelModel         `tfschema:"model"`
+	RaiPolicyName      string                         `tfschema:"rai_policy_name"`
+	ScaleSettings      []DeploymentScaleSettingsModel `tfschema:"scale_settings"`
+	CallRateLimit      []CallRateLimitModel           `tfschema:"call_rate_limit"`
+	Capabilities       map[string]string              `tfschema:"capabilities"`
+}
+
+type DeploymentModelModel struct {
+	CallRateLimit []CallRateLimitModel `tfschema:"call_rate_limit"`
+	Format        string               `tfschema:"format"`
+	Name          string               `tfschema:"name"`
+	Version       string               `tfschema:"version"`
+}
+
+type CallRateLimitModel struct {
+	Count         float64               `tfschema:"count"`
+	RenewalPeriod float64               `tfschema:"renewal_period"`
+	Rules         []ThrottlingRuleModel `tfschema:"rules"`
+}
+
+type ThrottlingRuleModel struct {
+	Count                    float64                    `tfschema:"count"`
+	DynamicThrottlingEnabled bool                       `tfschema:"dynamic_throttling_enabled"`
+	Key                      string                     `tfschema:"key"`
+	MatchPatterns            []RequestMatchPatternModel `tfschema:"match_patterns"`
+	MinCount                 float64                    `tfschema:"min_count"`
+	RenewalPeriod            float64                    `tfschema:"renewal_period"`
+}
+
+type RequestMatchPatternModel struct {
+	Method string `tfschema:"method"`
+	Path   string `tfschema:"path"`
+}
+
+type DeploymentScaleSettingsModel struct {
+	ActiveCapacity int64                           `tfschema:"active_capacity"`
+	Capacity       int64                           `tfschema:"capacity"`
+	ScaleType      deployments.DeploymentScaleType `tfschema:"scale_type"`
+}
+
+type cognitiveDeploymentResource struct{}
+
+var _ sdk.ResourceWithUpdate = cognitiveDeploymentResource{}
+
+func (r cognitiveDeploymentResource) ResourceType() string {
+	return "azurerm_cognitive_deployment"
+}
+
+func (r cognitiveDeploymentResource) ModelObject() interface{} {
+	return &cognitiveDeploymentModel{}
+}
+
+func (r cognitiveDeploymentResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
+	return deployments.ValidateDeploymentID
+}
+
+func (r cognitiveDeploymentResource) Arguments() map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{
+		"name": {
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validation.StringIsNotEmpty,
+		},
+
+		"cognitive_account_id": {
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: cognitiveservicesaccounts.ValidateAccountID,
+		},
+
+		"model": {
+			Type:     pluginsdk.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"call_rate_limit": {
+						Type:     pluginsdk.TypeList,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &pluginsdk.Resource{
+							Schema: map[string]*pluginsdk.Schema{
+								"count": {
+									Type:     pluginsdk.TypeFloat,
+									Optional: true,
+								},
+
+								"renewal_period": {
+									Type:     pluginsdk.TypeFloat,
+									Optional: true,
+								},
+
+								"rules": {
+									Type:     pluginsdk.TypeList,
+									Optional: true,
+									Elem: &pluginsdk.Resource{
+										Schema: map[string]*pluginsdk.Schema{
+											"count": {
+												Type:     pluginsdk.TypeFloat,
+												Optional: true,
+											},
+
+											"dynamic_throttling_enabled": {
+												Type:     pluginsdk.TypeBool,
+												Optional: true,
+											},
+
+											"key": {
+												Type:         pluginsdk.TypeString,
+												Optional:     true,
+												ValidateFunc: validation.StringIsNotEmpty,
+											},
+
+											"match_patterns": {
+												Type:     pluginsdk.TypeList,
+												Optional: true,
+												Elem: &pluginsdk.Resource{
+													Schema: map[string]*pluginsdk.Schema{
+														"method": {
+															Type:         pluginsdk.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringIsNotEmpty,
+														},
+
+														"path": {
+															Type:         pluginsdk.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringIsNotEmpty,
+														},
+													},
+												},
+											},
+
+											"min_count": {
+												Type:     pluginsdk.TypeFloat,
+												Optional: true,
+											},
+
+											"renewal_period": {
+												Type:     pluginsdk.TypeFloat,
+												Optional: true,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+
+					"format": {
+						Type:         pluginsdk.TypeString,
+						Optional:     true,
+						ValidateFunc: validation.StringIsNotEmpty,
+					},
+
+					"name": {
+						Type:         pluginsdk.TypeString,
+						Optional:     true,
+						ValidateFunc: validation.StringIsNotEmpty,
+					},
+
+					"version": {
+						Type:         pluginsdk.TypeString,
+						Optional:     true,
+						ValidateFunc: validation.StringIsNotEmpty,
+					},
+				},
+			},
+		},
+
+		"rai_policy_name": {
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.StringIsNotEmpty,
+		},
+
+		"scale_settings": {
+			Type:     pluginsdk.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"active_capacity": {
+						Type:     pluginsdk.TypeInt,
+						Optional: true,
+					},
+
+					"capacity": {
+						Type:     pluginsdk.TypeInt,
+						Optional: true,
+					},
+
+					"scale_type": {
+						Type:     pluginsdk.TypeString,
+						Optional: true,
+						ValidateFunc: validation.StringInSlice([]string{
+							string(deployments.DeploymentScaleTypeStandard),
+							string(deployments.DeploymentScaleTypeManual),
+						}, false),
+					},
+				},
+			},
+		},
+	}
+}
+
+func (r cognitiveDeploymentResource) Attributes() map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{
+		"call_rate_limit": {
+			Type:     pluginsdk.TypeList,
+			Computed: true,
+			MaxItems: 1,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"count": {
+						Type:     pluginsdk.TypeFloat,
+						Computed: true,
+					},
+
+					"renewal_period": {
+						Type:     pluginsdk.TypeFloat,
+						Computed: true,
+					},
+
+					"rules": {
+						Type:     pluginsdk.TypeList,
+						Computed: true,
+						MaxItems: 1,
+						Elem: &pluginsdk.Resource{
+							Schema: map[string]*pluginsdk.Schema{
+								"count": {
+									Type:     pluginsdk.TypeFloat,
+									Computed: true,
+								},
+
+								"dynamic_throttling_enabled": {
+									Type:     pluginsdk.TypeBool,
+									Computed: true,
+								},
+
+								"key": {
+									Type:     pluginsdk.TypeString,
+									Computed: true,
+								},
+
+								"match_patterns": {
+									Type:     pluginsdk.TypeList,
+									Computed: true,
+									MaxItems: 1,
+									Elem: &pluginsdk.Resource{
+										Schema: map[string]*pluginsdk.Schema{
+											"method": {
+												Type:     pluginsdk.TypeString,
+												Computed: true,
+											},
+
+											"path": {
+												Type:     pluginsdk.TypeString,
+												Computed: true,
+											},
+										},
+									},
+								},
+
+								"min_count": {
+									Type:     pluginsdk.TypeFloat,
+									Computed: true,
+								},
+
+								"renewal_period": {
+									Type:     pluginsdk.TypeFloat,
+									Computed: true,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+
+		"capabilities": {
+			Type:     pluginsdk.TypeMap,
+			Computed: true,
+			Elem: &pluginsdk.Schema{
+				Type: pluginsdk.TypeString,
+			},
+		},
+	}
+}
+
+func (r cognitiveDeploymentResource) Create() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 30 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			var model cognitiveDeploymentModel
+			if err := metadata.Decode(&model); err != nil {
+				return fmt.Errorf("decoding: %+v", err)
+			}
+
+			client := metadata.Client.Cognitive.DeploymentsClient
+			accountId, err := cognitiveservicesaccounts.ParseAccountID(model.CognitiveAccountId)
+			if err != nil {
+				return err
+			}
+
+			id := deployments.NewDeploymentID(accountId.SubscriptionId, accountId.ResourceGroupName, accountId.AccountName, model.Name)
+			existing, err := client.Get(ctx, id)
+			if err != nil && !response.WasNotFound(existing.HttpResponse) {
+				return fmt.Errorf("checking for existing %s: %+v", id, err)
+			}
+
+			if !response.WasNotFound(existing.HttpResponse) {
+				return metadata.ResourceRequiresImport(r.ResourceType(), id)
+			}
+
+			properties := &deployments.Deployment{
+				Properties: &deployments.DeploymentProperties{},
+			}
+
+			modelValue, err := expandDeploymentModelModel(model.Model)
+			if err != nil {
+				return err
+			}
+
+			properties.Properties.Model = modelValue
+
+			if model.RaiPolicyName != "" {
+				properties.Properties.RaiPolicyName = &model.RaiPolicyName
+			}
+
+			scaleSettingsValue, err := expandDeploymentScaleSettingsModel(model.ScaleSettings)
+			if err != nil {
+				return err
+			}
+
+			properties.Properties.ScaleSettings = scaleSettingsValue
+
+			if err := client.CreateOrUpdateThenPoll(ctx, id, *properties); err != nil {
+				return fmt.Errorf("creating %s: %+v", id, err)
+			}
+
+			metadata.SetID(id)
+			return nil
+		},
+	}
+}
+
+func (r cognitiveDeploymentResource) Update() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 30 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.Cognitive.DeploymentsClient
+
+			id, err := deployments.ParseDeploymentID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
+
+			var model cognitiveDeploymentModel
+			if err := metadata.Decode(&model); err != nil {
+				return fmt.Errorf("decoding: %+v", err)
+			}
+
+			resp, err := client.Get(ctx, *id)
+			if err != nil {
+				return fmt.Errorf("retrieving %s: %+v", *id, err)
+			}
+
+			properties := resp.Model
+			if properties == nil {
+				return fmt.Errorf("retrieving %s: properties was nil", id)
+			}
+
+			if metadata.ResourceData.HasChange("model") {
+				modelValue, err := expandDeploymentModelModel(model.Model)
+				if err != nil {
+					return err
+				}
+
+				properties.Properties.Model = modelValue
+			}
+
+			if metadata.ResourceData.HasChange("rai_policy_name") {
+				if model.RaiPolicyName != "" {
+					properties.Properties.RaiPolicyName = &model.RaiPolicyName
+				} else {
+					properties.Properties.RaiPolicyName = nil
+				}
+			}
+
+			if metadata.ResourceData.HasChange("scale_settings") {
+				scaleSettingsValue, err := expandDeploymentScaleSettingsModel(model.ScaleSettings)
+				if err != nil {
+					return err
+				}
+
+				properties.Properties.ScaleSettings = scaleSettingsValue
+			}
+
+			properties.SystemData = nil
+
+			if err := client.CreateOrUpdateThenPoll(ctx, *id, *properties); err != nil {
+				return fmt.Errorf("updating %s: %+v", *id, err)
+			}
+
+			return nil
+		},
+	}
+}
+
+func (r cognitiveDeploymentResource) Read() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 5 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.Cognitive.DeploymentsClient
+
+			id, err := deployments.ParseDeploymentID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
+
+			resp, err := client.Get(ctx, *id)
+			if err != nil {
+				if response.WasNotFound(resp.HttpResponse) {
+					return metadata.MarkAsGone(id)
+				}
+
+				return fmt.Errorf("retrieving %s: %+v", *id, err)
+			}
+
+			model := resp.Model
+			if model == nil {
+				return fmt.Errorf("retrieving %s: model was nil", id)
+			}
+
+			state := cognitiveDeploymentModel{
+				Name:               id.DeploymentName,
+				CognitiveAccountId: cognitiveservicesaccounts.NewAccountID(id.SubscriptionId, id.ResourceGroupName, id.AccountName).ID(),
+			}
+
+			if properties := model.Properties; properties != nil {
+				callRateLimitValue, err := flattenCallRateLimitModel(properties.CallRateLimit)
+				if err != nil {
+					return err
+				}
+
+				state.CallRateLimit = callRateLimitValue
+
+				if properties.Capabilities != nil {
+					state.Capabilities = *properties.Capabilities
+				}
+
+				modelValue, err := flattenDeploymentModelModel(properties.Model)
+				if err != nil {
+					return err
+				}
+
+				state.Model = modelValue
+
+				if properties.RaiPolicyName != nil {
+					state.RaiPolicyName = *properties.RaiPolicyName
+				}
+
+				scaleSettingsValue, err := flattenDeploymentScaleSettingsModel(properties.ScaleSettings)
+				if err != nil {
+					return err
+				}
+
+				state.ScaleSettings = scaleSettingsValue
+			}
+
+			return metadata.Encode(&state)
+		},
+	}
+}
+
+func (r cognitiveDeploymentResource) Delete() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 30 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.Cognitive.DeploymentsClient
+
+			id, err := deployments.ParseDeploymentID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
+
+			if err := client.DeleteThenPoll(ctx, *id); err != nil {
+				return fmt.Errorf("deleting %s: %+v", id, err)
+			}
+
+			return nil
+		},
+	}
+}
+
+func expandDeploymentModelModel(inputList []DeploymentModelModel) (*deployments.DeploymentModel, error) {
+	if len(inputList) == 0 {
+		return nil, nil
+	}
+
+	input := &inputList[0]
+	output := deployments.DeploymentModel{}
+
+	if input.Format != "" {
+		output.Format = &input.Format
+	}
+
+	if input.Name != "" {
+		output.Name = &input.Name
+	}
+
+	if input.Version != "" {
+		output.Version = &input.Version
+	}
+
+	return &output, nil
+}
+
+func expandDeploymentScaleSettingsModel(inputList []DeploymentScaleSettingsModel) (*deployments.DeploymentScaleSettings, error) {
+	if len(inputList) == 0 {
+		return nil, nil
+	}
+
+	input := &inputList[0]
+	output := deployments.DeploymentScaleSettings{
+		Capacity:  &input.Capacity,
+		ScaleType: &input.ScaleType,
+	}
+
+	return &output, nil
+}
+
+func flattenDeploymentModelModel(input *deployments.DeploymentModel) ([]DeploymentModelModel, error) {
+	var outputList []DeploymentModelModel
+	if input == nil {
+		return outputList, nil
+	}
+
+	output := DeploymentModelModel{}
+
+	callRateLimitValue, err := flattenCallRateLimitModel(input.CallRateLimit)
+	if err != nil {
+		return nil, err
+	}
+
+	output.CallRateLimit = callRateLimitValue
+
+	if input.Format != nil {
+		output.Format = *input.Format
+	}
+
+	if input.Name != nil {
+		output.Name = *input.Name
+	}
+
+	if input.Version != nil {
+		output.Version = *input.Version
+	}
+
+	return append(outputList, output), nil
+}
+
+func flattenCallRateLimitModel(input *deployments.CallRateLimit) ([]CallRateLimitModel, error) {
+	var outputList []CallRateLimitModel
+	if input == nil {
+		return outputList, nil
+	}
+
+	output := CallRateLimitModel{}
+
+	if input.Count != nil {
+		output.Count = *input.Count
+	}
+
+	if input.RenewalPeriod != nil {
+		output.RenewalPeriod = *input.RenewalPeriod
+	}
+
+	rulesValue, err := flattenThrottlingRuleModel(input.Rules)
+	if err != nil {
+		return nil, err
+	}
+
+	output.Rules = rulesValue
+
+	return append(outputList, output), nil
+}
+
+func flattenThrottlingRuleModel(inputList *[]deployments.ThrottlingRule) ([]ThrottlingRuleModel, error) {
+	var outputList []ThrottlingRuleModel
+	if inputList == nil {
+		return outputList, nil
+	}
+
+	for _, input := range *inputList {
+		output := ThrottlingRuleModel{}
+
+		if input.Count != nil {
+			output.Count = *input.Count
+		}
+
+		if input.DynamicThrottlingEnabled != nil {
+			output.DynamicThrottlingEnabled = *input.DynamicThrottlingEnabled
+		}
+
+		if input.Key != nil {
+			output.Key = *input.Key
+		}
+
+		matchPatternsValue, err := flattenRequestMatchPatternModel(input.MatchPatterns)
+		if err != nil {
+			return nil, err
+		}
+
+		output.MatchPatterns = matchPatternsValue
+
+		if input.MinCount != nil {
+			output.MinCount = *input.MinCount
+		}
+
+		if input.RenewalPeriod != nil {
+			output.RenewalPeriod = *input.RenewalPeriod
+		}
+
+		outputList = append(outputList, output)
+	}
+
+	return outputList, nil
+}
+
+func flattenRequestMatchPatternModel(inputList *[]deployments.RequestMatchPattern) ([]RequestMatchPatternModel, error) {
+	var outputList []RequestMatchPatternModel
+	if inputList == nil {
+		return outputList, nil
+	}
+
+	for _, input := range *inputList {
+		output := RequestMatchPatternModel{}
+
+		if input.Method != nil {
+			output.Method = *input.Method
+		}
+
+		if input.Path != nil {
+			output.Path = *input.Path
+		}
+
+		outputList = append(outputList, output)
+	}
+
+	return outputList, nil
+}
+
+func flattenDeploymentScaleSettingsModel(input *deployments.DeploymentScaleSettings) ([]DeploymentScaleSettingsModel, error) {
+	var outputList []DeploymentScaleSettingsModel
+	if input == nil {
+		return outputList, nil
+	}
+
+	output := DeploymentScaleSettingsModel{}
+
+	if input.ActiveCapacity != nil {
+		output.ActiveCapacity = *input.ActiveCapacity
+	}
+
+	if input.Capacity != nil {
+		output.Capacity = *input.Capacity
+	}
+
+	if input.ScaleType != nil {
+		output.ScaleType = *input.ScaleType
+	}
+
+	return append(outputList, output), nil
+}
