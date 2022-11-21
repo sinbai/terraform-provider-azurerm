@@ -97,7 +97,7 @@ func (r cognitiveDeploymentResource) Exists(ctx context.Context, clients *client
 	return utils.Bool(resp.Model != nil), nil
 }
 
-func (r cognitiveDeploymentResource) template(data acceptance.TestData) string {
+func (r cognitiveDeploymentResource) template(data acceptance.TestData, kind string) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
@@ -110,12 +110,14 @@ resource "azurerm_resource_group" "test" {
 resource "azurerm_cognitive_account" "test" {
   name                = "acctest-ca-%d"
   resource_group_name = azurerm_resource_group.test.name
+  kind                = "%s"
+  sku_name            = "S0"
 }
-`, data.RandomInteger, data.Locations.Primary, data.RandomInteger)
+`, data.RandomInteger, data.Locations.Primary, data.RandomInteger, kind)
 }
 
 func (r cognitiveDeploymentResource) basic(data acceptance.TestData) string {
-	template := r.template(data)
+	template := r.template(data, "OpenAI")
 	return fmt.Sprintf(`
 				%s
 
@@ -139,7 +141,7 @@ resource "azurerm_cognitive_deployment" "import" {
 }
 
 func (r cognitiveDeploymentResource) complete(data acceptance.TestData) string {
-	template := r.template(data)
+	template :=  r.template(data, "OpenAI")
 	return fmt.Sprintf(`
 			%s
 
@@ -162,7 +164,7 @@ resource "azurerm_cognitive_deployment" "test" {
 }
 
 func (r cognitiveDeploymentResource) update(data acceptance.TestData) string {
-	template := r.template(data)
+	template := r.template(data, "OpenAI")
 	return fmt.Sprintf(`
 			%s
 

@@ -24,7 +24,6 @@ type cognitiveDeploymentModel struct {
 }
 
 type DeploymentModelModel struct {
-	CallRateLimit []CallRateLimitModel `tfschema:"call_rate_limit"`
 	Format        string               `tfschema:"format"`
 	Name          string               `tfschema:"name"`
 	Version       string               `tfschema:"version"`
