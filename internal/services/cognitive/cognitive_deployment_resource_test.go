@@ -86,7 +86,7 @@ func (r cognitiveDeploymentResource) Exists(ctx context.Context, clients *client
 		return nil, err
 	}
 
-	client := clients.cognitive.DeploymentsClient
+	client := clients.Cognitive.DeploymentsClient
 	resp, err := client.Get(ctx, *id)
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {

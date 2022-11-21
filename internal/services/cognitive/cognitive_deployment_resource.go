@@ -49,6 +49,7 @@ type RequestMatchPatternModel struct {
 	Method string `tfschema:"method"`
 	Path   string `tfschema:"path"`
 }
+
 type DeploymentScaleSettingsModel struct {
 	ActiveCapacity int64                           `tfschema:"active_capacity"`
 	Capacity       int64                           `tfschema:"capacity"`
@@ -385,7 +386,7 @@ func (r cognitiveDeploymentResource) Read() sdk.ResourceFunc {
 			}
 
 			if properties := model.Properties; properties != nil {
-				callRateLimitValue, err := flattenCallRateLimitModel(properties.CallRateLimit)
+				callRateLimitValue, err := flattenDeploymentCallRateLimitModel(properties.CallRateLimit)
 				if err != nil {
 					return err
 				}
@@ -418,6 +419,97 @@ func (r cognitiveDeploymentResource) Read() sdk.ResourceFunc {
 			return metadata.Encode(&state)
 		},
 	}
+}
+
+func flattenDeploymentThrottlingRuleModel(inputList *[]deployments.ThrottlingRule) ([]ThrottlingRuleModel, error) {
+	var outputList []ThrottlingRuleModel
+	if inputList == nil {
+		return outputList, nil
+	}
+
+	for _, input := range *inputList {
+		output := ThrottlingRuleModel{}
+
+		if input.Count != nil {
+			output.Count = *input.Count
+		}
+
+		if input.DynamicThrottlingEnabled != nil {
+			output.DynamicThrottlingEnabled = *input.DynamicThrottlingEnabled
+		}
+
+		if input.Key != nil {
+			output.Key = *input.Key
+		}
+
+		matchPatternsValue, err := flattenDeploymentRequestMatchPatternModel(input.MatchPatterns)
+		if err != nil {
+			return nil, err
+		}
+
+		output.MatchPatterns = matchPatternsValue
+
+		if input.MinCount != nil {
+			output.MinCount = *input.MinCount
+		}
+
+		if input.RenewalPeriod != nil {
+			output.RenewalPeriod = *input.RenewalPeriod
+		}
+
+		outputList = append(outputList, output)
+	}
+
+	return outputList, nil
+}
+
+func flattenDeploymentRequestMatchPatternModel(inputList *[]deployments.RequestMatchPattern) ([]RequestMatchPatternModel, error) {
+	var outputList []RequestMatchPatternModel
+	if inputList == nil {
+		return outputList, nil
+	}
+
+	for _, input := range *inputList {
+		output := RequestMatchPatternModel{}
+
+		if input.Method != nil {
+			output.Method = *input.Method
+		}
+
+		if input.Path != nil {
+			output.Path = *input.Path
+		}
+
+		outputList = append(outputList, output)
+	}
+
+	return outputList, nil
+}
+
+func flattenDeploymentCallRateLimitModel(input *deployments.CallRateLimit) ([]CallRateLimitModel, error) {
+	var outputList []CallRateLimitModel
+	if input == nil {
+		return outputList, nil
+	}
+
+	output := CallRateLimitModel{}
+
+	if input.Count != nil {
+		output.Count = *input.Count
+	}
+
+	if input.RenewalPeriod != nil {
+		output.RenewalPeriod = *input.RenewalPeriod
+	}
+
+	rulesValue, err := flattenDeploymentThrottlingRuleModel(input.Rules)
+	if err != nil {
+		return nil, err
+	}
+
+	output.Rules = rulesValue
+
+	return append(outputList, output), nil
 }
 
 func (r cognitiveDeploymentResource) Delete() sdk.ResourceFunc {
@@ -485,7 +577,7 @@ func flattenDeploymentModelModel(input *deployments.DeploymentModel) ([]Deployme
 
 	output := DeploymentModelModel{}
 
-	callRateLimitValue, err := flattenCallRateLimitModel(input.CallRateLimit)
+	callRateLimitValue, err := flattenDeploymentCallRateLimitModel(input.CallRateLimit)
 	if err != nil {
 		return nil, err
 	}

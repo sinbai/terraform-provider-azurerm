@@ -58,6 +58,8 @@ The following arguments are supported:
 
 * `customer_managed_key` (Optional) A `customer_managed_key` block as documented below.
 
+* `dynamic_throttling_enabled` - (Optional) Whether to enable the dynamic throttling for this Cognitive Service Account. Defaults to `false`.
+
 * `fqdns` - (Optional) List of FQDNs allowed for the Cognitive Account.
 
 * `identity` - (Optional) An `identity` block as defined below.
