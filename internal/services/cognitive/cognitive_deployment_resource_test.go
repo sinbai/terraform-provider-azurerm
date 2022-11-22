@@ -77,6 +77,13 @@ func TestAcccognitiveDeployment_update(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+		{
+			Config: r.complete(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
 	})
 }
 
@@ -109,6 +116,7 @@ resource "azurerm_resource_group" "test" {
 }
 resource "azurerm_cognitive_account" "test" {
   name                = "acctest-ca-%d"
+  location = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   kind                = "%s"
   sku_name            = "S0"
@@ -120,10 +128,18 @@ func (r cognitiveDeploymentResource) basic(data acceptance.TestData) string {
 	template := r.template(data, "OpenAI")
 	return fmt.Sprintf(`
 				%s
-
 resource "azurerm_cognitive_deployment" "test" {
   name                 = "acctest-cd-%d"
   cognitive_account_id = azurerm_cognitive_account.test.id
+  model {
+      format ="OpenAI"
+      name = "text-curie-001"
+      version =  "1"
+    }
+
+  scale_settings {
+   scale_type = "Standard"
+   }
 }
 `, template, data.RandomInteger)
 }
@@ -141,24 +157,26 @@ resource "azurerm_cognitive_deployment" "import" {
 }
 
 func (r cognitiveDeploymentResource) complete(data acceptance.TestData) string {
-	template :=  r.template(data, "OpenAI")
+	template := r.template(data, "OpenAI")
 	return fmt.Sprintf(`
 			%s
 
 resource "azurerm_cognitive_deployment" "test" {
   name                 = "acctest-cd-%d"
   cognitive_account_id = azurerm_cognitive_account.test.id
-  rai_policy_name      = ""
+  
   model {
-    format  = ""
+    format  = "OpenAI"
     name    = ""
-    version = ""
+    version = "1"
   }
+  
   scale_settings {
+    scale_type = "Manual"
     capacity   = 0
-    scale_type = ""
   }
 
+  rai_policy_name      = "RAI policy"
 }
 `, template, data.RandomInteger)
 }

@@ -19,40 +19,17 @@ type cognitiveDeploymentModel struct {
 	Model              []DeploymentModelModel         `tfschema:"model"`
 	RaiPolicyName      string                         `tfschema:"rai_policy_name"`
 	ScaleSettings      []DeploymentScaleSettingsModel `tfschema:"scale_settings"`
-	CallRateLimit      []CallRateLimitModel           `tfschema:"call_rate_limit"`
-	Capabilities       map[string]string              `tfschema:"capabilities"`
 }
 
 type DeploymentModelModel struct {
-	Format        string               `tfschema:"format"`
-	Name          string               `tfschema:"name"`
-	Version       string               `tfschema:"version"`
-}
-
-type CallRateLimitModel struct {
-	Count         float64               `tfschema:"count"`
-	RenewalPeriod float64               `tfschema:"renewal_period"`
-	Rules         []ThrottlingRuleModel `tfschema:"rules"`
-}
-
-type ThrottlingRuleModel struct {
-	Count                    float64                    `tfschema:"count"`
-	DynamicThrottlingEnabled bool                       `tfschema:"dynamic_throttling_enabled"`
-	Key                      string                     `tfschema:"key"`
-	MatchPatterns            []RequestMatchPatternModel `tfschema:"match_patterns"`
-	MinCount                 float64                    `tfschema:"min_count"`
-	RenewalPeriod            float64                    `tfschema:"renewal_period"`
-}
-
-type RequestMatchPatternModel struct {
-	Method string `tfschema:"method"`
-	Path   string `tfschema:"path"`
+	Format  string `tfschema:"format"`
+	Name    string `tfschema:"name"`
+	Version string `tfschema:"version"`
 }
 
 type DeploymentScaleSettingsModel struct {
-	ActiveCapacity int64                           `tfschema:"active_capacity"`
-	Capacity       int64                           `tfschema:"capacity"`
-	ScaleType      deployments.DeploymentScaleType `tfschema:"scale_type"`
+	Capacity  int64                           `tfschema:"capacity"`
+	ScaleType deployments.DeploymentScaleType `tfschema:"scale_type"`
 }
 
 type cognitiveDeploymentResource struct{}
@@ -89,26 +66,50 @@ func (r cognitiveDeploymentResource) Arguments() map[string]*pluginsdk.Schema {
 
 		"model": {
 			Type:     pluginsdk.TypeList,
-			Optional: true,
+			Required: true,
 			MaxItems: 1,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"format": {
 						Type:         pluginsdk.TypeString,
-						Optional:     true,
+						Required:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
 
 					"name": {
 						Type:         pluginsdk.TypeString,
-						Optional:     true,
+						Required:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
 
 					"version": {
 						Type:         pluginsdk.TypeString,
-						Optional:     true,
+						Required:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
+					},
+				},
+			},
+		},
+
+		"scale_settings": {
+			Type:     pluginsdk.TypeList,
+			Required: true,
+			MaxItems: 1,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"scale_type": {
+						Type:     pluginsdk.TypeString,
+						Required: true,
+						ForceNew: true,
+						ValidateFunc: validation.StringInSlice([]string{
+							string(deployments.DeploymentScaleTypeStandard),
+							string(deployments.DeploymentScaleTypeManual),
+						}, false),
+					},
+					"capacity": {
+						Type:         pluginsdk.TypeInt,
+						Optional:     true,
+						ValidateFunc: validation.IntInSlice([]int{1, 2, 3}),
 					},
 				},
 			},
@@ -118,34 +119,6 @@ func (r cognitiveDeploymentResource) Arguments() map[string]*pluginsdk.Schema {
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
-		},
-
-		"scale_settings": {
-			Type:     pluginsdk.TypeList,
-			Optional: true,
-			MaxItems: 1,
-			Elem: &pluginsdk.Resource{
-				Schema: map[string]*pluginsdk.Schema{
-					"active_capacity": {
-						Type:     pluginsdk.TypeInt,
-						Optional: true,
-					},
-
-					"capacity": {
-						Type:     pluginsdk.TypeInt,
-						Optional: true,
-					},
-
-					"scale_type": {
-						Type:     pluginsdk.TypeString,
-						Optional: true,
-						ValidateFunc: validation.StringInSlice([]string{
-							string(deployments.DeploymentScaleTypeStandard),
-							string(deployments.DeploymentScaleTypeManual),
-						}, false),
-					},
-				},
-			},
 		},
 	}
 }
@@ -385,17 +358,6 @@ func (r cognitiveDeploymentResource) Read() sdk.ResourceFunc {
 			}
 
 			if properties := model.Properties; properties != nil {
-				callRateLimitValue, err := flattenDeploymentCallRateLimitModel(properties.CallRateLimit)
-				if err != nil {
-					return err
-				}
-
-				state.CallRateLimit = callRateLimitValue
-
-				if properties.Capabilities != nil {
-					state.Capabilities = *properties.Capabilities
-				}
-
 				modelValue, err := flattenDeploymentModelModel(properties.Model)
 				if err != nil {
 					return err
@@ -418,97 +380,6 @@ func (r cognitiveDeploymentResource) Read() sdk.ResourceFunc {
 			return metadata.Encode(&state)
 		},
 	}
-}
-
-func flattenDeploymentThrottlingRuleModel(inputList *[]deployments.ThrottlingRule) ([]ThrottlingRuleModel, error) {
-	var outputList []ThrottlingRuleModel
-	if inputList == nil {
-		return outputList, nil
-	}
-
-	for _, input := range *inputList {
-		output := ThrottlingRuleModel{}
-
-		if input.Count != nil {
-			output.Count = *input.Count
-		}
-
-		if input.DynamicThrottlingEnabled != nil {
-			output.DynamicThrottlingEnabled = *input.DynamicThrottlingEnabled
-		}
-
-		if input.Key != nil {
-			output.Key = *input.Key
-		}
-
-		matchPatternsValue, err := flattenDeploymentRequestMatchPatternModel(input.MatchPatterns)
-		if err != nil {
-			return nil, err
-		}
-
-		output.MatchPatterns = matchPatternsValue
-
-		if input.MinCount != nil {
-			output.MinCount = *input.MinCount
-		}
-
-		if input.RenewalPeriod != nil {
-			output.RenewalPeriod = *input.RenewalPeriod
-		}
-
-		outputList = append(outputList, output)
-	}
-
-	return outputList, nil
-}
-
-func flattenDeploymentRequestMatchPatternModel(inputList *[]deployments.RequestMatchPattern) ([]RequestMatchPatternModel, error) {
-	var outputList []RequestMatchPatternModel
-	if inputList == nil {
-		return outputList, nil
-	}
-
-	for _, input := range *inputList {
-		output := RequestMatchPatternModel{}
-
-		if input.Method != nil {
-			output.Method = *input.Method
-		}
-
-		if input.Path != nil {
-			output.Path = *input.Path
-		}
-
-		outputList = append(outputList, output)
-	}
-
-	return outputList, nil
-}
-
-func flattenDeploymentCallRateLimitModel(input *deployments.CallRateLimit) ([]CallRateLimitModel, error) {
-	var outputList []CallRateLimitModel
-	if input == nil {
-		return outputList, nil
-	}
-
-	output := CallRateLimitModel{}
-
-	if input.Count != nil {
-		output.Count = *input.Count
-	}
-
-	if input.RenewalPeriod != nil {
-		output.RenewalPeriod = *input.RenewalPeriod
-	}
-
-	rulesValue, err := flattenDeploymentThrottlingRuleModel(input.Rules)
-	if err != nil {
-		return nil, err
-	}
-
-	output.Rules = rulesValue
-
-	return append(outputList, output), nil
 }
 
 func (r cognitiveDeploymentResource) Delete() sdk.ResourceFunc {
@@ -576,13 +447,6 @@ func flattenDeploymentModelModel(input *deployments.DeploymentModel) ([]Deployme
 
 	output := DeploymentModelModel{}
 
-	callRateLimitValue, err := flattenDeploymentCallRateLimitModel(input.CallRateLimit)
-	if err != nil {
-		return nil, err
-	}
-
-	output.CallRateLimit = callRateLimitValue
-
 	if input.Format != nil {
 		output.Format = *input.Format
 	}
@@ -598,97 +462,6 @@ func flattenDeploymentModelModel(input *deployments.DeploymentModel) ([]Deployme
 	return append(outputList, output), nil
 }
 
-func flattenCallRateLimitModel(input *deployments.CallRateLimit) ([]CallRateLimitModel, error) {
-	var outputList []CallRateLimitModel
-	if input == nil {
-		return outputList, nil
-	}
-
-	output := CallRateLimitModel{}
-
-	if input.Count != nil {
-		output.Count = *input.Count
-	}
-
-	if input.RenewalPeriod != nil {
-		output.RenewalPeriod = *input.RenewalPeriod
-	}
-
-	rulesValue, err := flattenThrottlingRuleModel(input.Rules)
-	if err != nil {
-		return nil, err
-	}
-
-	output.Rules = rulesValue
-
-	return append(outputList, output), nil
-}
-
-func flattenThrottlingRuleModel(inputList *[]deployments.ThrottlingRule) ([]ThrottlingRuleModel, error) {
-	var outputList []ThrottlingRuleModel
-	if inputList == nil {
-		return outputList, nil
-	}
-
-	for _, input := range *inputList {
-		output := ThrottlingRuleModel{}
-
-		if input.Count != nil {
-			output.Count = *input.Count
-		}
-
-		if input.DynamicThrottlingEnabled != nil {
-			output.DynamicThrottlingEnabled = *input.DynamicThrottlingEnabled
-		}
-
-		if input.Key != nil {
-			output.Key = *input.Key
-		}
-
-		matchPatternsValue, err := flattenRequestMatchPatternModel(input.MatchPatterns)
-		if err != nil {
-			return nil, err
-		}
-
-		output.MatchPatterns = matchPatternsValue
-
-		if input.MinCount != nil {
-			output.MinCount = *input.MinCount
-		}
-
-		if input.RenewalPeriod != nil {
-			output.RenewalPeriod = *input.RenewalPeriod
-		}
-
-		outputList = append(outputList, output)
-	}
-
-	return outputList, nil
-}
-
-func flattenRequestMatchPatternModel(inputList *[]deployments.RequestMatchPattern) ([]RequestMatchPatternModel, error) {
-	var outputList []RequestMatchPatternModel
-	if inputList == nil {
-		return outputList, nil
-	}
-
-	for _, input := range *inputList {
-		output := RequestMatchPatternModel{}
-
-		if input.Method != nil {
-			output.Method = *input.Method
-		}
-
-		if input.Path != nil {
-			output.Path = *input.Path
-		}
-
-		outputList = append(outputList, output)
-	}
-
-	return outputList, nil
-}
-
 func flattenDeploymentScaleSettingsModel(input *deployments.DeploymentScaleSettings) ([]DeploymentScaleSettingsModel, error) {
 	var outputList []DeploymentScaleSettingsModel
 	if input == nil {
@@ -696,10 +469,6 @@ func flattenDeploymentScaleSettingsModel(input *deployments.DeploymentScaleSetti
 	}
 
 	output := DeploymentScaleSettingsModel{}
-
-	if input.ActiveCapacity != nil {
-		output.ActiveCapacity = *input.ActiveCapacity
-	}
 
 	if input.Capacity != nil {
 		output.Capacity = *input.Capacity
