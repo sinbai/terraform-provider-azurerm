@@ -37,23 +37,23 @@ type CommitmentQuotaModel struct {
 	Unit     string `tfschema:"unit"`
 }
 
-type cognitiveCommitmentPlanResource struct{}
+type CognitiveCommitmentPlanResource struct{}
 
-var _ sdk.ResourceWithUpdate = cognitiveCommitmentPlanResource{}
+var _ sdk.ResourceWithUpdate = CognitiveCommitmentPlanResource{}
 
-func (r cognitiveCommitmentPlanResource) ResourceType() string {
+func (r CognitiveCommitmentPlanResource) ResourceType() string {
 	return "azurerm_cognitive_commitment_plan"
 }
 
-func (r cognitiveCommitmentPlanResource) ModelObject() interface{} {
+func (r CognitiveCommitmentPlanResource) ModelObject() interface{} {
 	return &cognitiveCommitmentPlanModel{}
 }
 
-func (r cognitiveCommitmentPlanResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
+func (r CognitiveCommitmentPlanResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return commitmentplans.ValidateCommitmentPlanID
 }
 
-func (r cognitiveCommitmentPlanResource) Arguments() map[string]*pluginsdk.Schema {
+func (r CognitiveCommitmentPlanResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"name": {
 			Type:         pluginsdk.TypeString,
@@ -196,7 +196,7 @@ func (r cognitiveCommitmentPlanResource) Arguments() map[string]*pluginsdk.Schem
 	}
 }
 
-func (r cognitiveCommitmentPlanResource) Attributes() map[string]*pluginsdk.Schema {
+func (r CognitiveCommitmentPlanResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"last": {
 			Type:     pluginsdk.TypeList,
@@ -248,7 +248,7 @@ func (r cognitiveCommitmentPlanResource) Attributes() map[string]*pluginsdk.Sche
 	}
 }
 
-func (r cognitiveCommitmentPlanResource) Create() sdk.ResourceFunc {
+func (r CognitiveCommitmentPlanResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
@@ -308,7 +308,7 @@ func (r cognitiveCommitmentPlanResource) Create() sdk.ResourceFunc {
 	}
 }
 
-func (r cognitiveCommitmentPlanResource) Update() sdk.ResourceFunc {
+func (r CognitiveCommitmentPlanResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
@@ -379,7 +379,7 @@ func (r cognitiveCommitmentPlanResource) Update() sdk.ResourceFunc {
 	}
 }
 
-func (r cognitiveCommitmentPlanResource) Read() sdk.ResourceFunc {
+func (r CognitiveCommitmentPlanResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
@@ -449,7 +449,7 @@ func (r cognitiveCommitmentPlanResource) Read() sdk.ResourceFunc {
 	}
 }
 
-func (r cognitiveCommitmentPlanResource) Delete() sdk.ResourceFunc {
+func (r CognitiveCommitmentPlanResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {

@@ -32,23 +32,26 @@ type DeploymentScaleSettingsModel struct {
 	ScaleType deployments.DeploymentScaleType `tfschema:"scale_type"`
 }
 
-type cognitiveDeploymentResource struct{}
+type CognitiveDeploymentResource struct{}
 
-var _ sdk.ResourceWithUpdate = cognitiveDeploymentResource{}
+var (
+	_ sdk.Resource           = CognitiveDeploymentResource{}
+	_ sdk.ResourceWithUpdate = CognitiveDeploymentResource{}
+)
 
-func (r cognitiveDeploymentResource) ResourceType() string {
+func (r CognitiveDeploymentResource) ResourceType() string {
 	return "azurerm_cognitive_deployment"
 }
 
-func (r cognitiveDeploymentResource) ModelObject() interface{} {
+func (r CognitiveDeploymentResource) ModelObject() interface{} {
 	return &cognitiveDeploymentModel{}
 }
 
-func (r cognitiveDeploymentResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
+func (r CognitiveDeploymentResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return deployments.ValidateDeploymentID
 }
 
-func (r cognitiveDeploymentResource) Arguments() map[string]*pluginsdk.Schema {
+func (r CognitiveDeploymentResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"name": {
 			Type:         pluginsdk.TypeString,
@@ -123,91 +126,11 @@ func (r cognitiveDeploymentResource) Arguments() map[string]*pluginsdk.Schema {
 	}
 }
 
-func (r cognitiveDeploymentResource) Attributes() map[string]*pluginsdk.Schema {
-	return map[string]*pluginsdk.Schema{
-		"call_rate_limit": {
-			Type:     pluginsdk.TypeList,
-			Computed: true,
-			MaxItems: 1,
-			Elem: &pluginsdk.Resource{
-				Schema: map[string]*pluginsdk.Schema{
-					"count": {
-						Type:     pluginsdk.TypeFloat,
-						Computed: true,
-					},
-
-					"renewal_period": {
-						Type:     pluginsdk.TypeFloat,
-						Computed: true,
-					},
-
-					"rules": {
-						Type:     pluginsdk.TypeList,
-						Computed: true,
-						MaxItems: 1,
-						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"count": {
-									Type:     pluginsdk.TypeFloat,
-									Computed: true,
-								},
-
-								"dynamic_throttling_enabled": {
-									Type:     pluginsdk.TypeBool,
-									Computed: true,
-								},
-
-								"key": {
-									Type:     pluginsdk.TypeString,
-									Computed: true,
-								},
-
-								"match_patterns": {
-									Type:     pluginsdk.TypeList,
-									Computed: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"method": {
-												Type:     pluginsdk.TypeString,
-												Computed: true,
-											},
-
-											"path": {
-												Type:     pluginsdk.TypeString,
-												Computed: true,
-											},
-										},
-									},
-								},
-
-								"min_count": {
-									Type:     pluginsdk.TypeFloat,
-									Computed: true,
-								},
-
-								"renewal_period": {
-									Type:     pluginsdk.TypeFloat,
-									Computed: true,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-
-		"capabilities": {
-			Type:     pluginsdk.TypeMap,
-			Computed: true,
-			Elem: &pluginsdk.Schema{
-				Type: pluginsdk.TypeString,
-			},
-		},
-	}
+func (r CognitiveDeploymentResource) Attributes() map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{}
 }
 
-func (r cognitiveDeploymentResource) Create() sdk.ResourceFunc {
+func (r CognitiveDeploymentResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
@@ -264,7 +187,7 @@ func (r cognitiveDeploymentResource) Create() sdk.ResourceFunc {
 	}
 }
 
-func (r cognitiveDeploymentResource) Update() sdk.ResourceFunc {
+func (r CognitiveDeploymentResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
@@ -327,7 +250,7 @@ func (r cognitiveDeploymentResource) Update() sdk.ResourceFunc {
 	}
 }
 
-func (r cognitiveDeploymentResource) Read() sdk.ResourceFunc {
+func (r CognitiveDeploymentResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
@@ -382,7 +305,7 @@ func (r cognitiveDeploymentResource) Read() sdk.ResourceFunc {
 	}
 }
 
-func (r cognitiveDeploymentResource) Delete() sdk.ResourceFunc {
+func (r CognitiveDeploymentResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {

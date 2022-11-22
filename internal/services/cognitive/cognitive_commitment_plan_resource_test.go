@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/utils"
 )
 
-type cognitiveCommitmentPlanResource struct{}
+type CognitiveCommitmentPlanResource struct{}
 
 func TestAcccognitiveCommitmentPlan_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_cognitive_commitment_plan", "test")
-	r := cognitiveCommitmentPlanResource{}
+	r := CognitiveCommitmentPlanResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
@@ -33,7 +33,7 @@ func TestAcccognitiveCommitmentPlan_basic(t *testing.T) {
 
 func TestAcccognitiveCommitmentPlan_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_cognitive_commitment_plan", "test")
-	r := cognitiveCommitmentPlanResource{}
+	r := CognitiveCommitmentPlanResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
@@ -47,7 +47,7 @@ func TestAcccognitiveCommitmentPlan_requiresImport(t *testing.T) {
 
 func TestAcccognitiveCommitmentPlan_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_cognitive_commitment_plan", "test")
-	r := cognitiveCommitmentPlanResource{}
+	r := CognitiveCommitmentPlanResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data),
@@ -61,7 +61,7 @@ func TestAcccognitiveCommitmentPlan_complete(t *testing.T) {
 
 func TestAcccognitiveCommitmentPlan_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_cognitive_commitment_plan", "test")
-	r := cognitiveCommitmentPlanResource{}
+	r := CognitiveCommitmentPlanResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data),
@@ -80,7 +80,7 @@ func TestAcccognitiveCommitmentPlan_update(t *testing.T) {
 	})
 }
 
-func (r cognitiveCommitmentPlanResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
+func (r CognitiveCommitmentPlanResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	id, err := commitmentplans.ParseCommitmentPlanID(state.ID)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func (r cognitiveCommitmentPlanResource) Exists(ctx context.Context, clients *cl
 	return utils.Bool(resp.Model != nil), nil
 }
 
-func (r cognitiveCommitmentPlanResource) template(data acceptance.TestData) string {
+func (r CognitiveCommitmentPlanResource) template(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
@@ -114,7 +114,7 @@ resource "azurerm_cognitive_account" "test" {
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger)
 }
 
-func (r cognitiveCommitmentPlanResource) basic(data acceptance.TestData) string {
+func (r CognitiveCommitmentPlanResource) basic(data acceptance.TestData) string {
 	template := r.template(data)
 	return fmt.Sprintf(`
 				%s
@@ -126,7 +126,7 @@ resource "azurerm_cognitive_commitment_plan" "test" {
 `, template, data.RandomInteger)
 }
 
-func (r cognitiveCommitmentPlanResource) requiresImport(data acceptance.TestData) string {
+func (r CognitiveCommitmentPlanResource) requiresImport(data acceptance.TestData) string {
 	config := r.basic(data)
 	return fmt.Sprintf(`
 			%s
@@ -138,7 +138,7 @@ resource "azurerm_cognitive_commitment_plan" "import" {
 `, config)
 }
 
-func (r cognitiveCommitmentPlanResource) complete(data acceptance.TestData) string {
+func (r CognitiveCommitmentPlanResource) complete(data acceptance.TestData) string {
 	template := r.template(data)
 	return fmt.Sprintf(`
 			%s
@@ -162,7 +162,7 @@ resource "azurerm_cognitive_commitment_plan" "test" {
 `, template, data.RandomInteger)
 }
 
-func (r cognitiveCommitmentPlanResource) update(data acceptance.TestData) string {
+func (r CognitiveCommitmentPlanResource) update(data acceptance.TestData) string {
 	template := r.template(data)
 	return fmt.Sprintf(`
 			%s

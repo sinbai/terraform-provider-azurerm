@@ -7,7 +7,10 @@ import (
 
 type Registration struct{}
 
-var _ sdk.UntypedServiceRegistrationWithAGitHubLabel = Registration{}
+var (
+	_ sdk.TypedServiceRegistration                   = Registration{}
+	_ sdk.UntypedServiceRegistrationWithAGitHubLabel = Registration{}
+)
 
 func (r Registration) AssociatedGitHubLabel() string {
 	return "service/cognitive-services"
@@ -48,7 +51,7 @@ func (r Registration) DataSources() []sdk.DataSource {
 // Resources returns a list of Resources supported by this Service
 func (r Registration) Resources() []sdk.Resource {
 	return []sdk.Resource{
-		cognitiveCommitmentPlanResource{},
-		cognitiveDeploymentResource{},
+		CognitiveCommitmentPlanResource{},
+		CognitiveDeploymentResource{},
 	}
 }
