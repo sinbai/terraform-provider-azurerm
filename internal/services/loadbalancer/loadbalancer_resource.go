@@ -246,11 +246,20 @@ func expandAzureRmLoadBalancerFrontendIpConfigurations(d *pluginsdk.ResourceData
 			FrontendIPConfigurationPropertiesFormat: &properties,
 		}
 
+		log.Printf("this is new resource : %t ", d.IsNewResource())
+
 		zones := zones.ExpandUntyped(data["zones"].(*pluginsdk.Set).List())
+		for i, v := range zones {
+			log.Printf("ExpandUntyped zones value %b is: %s", i, v)
+		}
+
 		if len(zones) > 0 {
 			frontEndConfig.Zones = &zones
 		}
 
+		for i, v := range *frontEndConfig.Zones {
+			log.Printf("ExpandUntyped frontEndConfig.Zones value %b is: %s", i, v)
+		}
 		frontEndConfigs = append(frontEndConfigs, frontEndConfig)
 	}
 
@@ -335,6 +344,16 @@ func flattenLoadBalancerFrontendIpConfiguration(ipConfigs *[]network.FrontendIPC
 			}
 		}
 
+		for i, v := range *config.Zones {
+			log.Printf("Read FlattenUntyped config.Zones %b is: %s", i, v)
+		}
+
+		zones := zones.FlattenUntyped(config.Zones)
+
+		for i, v := range zones {
+			log.Printf("Read FlattenUntyped zones value %b is: %s", i, v)
+		}
+
 		out := map[string]interface{}{
 			"gateway_load_balancer_frontend_ip_configuration_id": gatewayLoadBalancerId,
 			"id":                            id,
@@ -348,7 +367,7 @@ func flattenLoadBalancerFrontendIpConfiguration(ipConfigs *[]network.FrontendIPC
 			"private_ip_address_allocation": privateIPAllocationMethod,
 			"public_ip_prefix_id":           publicIpPrefixId,
 			"subnet_id":                     subnetId,
-			"zones":                         zones.FlattenUntyped(config.Zones),
+			"zones":                         zones,
 		}
 
 		result = append(result, out)
@@ -396,7 +415,7 @@ func resourceArmLoadBalancerSchema() map[string]*pluginsdk.Schema {
 		"frontend_ip_configuration": {
 			Type:     pluginsdk.TypeList,
 			Optional: true,
-			MinItems: 1,
+			//MinItems: 1,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"name": {
