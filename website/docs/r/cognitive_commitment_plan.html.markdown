@@ -3,12 +3,12 @@ subcategory: "cognitive"
 layout: "azurerm"
 page_title: "Azure Resource Manager: azurerm_cognitive_commitment_plan"
 description: |-
-  Manages a Cognitive Commitment Plans.
+  Manage a Commitment Plan for Azure Cognitive Services Account.
 ---
 
 # azurerm_cognitive_commitment_plan
 
-Manages a Cognitive Commitment Plans.
+Manage a Commitment Plan for Azure Cognitive Services Account.
 
 ## Example Usage
 

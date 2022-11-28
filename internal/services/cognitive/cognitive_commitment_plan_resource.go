@@ -3,6 +3,8 @@ package cognitive
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
+	"github.com/hashicorp/terraform-provider-azurerm/helpers/tf"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,6 +19,7 @@ import (
 
 type cognitiveCommitmentPlanModel struct {
 	Name               string                       `tfschema:"name"`
+	ResourceGroupName  string                       `tfschema:"resource_group_name"`
 	CognitiveAccountId string                       `tfschema:"cognitive_account_id"`
 	AutoRenew          bool                         `tfschema:"auto_renew"`
 	Current            []CommitmentPeriodModel      `tfschema:"current"`
@@ -55,11 +58,31 @@ func (r cognitiveCommitmentPlanResource) Arguments() map[string]*pluginsdk.Schem
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
+		"resource_group_name": commonschema.ResourceGroupName(),
+
 		"cognitive_account_id": {
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
 			ValidateFunc: cognitiveservicesaccounts.ValidateAccountID,
+		},
+
+		"hosting_model": {
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			ForceNew: true,
+			ValidateFunc: validation.StringInSlice([]string{
+				string(commitmentplans.HostingModelWeb),
+				string(commitmentplans.HostingModelConnectedContainer),
+				string(commitmentplans.HostingModelDisconnectedContainer),
+			}, false),
+		},
+
+		"plan_type": {
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"auto_renew": {
@@ -69,23 +92,7 @@ func (r cognitiveCommitmentPlanResource) Arguments() map[string]*pluginsdk.Schem
 
 		"current": CommitmentPeriod(),
 
-		"hosting_model": {
-			Type:     pluginsdk.TypeString,
-			Optional: true,
-			ValidateFunc: validation.StringInSlice([]string{
-				string(commitmentplans.HostingModelWeb),
-				string(commitmentplans.HostingModelConnectedContainer),
-				string(commitmentplans.HostingModelDisconnectedContainer),
-			}, false),
-		},
-
 		"next": CommitmentPeriod(),
-
-		"plan_type": {
-			Type:         pluginsdk.TypeString,
-			Optional:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
-		},
 	}
 }
 
@@ -132,11 +139,11 @@ func (r cognitiveCommitmentPlanResource) Create() sdk.ResourceFunc {
 			id := commitmentplans.NewCommitmentPlanID(accountId.SubscriptionId, accountId.ResourceGroupName, accountId.AccountName, model.Name)
 			existing, err := client.Get(ctx, id)
 			if err != nil && !response.WasNotFound(existing.HttpResponse) {
-				return fmt.Errorf("checking for existing %s: %+v", id, err)
+				return fmt.Errorf("checking for presence of existing %s: %+v", id, err)
 			}
 
 			if !response.WasNotFound(existing.HttpResponse) {
-				return metadata.ResourceRequiresImport(r.ResourceType(), id)
+				return tf.ImportAsExistsError("azurerm_cognitive_commitment_plan", id.ID())
 			}
 
 			properties := &commitmentplans.CommitmentPlan{
@@ -353,13 +360,17 @@ func flattenCommitmentPeriodModel(input *commitmentplans.CommitmentPeriod) ([]Co
 
 	output := CommitmentPeriodModel{}
 
+	var count int64
 	if input.Count != nil {
-		output.Count = *input.Count
+		count = *input.Count
 	}
+	output.Count = count
 
+	var tier string
 	if input.Tier != nil {
-		output.Tier = *input.Tier
+		tier= *input.Tier
 	}
+	output.Tier = tier
 
 	return append(outputList, output), nil
 }

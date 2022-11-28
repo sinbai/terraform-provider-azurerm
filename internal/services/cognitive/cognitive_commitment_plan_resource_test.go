@@ -86,7 +86,7 @@ func (r cognitiveCommitmentPlanResource) Exists(ctx context.Context, clients *cl
 		return nil, err
 	}
 
-	client := clients.cognitive.CommitmentPlansClient
+	client := clients.Cognitive.CommitmentPlansClient
 	resp, err := client.Get(ctx, *id)
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
@@ -108,8 +108,11 @@ resource "azurerm_resource_group" "test" {
   location = "%s"
 }
 resource "azurerm_cognitive_account" "test" {
-  name                = "acctest-ca-%d"
+  name                = "acctestcogacc-%d"
+  location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
+  kind                = "SpeechServices"
+  sku_name            = "S0"
 }
 `, data.RandomInteger, data.Locations.Primary, data.RandomInteger)
 }
@@ -121,7 +124,12 @@ func (r cognitiveCommitmentPlanResource) basic(data acceptance.TestData) string 
 
 resource "azurerm_cognitive_commitment_plan" "test" {
   name                 = "acctest-ccp-%d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
   cognitive_account_id = azurerm_cognitive_account.test.id
+
+  hosting_model = "Web"
+  plan_type     = "Speech2Text"
 }
 `, template, data.RandomInteger)
 }
@@ -145,19 +153,22 @@ func (r cognitiveCommitmentPlanResource) complete(data acceptance.TestData) stri
 
 resource "azurerm_cognitive_commitment_plan" "test" {
   name                 = "acctest-ccp-%d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
   cognitive_account_id = azurerm_cognitive_account.test.id
-  auto_renew           = false
-  hosting_model        = ""
-  plan_type            = ""
+  auto_renew           = true
+  hosting_model        = "Web"
+  plan_type            = "Speech2Text"
+
   current {
     count = 0
-    tier  = ""
-  }
-  next {
-    count = 0
-    tier  = ""
+    tier  = "T1"
   }
 
+  next {
+    count = 1
+    tier  = "T2"
+  }
 }
 `, template, data.RandomInteger)
 }
@@ -171,17 +182,18 @@ resource "azurerm_cognitive_commitment_plan" "test" {
   name                 = "acctest-ccp-%d"
   cognitive_account_id = azurerm_cognitive_account.test.id
   auto_renew           = false
-  hosting_model        = ""
-  plan_type            = ""
+  hosting_model        = "Web"
+  plan_type            = "Speech2Text"
+
   current {
-    count = 0
-    tier  = ""
-  }
-  next {
-    count = 0
-    tier  = ""
+    count = 1
+    tier  = "T2"
   }
 
+  next {
+    count = 0
+    tier  = "T1"
+  }
 }
 `, template, data.RandomInteger)
 }
