@@ -32,7 +32,7 @@ func (r Registration) Resources() []sdk.Resource {
 		DataCollectionRuleResource{},
 		ScheduledQueryRulesAlertV2Resource{},
 		AlertPrometheusRuleGroupResource{},
-		WorkspaceResourceModel{},
+		WorkspaceResource{},
 	}
 }
 
