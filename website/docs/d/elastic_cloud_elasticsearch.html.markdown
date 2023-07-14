@@ -66,6 +66,8 @@ The following attributes are exported:
 
 * `tags` - A mapping of tags assigned to the Elasticsearch.
 
+* `versions` - The Available elastic versions of the given region.
+
 ---
 
 The `filtering_tag` block exports the following:

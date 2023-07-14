@@ -89,6 +89,8 @@ In addition to the Arguments listed above - the following Attributes are exporte
 
 * `kibana_sso_uri` - The URI used for SSO to the Kibana Dashboard associated with this Elasticsearch.
 
+* `versions` - The Available elastic versions of the given region.
+
 ## Timeouts
 
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
