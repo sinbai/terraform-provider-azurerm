@@ -5,6 +5,9 @@ package elastic
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/elastic/2023-06-01/apikey"
 	"log"
 	"time"
 
@@ -223,6 +226,7 @@ func resourceElasticsearchCreate(d *pluginsdk.ResourceData, meta interface{}) er
 func resourceElasticsearchRead(d *pluginsdk.ResourceData, meta interface{}) error {
 	client := meta.(*clients.Client).Elastic.MonitorClient
 	logsClient := meta.(*clients.Client).Elastic.TagRuleClient
+	apiKeyClient := meta.(*clients.Client).Elastic.ApiKeyClient
 	ctx, cancel := timeouts.ForRead(meta.(*clients.Client).StopContext, d)
 	defer cancel()
 
@@ -276,6 +280,25 @@ func resourceElasticsearchRead(d *pluginsdk.ResourceData, meta interface{}) erro
 					d.Set("elastic_cloud_user_id", elastic.ElasticCloudUser.Id)
 					d.Set("elastic_cloud_email_address", elastic.ElasticCloudUser.EmailAddress)
 					d.Set("elastic_cloud_sso_default_url", elastic.ElasticCloudUser.ElasticCloudSsoDefaultUrl)
+
+					userEmail:=apikey.UserEmailId{
+						EmailId:elastic.ElasticCloudUser.EmailAddress,
+					}
+
+					subscriptionId := commonids.SubscriptionId{
+						SubscriptionId: id.SubscriptionId,
+					}
+
+					respApiKey,err:=apiKeyClient.OrganizationsGetApiKey(ctx,subscriptionId,userEmail)
+					if err!=nil{
+						if !response.WasNotFound(respApiKey.HttpResponse){
+							return fmt.Errorf("retrievingapikeyfor%s:%+v",*elastic.ElasticCloudUser.EmailAddress,err)
+						}
+					}
+
+					if model:=respApiKey.Model; model!=nil&& model.Properties!=nil{
+						d.Set("api_key",pointer.From(model.Properties.ApiKey))
+					}
 				}
 			}
 		}
