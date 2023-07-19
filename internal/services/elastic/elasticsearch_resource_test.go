@@ -63,7 +63,7 @@ func TestAccElasticsearch_complete(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("company_info", "company_name", "user_first_name", "user_last_name"),
 	})
 }
 
