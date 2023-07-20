@@ -13,13 +13,13 @@ import (
 )
 
 type Client struct {
-	ApiKeyClient * apikey.ApiKeyClient
+	ApiKeyClient  *apikey.ApiKeyClient
 	MonitorClient *monitorsresource.MonitorsResourceClient
 	TagRuleClient *rules.RulesClient
 }
 
 func NewClient(o *common.ClientOptions) (*Client, error) {
-	apiKeyClient , err := apikey.NewApiKeyClientWithBaseURI(o.Environment.ResourceManager)
+	apiKeyClient, err := apikey.NewApiKeyClientWithBaseURI(o.Environment.ResourceManager)
 	if err != nil {
 		return nil, fmt.Errorf("building Monitor Client: %+v", err)
 	}
@@ -38,7 +38,7 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	o.Configure(tagRuleClient.Client, o.Authorizers.ResourceManager)
 
 	return &Client{
-		ApiKeyClient : apiKeyClient,
+		ApiKeyClient:  apiKeyClient,
 		MonitorClient: monitorClient,
 		TagRuleClient: tagRuleClient,
 	}, nil
