@@ -33,6 +33,7 @@ func TestAccElasticsearch_basic(t *testing.T) {
 				check.That(data.ResourceName).Key("elasticsearch_service_url").Exists(),
 				check.That(data.ResourceName).Key("kibana_service_url").Exists(),
 				check.That(data.ResourceName).Key("kibana_sso_uri").Exists(),
+				check.That(data.ResourceName).Key("versions.#").Exists(),
 			),
 		},
 		data.ImportStep(),
@@ -166,6 +167,9 @@ provider "azurerm" {
 resource "azurerm_resource_group" "test" {
   name     = "acctestrg-elastic-%[1]d"
   location = "%[2]s"
+lifecycle {
+    ignore_changes = ["tags"]
+  }
 }
 
 resource "azurerm_elastic_cloud_elasticsearch" "test" {
@@ -174,6 +178,9 @@ resource "azurerm_elastic_cloud_elasticsearch" "test" {
   location                    = azurerm_resource_group.test.location
   sku_name                    = "ess-monthly-consumption_Monthly"
   elastic_cloud_email_address = "terraform-acctest@hashicorp.com"
+lifecycle {
+    ignore_changes = ["tags"]
+  }
 }
 `, data.RandomInteger, data.Locations.Primary)
 }
@@ -201,6 +208,9 @@ provider "azurerm" {
 resource "azurerm_resource_group" "test" {
   name     = "acctestrg-elastic-%[1]d"
   location = "%[2]s"
+lifecycle {
+    ignore_changes = ["tags"]
+  }
 }
 
 resource "azurerm_elastic_cloud_elasticsearch" "test" {
@@ -212,6 +222,9 @@ resource "azurerm_elastic_cloud_elasticsearch" "test" {
 
   tags = {
     ENV = "Test"
+  }
+lifecycle {
+    ignore_changes = ["tags"]
   }
 }
 `, data.RandomInteger, data.Locations.Primary)
@@ -226,6 +239,9 @@ provider "azurerm" {
 resource "azurerm_resource_group" "test" {
   name     = "acctestrg-elastic-%[1]d"
   location = "%[2]s"
+  lifecycle {
+    ignore_changes = ["tags"]
+  }
 }
 
 resource "azurerm_elastic_cloud_elasticsearch" "test" {
@@ -233,7 +249,7 @@ resource "azurerm_elastic_cloud_elasticsearch" "test" {
   resource_group_name         = azurerm_resource_group.test.name
   location                    = azurerm_resource_group.test.location
   sku_name                    = "ess-monthly-consumption_Monthly"
-  elastic_cloud_email_address = "terraform-acctest@hashicorp.com"
+  elastic_cloud_email_address = "v-elenaxin@microsoft.com"
 
   company_info {
     business         = "Technology"
@@ -252,6 +268,10 @@ resource "azurerm_elastic_cloud_elasticsearch" "test" {
   tags = {
     ENV = "Test"
   }
+
+  lifecycle {
+    ignore_changes = ["tags"]
+  }
 }
 `, data.RandomInteger, data.Locations.Primary)
 }
@@ -265,6 +285,9 @@ provider "azurerm" {
 resource "azurerm_resource_group" "test" {
   name     = "acctestrg-elastic-%[1]d"
   location = "%[2]s"
+lifecycle {
+    ignore_changes = ["tags"]
+  }
 }
 
 resource "azurerm_elastic_cloud_elasticsearch" "test" {
@@ -286,6 +309,9 @@ resource "azurerm_elastic_cloud_elasticsearch" "test" {
     send_azuread_logs      = false
     send_subscription_logs = false
   }
+lifecycle {
+    ignore_changes = ["tags"]
+  }
 }
 `, data.RandomInteger, data.Locations.Primary)
 }
@@ -299,6 +325,9 @@ provider "azurerm" {
 resource "azurerm_resource_group" "test" {
   name     = "acctestrg-elastic-%[1]d"
   location = "%[2]s"
+lifecycle {
+    ignore_changes = ["tags"]
+  }
 }
 
 resource "azurerm_elastic_cloud_elasticsearch" "test" {
@@ -323,6 +352,9 @@ resource "azurerm_elastic_cloud_elasticsearch" "test" {
 
   tags = {
     ENV = "Test"
+  }
+lifecycle {
+    ignore_changes = ["tags"]
   }
 }
 `, data.RandomInteger, data.Locations.Primary)

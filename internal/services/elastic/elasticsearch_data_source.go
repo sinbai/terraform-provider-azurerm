@@ -7,10 +7,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/location"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/tags"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/elastic/2023-06-01/elasticversions"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/elastic/2023-06-01/monitorsresource"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/elastic/2023-06-01/rules"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -127,6 +130,14 @@ func dataSourceElasticsearch() *pluginsdk.Resource {
 				Type:     pluginsdk.TypeString,
 				Computed: true,
 			},
+			"versions": {
+				Type:     pluginsdk.TypeList,
+				Computed: true,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
+				},
+				Description: "A list of available elastic version of the given region. For example `[\"8.7.1\", \"7.17.11\", \"8.8.2\"]`.",
+			},
 		},
 	}
 }
@@ -134,6 +145,7 @@ func dataSourceElasticsearch() *pluginsdk.Resource {
 func dataSourceElasticsearchRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.Client).Elastic.MonitorClient
 	logsClient := meta.(*clients.Client).Elastic.TagRuleClient
+	elasticVersionsClient := meta.(*clients.Client).Elastic.ElasticVersionClient
 	subscriptionId := meta.(*clients.Client).Account.SubscriptionId
 	ctx, cancel := timeouts.ForRead(meta.(*clients.Client).StopContext, d)
 	defer cancel()
@@ -195,6 +207,22 @@ func dataSourceElasticsearchRead(d *schema.ResourceData, meta interface{}) error
 		if err := tags.FlattenAndSet(d, model.Tags); err != nil {
 			return err
 		}
+
+		subscription := commonids.SubscriptionId{
+			SubscriptionId: id.SubscriptionId,
+		}
+
+		resp, err := elasticVersionsClient.List(ctx, subscription, elasticversions.ListOperationOptions{Region: pointer.To(location.Normalize(model.Location))})
+		if err != nil {
+			if !response.WasNotFound(resp.HttpResponse) {
+				return fmt.Errorf("retrieving elastic versions for %s: %+v", location.Normalize(model.Location), err)
+			}
+		}
+		if resp.Model != nil {
+			if err := d.Set("versions", flattenVersions(*resp.Model)); err != nil {
+				return fmt.Errorf("flattening `versions`: %+v", err)
+			}
+		}
 	}
 
 	if err := d.Set("logs", flattenTagRule(rulesResp.Model)); err != nil {
@@ -204,4 +232,19 @@ func dataSourceElasticsearchRead(d *schema.ResourceData, meta interface{}) error
 	d.SetId(id.ID())
 
 	return nil
+}
+
+func flattenVersions(input []elasticversions.ElasticVersionListFormat) []interface{} {
+	results := make([]interface{}, 0)
+	if input == nil {
+		return results
+	}
+
+	for _, prop := range input {
+		if prop.Properties != nil {
+			results = append(results, pointer.From(prop.Properties.Version))
+		}
+	}
+
+	return results
 }
