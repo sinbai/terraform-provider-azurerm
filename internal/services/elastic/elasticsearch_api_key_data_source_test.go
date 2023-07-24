@@ -8,11 +8,11 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 )
 
-type ElasticsearchVersionDataSourceTest struct{}
+type ElasticsearchApiKeyDataSource struct{}
 
-func TestAccElasticsearchVersionsDataSource_basic(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_elastic_cloud_elasticsearch_api_key", "test")
-	r := ElasticsearchVersionDataSourceTest{}
+func TestAccElasticsearchApiKeyDataSource_basic(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azurerm_elastic_cloud_elasticsearch_api_key", "test")
+	r := ElasticsearchApiKeyDataSource{}
 
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
@@ -24,7 +24,7 @@ func TestAccElasticsearchVersionsDataSource_basic(t *testing.T) {
 	})
 }
 
-func (ElasticsearchVersionDataSourceTest) basic(data acceptance.TestData) string {
+func (ElasticsearchApiKeyDataSource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   client_id               = ""

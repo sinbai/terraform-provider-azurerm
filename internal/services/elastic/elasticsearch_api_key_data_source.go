@@ -4,6 +4,7 @@
 package elastic
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -11,58 +12,80 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/elastic/2023-06-01/apikey"
-	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/elastic/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azurerm/internal/timeouts"
 )
 
-func dataSourceElasticsearchApiKey() *pluginsdk.Resource {
-	return &pluginsdk.Resource{
-		Read: dataSourceElasticsearchApiKeyRead,
+var _ sdk.DataSource = ElasticsearchApiKeyDataSource{}
 
-		Timeouts: &pluginsdk.ResourceTimeout{
-			Read: pluginsdk.DefaultTimeout(10 * time.Minute),
-		},
+type ElasticsearchApiKeyDataSource struct{}
 
-		Schema: map[string]*pluginsdk.Schema{
-			"email_address": {
-				Type:         pluginsdk.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.ElasticEmailAddress,
-			},
-			"api_key": {
-				Type:     pluginsdk.TypeString,
-				Computed: true,
-			},
+type ElasticsearchApiKeyDataSourceModel struct {
+	EmailAddress string `tfschema:"email_address"`
+	ApiKey       string `tfschema:"api_key"`
+}
+
+func (e ElasticsearchApiKeyDataSource) Arguments() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"email_address": {
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validate.ElasticEmailAddress,
 		},
 	}
 }
 
-func dataSourceElasticsearchApiKeyRead(d *pluginsdk.ResourceData, meta interface{}) error {
-	apiKeyClient := meta.(*clients.Client).Elastic.ApiKeyClient
-	ctx, cancel := timeouts.ForRead(meta.(*clients.Client).StopContext, d)
-	defer cancel()
-
-	userEmail := apikey.UserEmailId{
-		EmailId: pointer.To(d.Get("email_address").(string)),
+func (e ElasticsearchApiKeyDataSource) Attributes() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"api_key": {
+			Type:     pluginsdk.TypeString,
+			Computed: true,
+		},
 	}
+}
 
-	subscriptionId := commonids.SubscriptionId{
-		SubscriptionId: meta.(*clients.Client).Account.SubscriptionId,
+func (e ElasticsearchApiKeyDataSource) ModelObject() interface{} {
+	return &ElasticsearchApiKeyDataSourceModel{}
+}
+
+func (e ElasticsearchApiKeyDataSource) ResourceType() string {
+	return "azurerm_elastic_cloud_elasticsearch_api_key"
+}
+
+func (e ElasticsearchApiKeyDataSource) Read() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			apiKeyClient := metadata.Client.Elastic.ApiKeyClient
+
+			var model ElasticsearchApiKeyDataSourceModel
+			if err := metadata.Decode(&model); err != nil {
+				return fmt.Errorf("decoding: %+v", err)
+			}
+
+			userEmail := apikey.UserEmailId{
+				EmailId: pointer.To(model.EmailAddress),
+			}
+
+			subscriptionId := commonids.SubscriptionId{
+				SubscriptionId: metadata.Client.Account.SubscriptionId,
+			}
+
+			resp, err := apiKeyClient.OrganizationsGetApiKey(ctx, subscriptionId, userEmail)
+			if err != nil {
+				if !response.WasNotFound(resp.HttpResponse) {
+					return fmt.Errorf("retrieving api key for %s: %+v", model.EmailAddress, err)
+				}
+			}
+
+			if m := resp.Model; m != nil && m.Properties != nil {
+				model.ApiKey = pointer.From(m.Properties.ApiKey)
+			}
+
+			return metadata.Encode(&model)
+		},
+		Timeout: 5 * time.Minute,
 	}
-
-	respApiKey, err := apiKeyClient.OrganizationsGetApiKey(ctx, subscriptionId, userEmail)
-	if err != nil {
-		if !response.WasNotFound(respApiKey.HttpResponse) {
-			return fmt.Errorf("retrieving apikey for %s: %+v", d.Get("email_address").(string), err)
-		}
-	}
-
-	if model := respApiKey.Model; model != nil && model.Properties != nil {
-		d.Set("api_key", pointer.From(model.Properties.ApiKey))
-	}
-
-	return nil
 }
