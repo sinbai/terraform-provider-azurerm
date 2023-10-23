@@ -8,23 +8,25 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/security/2021-06-01/assessmentsmetadata"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/security/2022-12-01-preview/defenderforstorage"
 	pricings_v2023_01_01 "github.com/hashicorp/go-azure-sdk/resource-manager/security/2023-01-01/pricings"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/security/2023-05-01/servervulnerabilityassessmentssettings"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/common"
 )
 
 type Client struct {
-	AssessmentsClient                   *security.AssessmentsClient
-	AssessmentsMetadataClient           *assessmentsmetadata.AssessmentsMetadataClient
-	ContactsClient                      *security.ContactsClient
-	DeviceSecurityGroupsClient          *security.DeviceSecurityGroupsClient
-	IotSecuritySolutionClient           *security.IotSecuritySolutionClient
-	PricingClient                       *pricings_v2023_01_01.PricingsClient
-	WorkspaceClient                     *security.WorkspaceSettingsClient
-	AdvancedThreatProtectionClient      *security.AdvancedThreatProtectionClient
-	AutoProvisioningClient              *security.AutoProvisioningSettingsClient
-	SettingClient                       *security.SettingsClient
-	AutomationsClient                   *security.AutomationsClient
-	ServerVulnerabilityAssessmentClient *security.ServerVulnerabilityAssessmentClient
-	DefenderForStorageClient            *defenderforstorage.DefenderForStorageClient
+	AssessmentsClient                            *security.AssessmentsClient
+	AssessmentsMetadataClient                    *assessmentsmetadata.AssessmentsMetadataClient
+	ContactsClient                               *security.ContactsClient
+	DeviceSecurityGroupsClient                   *security.DeviceSecurityGroupsClient
+	IotSecuritySolutionClient                    *security.IotSecuritySolutionClient
+	PricingClient                                *pricings_v2023_01_01.PricingsClient
+	WorkspaceClient                              *security.WorkspaceSettingsClient
+	AdvancedThreatProtectionClient               *security.AdvancedThreatProtectionClient
+	AutoProvisioningClient                       *security.AutoProvisioningSettingsClient
+	ServerVulnerabilityAssessmentsSettingsClient *servervulnerabilityassessmentssettings.ServerVulnerabilityAssessmentsSettingsClient
+	SettingClient                                *security.SettingsClient
+	AutomationsClient                            *security.AutomationsClient
+	ServerVulnerabilityAssessmentClient          *security.ServerVulnerabilityAssessmentClient
+	DefenderForStorageClient                     *defenderforstorage.DefenderForStorageClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
@@ -57,6 +59,9 @@ func NewClient(o *common.ClientOptions) *Client {
 	AutoProvisioningClient := security.NewAutoProvisioningSettingsClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId, ascLocation)
 	o.ConfigureClient(&AutoProvisioningClient.Client, o.ResourceManagerAuthorizer)
 
+	ServerVulnerabilityAssessmentsSettingsClient := servervulnerabilityassessmentssettings.NewServerVulnerabilityAssessmentsSettingsClientWithBaseURI(o.ResourceManagerEndpoint)
+	o.ConfigureClient(&ServerVulnerabilityAssessmentsSettingsClient.Client, o.ResourceManagerAuthorizer)
+
 	SettingClient := security.NewSettingsClientWithBaseURI(o.ResourceManagerEndpoint, o.SubscriptionId, ascLocation)
 	o.ConfigureClient(&SettingClient.Client, o.ResourceManagerAuthorizer)
 
@@ -70,18 +75,19 @@ func NewClient(o *common.ClientOptions) *Client {
 	o.ConfigureClient(&DefenderForStorageClient.Client, o.ResourceManagerAuthorizer)
 
 	return &Client{
-		AssessmentsClient:                   &AssessmentsClient,
-		AssessmentsMetadataClient:           &AssessmentsMetadataClient,
-		ContactsClient:                      &ContactsClient,
-		DeviceSecurityGroupsClient:          &DeviceSecurityGroupsClient,
-		IotSecuritySolutionClient:           &IotSecuritySolutionClient,
-		PricingClient:                       &PricingClient,
-		WorkspaceClient:                     &WorkspaceClient,
-		AdvancedThreatProtectionClient:      &AdvancedThreatProtectionClient,
-		AutoProvisioningClient:              &AutoProvisioningClient,
-		SettingClient:                       &SettingClient,
-		AutomationsClient:                   &AutomationsClient,
-		ServerVulnerabilityAssessmentClient: &ServerVulnerabilityAssessmentClient,
-		DefenderForStorageClient:            &DefenderForStorageClient,
+		AssessmentsClient:                            &AssessmentsClient,
+		AssessmentsMetadataClient:                    &AssessmentsMetadataClient,
+		ContactsClient:                               &ContactsClient,
+		DeviceSecurityGroupsClient:                   &DeviceSecurityGroupsClient,
+		IotSecuritySolutionClient:                    &IotSecuritySolutionClient,
+		PricingClient:                                &PricingClient,
+		WorkspaceClient:                              &WorkspaceClient,
+		AdvancedThreatProtectionClient:               &AdvancedThreatProtectionClient,
+		AutoProvisioningClient:                       &AutoProvisioningClient,
+		ServerVulnerabilityAssessmentsSettingsClient: &ServerVulnerabilityAssessmentsSettingsClient,
+		SettingClient:                                &SettingClient,
+		AutomationsClient:                            &AutomationsClient,
+		ServerVulnerabilityAssessmentClient:          &ServerVulnerabilityAssessmentClient,
+		DefenderForStorageClient:                     &DefenderForStorageClient,
 	}
 }
