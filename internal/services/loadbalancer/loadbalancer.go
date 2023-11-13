@@ -6,20 +6,21 @@ package loadbalancer
 import (
 	"context"
 
+	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2023-04-01/loadbalancers"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-azurerm/internal/services/loadbalancer/parse"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/tombuildsstuff/kermit/sdk/network/2022-07-01/network"
 )
 
 // TODO: refactor this
 
-func FindLoadBalancerBackEndAddressPoolByName(lb *network.LoadBalancer, name string) (*network.BackendAddressPool, int, bool) {
-	if lb == nil || lb.LoadBalancerPropertiesFormat == nil || lb.LoadBalancerPropertiesFormat.BackendAddressPools == nil {
+func FindLoadBalancerBackEndAddressPoolByName(properties *loadbalancers.LoadBalancerPropertiesFormat, name string) (*loadbalancers.BackendAddressPool, int, bool) {
+	if properties == nil || properties.BackendAddressPools == nil {
 		return nil, -1, false
 	}
 
-	for i, apc := range *lb.LoadBalancerPropertiesFormat.BackendAddressPools {
+	for i, apc := range *properties.BackendAddressPools {
 		if apc.Name != nil && *apc.Name == name {
 			return &apc, i, true
 		}
@@ -112,7 +113,7 @@ func FindLoadBalancerProbeByName(lb *network.LoadBalancer, name string) (*networ
 	return nil, -1, false
 }
 
-func loadBalancerSubResourceImporter(parser func(input string) (*parse.LoadBalancerId, error)) *schema.ResourceImporter {
+func loadBalancerSubResourceImporter(parser func(input string) (*loadbalancers.LoadBalancerId, error)) *schema.ResourceImporter {
 	return pluginsdk.ImporterValidatingResourceIdThen(func(id string) error {
 		_, err := parser(id)
 		return err
