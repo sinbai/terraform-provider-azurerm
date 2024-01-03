@@ -185,6 +185,7 @@ resource "azurerm_data_protection_backup_policy_postgresql" "test" {
     criteria {
       days_of_week           = ["Thursday"]
       months_of_year         = ["November"]
+      last_day_of_month_enabled = true
       scheduled_backup_times = ["2021-05-23T02:30:00Z"]
     }
   }
@@ -196,6 +197,7 @@ resource "azurerm_data_protection_backup_policy_postgresql" "test" {
     criteria {
       weeks_of_month         = ["First", "Last"]
       days_of_week           = ["Tuesday"]
+      days_of_month          = [1,10]
       scheduled_backup_times = ["2021-05-23T02:30:00Z"]
     }
   }

@@ -5,6 +5,7 @@ package dataprotection
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"log"
 	"regexp"
 	"strings"
@@ -114,6 +115,18 @@ func resourceDataProtectionBackupPolicyPostgreSQL() *pluginsdk.Resource {
 										}, false),
 									},
 
+									"days_of_month": {
+										Type:     pluginsdk.TypeSet,
+										Optional: true,
+										ForceNew: true,
+										MinItems: 1,
+										Elem: &pluginsdk.Schema{
+											Type:         pluginsdk.TypeInt,
+											ValidateFunc: validation.IntBetween(1, 28),
+										},
+										//ConflictsWith: []string{"criteria.0.last_day_of_month_enabled"},
+									},
+
 									"days_of_week": {
 										Type:     pluginsdk.TypeSet,
 										Optional: true,
@@ -123,6 +136,14 @@ func resourceDataProtectionBackupPolicyPostgreSQL() *pluginsdk.Resource {
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.IsDayOfTheWeek(false),
 										},
+									},
+
+									"last_day_of_month_enabled": {
+										Type:     pluginsdk.TypeBool,
+										Optional: true,
+										ForceNew: true,
+										Default:  false,
+										//ConflictsWith: []string{"criteria.0.days_of_month"},
 									},
 
 									"months_of_year": {
@@ -399,6 +420,27 @@ func expandBackupPolicyPostgreSQLCriteriaArray(input []interface{}) (*[]backuppo
 			absoluteCriteria = []backuppolicies.AbsoluteMarker{backuppolicies.AbsoluteMarker(absoluteCriteriaRaw)}
 		}
 
+		var daysOfMonth []backuppolicies.Day
+		if v["days_of_month"].(*pluginsdk.Set).Len() > 0 {
+			daysOfMonth = make([]backuppolicies.Day, 0)
+			for _, value := range v["days_of_month"].(*pluginsdk.Set).List() {
+				day := backuppolicies.Day{
+					Date:   pointer.To(int64(value.(int))),
+					IsLast: pointer.To(false),
+				}
+				daysOfMonth = append(daysOfMonth, day)
+			}
+		} else {
+			if v["last_day_of_month_enabled"].(bool) {
+				daysOfMonth = make([]backuppolicies.Day, 0)
+				day := backuppolicies.Day{
+					Date:   nil,
+					IsLast: pointer.To(true),
+				}
+				daysOfMonth = append(daysOfMonth, day)
+			}
+		}
+
 		var daysOfWeek []backuppolicies.DayOfWeek
 		if v["days_of_week"].(*pluginsdk.Set).Len() > 0 {
 			daysOfWeek = make([]backuppolicies.DayOfWeek, 0)
@@ -429,7 +471,7 @@ func expandBackupPolicyPostgreSQLCriteriaArray(input []interface{}) (*[]backuppo
 		}
 		results = append(results, backuppolicies.ScheduleBasedBackupCriteria{
 			AbsoluteCriteria: &absoluteCriteria,
-			DaysOfMonth:      nil,
+			DaysOfMonth:      &daysOfMonth,
 			DaysOfTheWeek:    &daysOfWeek,
 			MonthsOfYear:     &monthsOfYear,
 			ScheduleTimes:    scheduleTimes,
@@ -529,6 +571,22 @@ func flattenBackupPolicyPostgreSQLBackupCriteriaArray(input *[]backuppolicies.Ba
 			if criteria.AbsoluteCriteria != nil && len(*criteria.AbsoluteCriteria) > 0 {
 				absoluteCriteria = string((*criteria.AbsoluteCriteria)[0])
 			}
+
+			var daysOfMonth []int
+			var lastDayOfMonthEnabled bool
+			if criteria.DaysOfMonth != nil {
+				daysOfMonth = make([]int, 0)
+				for _, item := range *criteria.DaysOfMonth {
+					if pointer.From(item.IsLast) {
+						lastDayOfMonthEnabled = true
+					} else {
+						if item.Date != nil && pointer.From(item.Date) > 0 {
+							daysOfMonth = append(daysOfMonth, int(pointer.From(item.Date)))
+						}
+					}
+				}
+			}
+
 			var daysOfWeek []string
 			if criteria.DaysOfTheWeek != nil {
 				daysOfWeek = make([]string, 0)
@@ -557,11 +615,13 @@ func flattenBackupPolicyPostgreSQLBackupCriteriaArray(input *[]backuppolicies.Ba
 			}
 
 			results = append(results, map[string]interface{}{
-				"absolute_criteria":      absoluteCriteria,
-				"days_of_week":           daysOfWeek,
-				"months_of_year":         monthsOfYear,
-				"weeks_of_month":         weeksOfMonth,
-				"scheduled_backup_times": scheduleTimes,
+				"absolute_criteria":         absoluteCriteria,
+				"days_of_month":             daysOfMonth,
+				"days_of_week":              daysOfWeek,
+				"last_day_of_month_enabled": lastDayOfMonthEnabled,
+				"months_of_year":            monthsOfYear,
+				"weeks_of_month":            weeksOfMonth,
+				"scheduled_backup_times":    scheduleTimes,
 			})
 		}
 	}
