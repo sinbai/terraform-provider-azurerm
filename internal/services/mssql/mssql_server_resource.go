@@ -529,7 +529,6 @@ func resourceMsSqlServerUpdate(d *pluginsdk.ResourceData, meta interface{}) erro
 		}
 
 		err := aadOnlyAuthenticationsClient.CreateOrUpdateThenPoll(ctx, *id, aadOnlyAuthenticationsProps)
-
 		if err != nil {
 			return fmt.Errorf("updating Azure Active Directory Only Authentication for %s: %+v", id, err)
 		}
