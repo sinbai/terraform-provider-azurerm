@@ -6,6 +6,7 @@ package apimanagement_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -26,6 +27,21 @@ func TestAccApiManagementCustomDomain_basic(t *testing.T) {
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApiManagementCustomDomain_certificateManaged(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_api_management_custom_domain", "test")
+	r := ApiManagementCustomDomainResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.certificateManaged(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -125,6 +141,42 @@ resource "azurerm_api_management_custom_domain" "test" {
   }
 }
 `, r.template(data, true))
+}
+
+func (r ApiManagementCustomDomainResource) certificateManaged(data acceptance.TestData) string {
+	dnsZone := os.Getenv("ARM_TEST_DNS_ZONE")
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_resource_group" "test" {
+  name     = "acctestRG-%[1]d"
+  location = "%[2]s"
+}
+
+resource "azurerm_api_management" "test" {
+  name                = "elenatestapim0311"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  publisher_name      = "pub1"
+  publisher_email     = "pub1@email.com"
+  sku_name            = "Developer_1"
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+resource "azurerm_api_management_custom_domain" "test" {
+  api_management_id = azurerm_api_management.test.id
+
+  gateway {
+    host_name          = "elenatestapim0311.sinbai.store"
+    certificate_source = "Managed"
+  }
+}
+`, data.RandomInteger, data.Locations.Primary, data.RandomString, dnsZone)
 }
 
 func (r ApiManagementCustomDomainResource) proxyOnly(data acceptance.TestData) string {

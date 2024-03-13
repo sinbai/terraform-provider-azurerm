@@ -1536,6 +1536,9 @@ func expandApiManagementCommonHostnameConfiguration(input map[string]interface{}
 	if v, ok := input["certificate_password"]; ok && v.(string) != "" {
 		output.CertificatePassword = pointer.To(v.(string))
 	}
+	if v, ok := input["certificate_source"]; ok && v.(string) != "" {
+		output.CertificateSource = pointer.To(apimanagementservice.CertificateSource(v.(string)))
+	}
 	if v, ok := input["host_name"]; ok && v.(string) != "" {
 		output.HostName = v.(string)
 	}
