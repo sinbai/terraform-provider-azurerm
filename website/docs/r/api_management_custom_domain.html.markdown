@@ -156,6 +156,8 @@ A `gateway` block supports the following:
 
 * `certificate_password` - (Optional) The password associated with the certificate provided above.
 
+* `certificate_source` - (Optional) The source of certificate. Possible value is `Managed`.
+
 * `default_ssl_binding` - (Optional) Is the certificate associated with this Hostname the Default SSL Certificate? This is used when an SNI header isn't specified by a client. Defaults to `false`.
 
 * `key_vault_id` - (Optional) The ID of the Key Vault Secret containing the SSL Certificate, which must be should be of the type application/x-pkcs12.

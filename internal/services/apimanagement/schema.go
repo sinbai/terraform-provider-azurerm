@@ -4,6 +4,7 @@
 package apimanagement
 
 import (
+	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2022-08-01/apimanagementservice"
 	keyVaultValidate "github.com/hashicorp/terraform-provider-azurerm/internal/services/keyvault/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/suppress"
@@ -87,6 +88,17 @@ func apiManagementResourceHostnameProxySchema() map[string]*pluginsdk.Schema {
 		Optional: true,
 		Computed: true, // Azure has certain logic to set this, which we cannot predict
 	}
+
+	return hostnameSchema
+}
+
+func apiManagementResourceCustomDomainHostnameProxySchema() map[string]*pluginsdk.Schema {
+	hostnameSchema := apiManagementResourceHostnameProxySchema()
+
+	// The managed certificate for the Gateway endpoint only.
+	hostnameSchema["certificate_source"].Computed = false
+	hostnameSchema["certificate_source"].Optional = true
+	hostnameSchema["certificate_source"].ValidateFunc = validation.StringInSlice([]string{string(apimanagementservice.CertificateSourceManaged)}, false)
 
 	return hostnameSchema
 }
