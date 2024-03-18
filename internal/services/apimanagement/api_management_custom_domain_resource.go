@@ -338,6 +338,7 @@ func flattenApiManagementHostnameConfiguration(input *[]apimanagementservice.Hos
 		output["negotiate_client_certificate"] = pointer.From(config.NegotiateClientCertificate)
 		output["key_vault_id"] = pointer.From(config.KeyVaultId)
 		output["ssl_keyvault_identity_client_id"] = pointer.From(config.IdentityClientId)
+		output["certificate_source"] = string(pointer.From(config.CertificateSource))
 
 		var configType string
 		switch strings.ToLower(string(config.Type)) {

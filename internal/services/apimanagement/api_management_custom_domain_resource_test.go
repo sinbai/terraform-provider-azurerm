@@ -156,7 +156,7 @@ resource "azurerm_resource_group" "test" {
 }
 
 resource "azurerm_api_management" "test" {
-  name                = "elenatestapim0311"
+  name                = "elenatestapim0315"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   publisher_name      = "pub1"
@@ -172,7 +172,7 @@ resource "azurerm_api_management_custom_domain" "test" {
   api_management_id = azurerm_api_management.test.id
 
   gateway {
-    host_name          = "elenatestapim0311.sinbai.store"
+    host_name          = "elenatestapim0315.sinbai.store"
     certificate_source = "Managed"
   }
 }
