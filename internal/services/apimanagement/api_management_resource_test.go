@@ -1786,6 +1786,20 @@ resource "azurerm_network_security_rule" "endpoint" {
   network_security_group_name = azurerm_network_security_group.test.name
 }
 
+resource "azurerm_network_security_rule" "load_balancer" {
+  name                        = "Azure_infra_load_balancer"
+  priority                    = 130
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "6390"
+  source_address_prefix       = "AzureLoadBalancer"
+  destination_address_prefix  = "VirtualNetwork"
+  resource_group_name         = azurerm_resource_group.test.name
+  network_security_group_name = azurerm_network_security_group.test.name
+}
+
 resource "azurerm_network_security_rule" "authenticate" {
   name                        = "Authenticate_To_Azure_Active_Directory"
   priority                    = 200
@@ -1799,6 +1813,20 @@ resource "azurerm_network_security_rule" "authenticate" {
   resource_group_name         = azurerm_resource_group.test.name
   network_security_group_name = azurerm_network_security_group.test.name
 }
+
+resource "azurerm_network_security_rule" "access_kv" {
+  name                        = "Access_to_azure_key_vault"
+  priority                    = 210
+  direction                   = "Outbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "443"
+  source_address_prefix       = "VirtualNetwork"
+  destination_address_prefix  = "AzureKeyVault"
+  resource_group_name         = azurerm_resource_group.test.name
+  network_security_group_name = azurerm_network_security_group.test.name
+}
 `, data.RandomInteger, data.Locations.Primary)
 }
 
@@ -1806,8 +1834,17 @@ func (r ApiManagementResource) virtualNetworkInternal(data acceptance.TestData) 
 	return fmt.Sprintf(`
 %s
 
+resource "azurerm_public_ip" "test" {
+  name                = "acctestpip-%[2]d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  domain_name_label   = "acctest-publicip-%[2]d"
+}
+
 resource "azurerm_api_management" "test" {
-  name                = "acctestAM-%d"
+  name                = "acctestAM-%[2]d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   publisher_name      = "pub1"
@@ -1819,6 +1856,8 @@ resource "azurerm_api_management" "test" {
   virtual_network_configuration {
     subnet_id = azurerm_subnet.test.id
   }
+  
+  public_ip_address_id = azurerm_public_ip.test.id
 }
 `, r.virtualNetworkTemplate(data), data.RandomInteger)
 }
