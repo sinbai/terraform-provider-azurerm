@@ -6,7 +6,6 @@ package apimanagement_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -144,7 +143,8 @@ resource "azurerm_api_management_custom_domain" "test" {
 }
 
 func (r ApiManagementCustomDomainResource) certificateManaged(data acceptance.TestData) string {
-	dnsZone := os.Getenv("ARM_TEST_DNS_ZONE")
+	dnsZone := "sinbai.store"    //os.Getenv("ARM_TEST_DNS_ZONE")
+	groupName := "elenatest0320" //os.Getenv("ARM_TEST_DATA_RESOURCE_GROUP")
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
@@ -156,7 +156,7 @@ resource "azurerm_resource_group" "test" {
 }
 
 resource "azurerm_api_management" "test" {
-  name                = "elenatestapim0315"
+  name                = "acctestAM-%[1]d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   publisher_name      = "pub1"
@@ -168,15 +168,39 @@ resource "azurerm_api_management" "test" {
   }
 }
 
+data "azurerm_dns_zone" "test" {
+  name                = "%[4]s"
+  resource_group_name = "%[5]s"
+}
+
+resource "azurerm_dns_cname_record" "test" {
+  name                = "api"
+  zone_name           = data.azurerm_dns_zone.test.name
+  resource_group_name = data.azurerm_dns_zone.test.resource_group_name
+  ttl                 = 3600
+  record              = "${azurerm_api_management.test.name}.azure-api.net"
+}
+
+resource "azurerm_dns_txt_record" "test" {
+  name                = "apimuid.api.%[4]s"
+  resource_group_name = data.azurerm_dns_zone.test.resource_group_name
+  zone_name           = data.azurerm_dns_zone.test.name
+  ttl                 = 3600
+
+  record {
+    value = "szUPsAcBwmyzrytzz58c/XZ7NJM5dQVFmOGZr/Mnhzc=."
+  }
+}
+
 resource "azurerm_api_management_custom_domain" "test" {
   api_management_id = azurerm_api_management.test.id
 
   gateway {
-    host_name          = "elenatestapim0315.sinbai.store"
+    host_name           = "${azurerm_dns_cname_record.test.name}.${data.azurerm_dns_zone.test.name}"
     certificate_source = "Managed"
   }
 }
-`, data.RandomInteger, data.Locations.Primary, data.RandomString, dnsZone)
+`, data.RandomInteger, data.Locations.Primary, data.RandomString, dnsZone, groupName)
 }
 
 func (r ApiManagementCustomDomainResource) proxyOnly(data acceptance.TestData) string {
