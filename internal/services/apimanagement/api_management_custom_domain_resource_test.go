@@ -182,7 +182,7 @@ resource "azurerm_dns_cname_record" "test" {
 }
 
 resource "azurerm_dns_txt_record" "test" {
-  name                = "apimuid.api.%[4]s"
+  name                = "apimuid.api.sinbai.store"
   resource_group_name = data.azurerm_dns_zone.test.resource_group_name
   zone_name           = data.azurerm_dns_zone.test.name
   ttl                 = 3600
