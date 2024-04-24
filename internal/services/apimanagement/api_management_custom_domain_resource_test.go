@@ -143,8 +143,8 @@ resource "azurerm_api_management_custom_domain" "test" {
 }
 
 func (r ApiManagementCustomDomainResource) certificateManaged(data acceptance.TestData) string {
-	dnsZone := "sinbai.store"    //os.Getenv("ARM_TEST_DNS_ZONE")
-	groupName := "elenatest0320" //os.Getenv("ARM_TEST_DATA_RESOURCE_GROUP")
+	dnsZone := "sinbai.store"                              //os.Getenv("ARM_TEST_DNS_ZONE")
+	dnsZoneResourceGroup := "acctestRG-240422163031070490" //os.Getenv("ARM_TEST_DNS_ZONE_RESOURCE_GROUP")
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
@@ -174,7 +174,7 @@ data "azurerm_dns_zone" "test" {
 }
 
 resource "azurerm_dns_cname_record" "test" {
-  name                = "api"
+  name                = "%[3]s"
   zone_name           = data.azurerm_dns_zone.test.name
   resource_group_name = data.azurerm_dns_zone.test.resource_group_name
   ttl                 = 3600
@@ -182,7 +182,7 @@ resource "azurerm_dns_cname_record" "test" {
 }
 
 resource "azurerm_dns_txt_record" "test" {
-  name                = "apimuid.api.sinbai.store"
+  name                = "apimuid.%[3]s"
   resource_group_name = data.azurerm_dns_zone.test.resource_group_name
   zone_name           = data.azurerm_dns_zone.test.name
   ttl                 = 3600
@@ -197,10 +197,10 @@ resource "azurerm_api_management_custom_domain" "test" {
 
   gateway {
     host_name           = "${azurerm_dns_cname_record.test.name}.${data.azurerm_dns_zone.test.name}"
-    certificate_source = "Managed"
+    certificate_source  = "Managed"
   }
 }
-`, data.RandomInteger, data.Locations.Primary, data.RandomString, dnsZone, groupName)
+`, data.RandomInteger, data.Locations.Primary, data.RandomString, dnsZone, dnsZoneResourceGroup)
 }
 
 func (r ApiManagementCustomDomainResource) proxyOnly(data acceptance.TestData) string {
