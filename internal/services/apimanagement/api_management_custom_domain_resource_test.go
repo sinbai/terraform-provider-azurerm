@@ -34,21 +34,6 @@ func TestAccApiManagementCustomDomain_basic(t *testing.T) {
 	})
 }
 
-func TestAccApiManagementCustomDomain_certificateManaged(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_api_management_custom_domain", "test")
-	r := ApiManagementCustomDomainResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.certificateManaged(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-	})
-}
-
 func TestAccApiManagementCustomDomain_basicWithUserIdentity(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_api_management_custom_domain", "test")
 	r := ApiManagementCustomDomainResource{}
@@ -107,6 +92,21 @@ func TestAccApiManagementCustomDomain_update(t *testing.T) {
 	})
 }
 
+func TestAccApiManagementCustomDomain_certificateManaged(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_api_management_custom_domain", "test")
+	r := ApiManagementCustomDomainResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.certificateManaged(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (ApiManagementCustomDomainResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	id, err := parse.CustomDomainID(state.ID)
 	if err != nil {
@@ -138,69 +138,12 @@ resource "azurerm_api_management_custom_domain" "test" {
     host_name    = "portal.example.com"
     key_vault_id = azurerm_key_vault_certificate.test.secret_id
   }
+
+  lifecycle {
+    ignore_changes = [gateway.0.certificate_source, developer_portal.0.certificate_source]
+  }
 }
 `, r.template(data, true))
-}
-
-func (r ApiManagementCustomDomainResource) certificateManaged(data acceptance.TestData) string {
-	dnsZone := "sinbai.store"                              //os.Getenv("ARM_TEST_DNS_ZONE")
-	dnsZoneResourceGroup := "acctestRG-240422163031070490" //os.Getenv("ARM_TEST_DNS_ZONE_RESOURCE_GROUP")
-	return fmt.Sprintf(`
-provider "azurerm" {
-  features {}
-}
-
-resource "azurerm_resource_group" "test" {
-  name     = "acctestRG-%[1]d"
-  location = "%[2]s"
-}
-
-resource "azurerm_api_management" "test" {
-  name                = "acctestAM-%[1]d"
-  location            = azurerm_resource_group.test.location
-  resource_group_name = azurerm_resource_group.test.name
-  publisher_name      = "pub1"
-  publisher_email     = "pub1@email.com"
-  sku_name            = "Developer_1"
-
-  identity {
-    type = "SystemAssigned"
-  }
-}
-
-data "azurerm_dns_zone" "test" {
-  name                = "%[4]s"
-  resource_group_name = "%[5]s"
-}
-
-resource "azurerm_dns_cname_record" "test" {
-  name                = "%[3]s"
-  zone_name           = data.azurerm_dns_zone.test.name
-  resource_group_name = data.azurerm_dns_zone.test.resource_group_name
-  ttl                 = 3600
-  record              = "${azurerm_api_management.test.name}.azure-api.net"
-}
-
-resource "azurerm_dns_txt_record" "test" {
-  name                = "apimuid.%[3]s"
-  resource_group_name = data.azurerm_dns_zone.test.resource_group_name
-  zone_name           = data.azurerm_dns_zone.test.name
-  ttl                 = 3600
-
-  record {
-    value = "szUPsAcBwmyzrytzz58c/XZ7NJM5dQVFmOGZr/Mnhzc=."
-  }
-}
-
-resource "azurerm_api_management_custom_domain" "test" {
-  api_management_id = azurerm_api_management.test.id
-
-  gateway {
-    host_name           = "${azurerm_dns_cname_record.test.name}.${data.azurerm_dns_zone.test.name}"
-    certificate_source  = "Managed"
-  }
-}
-`, data.RandomInteger, data.Locations.Primary, data.RandomString, dnsZone, dnsZoneResourceGroup)
 }
 
 func (r ApiManagementCustomDomainResource) proxyOnly(data acceptance.TestData) string {
@@ -213,6 +156,10 @@ resource "azurerm_api_management_custom_domain" "test" {
   gateway {
     host_name    = "api.example.com"
     key_vault_id = azurerm_key_vault_certificate.test.secret_id
+  }
+
+lifecycle {
+    ignore_changes = [gateway.0.certificate_source]
   }
 }
 `, r.template(data, true))
@@ -228,6 +175,10 @@ resource "azurerm_api_management_custom_domain" "test" {
   developer_portal {
     host_name    = "portal.example.com"
     key_vault_id = azurerm_key_vault_certificate.test.secret_id
+  }
+
+lifecycle {
+    ignore_changes = [ developer_portal.0.certificate_source]
   }
 }
 `, r.template(data, true))
@@ -415,6 +366,66 @@ resource "azurerm_api_management_custom_domain" "test" {
     host_name    = "portal.example.com"
     key_vault_id = azurerm_key_vault_certificate.test.secret_id
   }
+
+lifecycle {
+    ignore_changes = [gateway.0.certificate_source, developer_portal.0.certificate_source]
+  }
 }
 `, r.template(data, false))
+}
+
+func (r ApiManagementCustomDomainResource) certificateManaged(data acceptance.TestData) string {
+	dnsZone := "sinbai.store"           //os.Getenv("ARM_TEST_DNS_ZONE")
+	dnsZoneResourceGroup := "elenatest" //os.Getenv("ARM_TEST_DNS_ZONE_RESOURCE_GROUP")
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {}
+}
+resource "azurerm_resource_group" "test" {
+  name     = "acctestRG-%[1]d"
+  location = "%[2]s"
+}
+resource "azurerm_api_management" "test" {
+  name                = "acctestAM-%[1]d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  publisher_name      = "pub1"
+  publisher_email     = "pub1@email.com"
+  sku_name            = "Developer_1"
+  identity {
+    type = "SystemAssigned"
+  }
+}
+data "azurerm_dns_zone" "test" {
+  name                = "%[4]s"
+  resource_group_name = "%[5]s"
+}
+resource "azurerm_dns_cname_record" "test" {
+  name                = "%[3]s"
+  zone_name           = data.azurerm_dns_zone.test.name
+  resource_group_name = data.azurerm_dns_zone.test.resource_group_name
+  ttl                 = 3600
+  record              = "${azurerm_api_management.test.name}.azure-api.net"
+}
+resource "azurerm_dns_txt_record" "test" {
+  name                = "apimuid.%[3]s"
+  resource_group_name = data.azurerm_dns_zone.test.resource_group_name
+  zone_name           = data.azurerm_dns_zone.test.name
+  ttl                 = 3600
+  record {
+    value = "n2M2sJ8QNszT87bHLKFAzTUpwdo4w4YyJstg5Ko9rDk=."
+  }
+}
+resource "azurerm_api_management_custom_domain" "test" {
+  api_management_id = azurerm_api_management.test.id
+  gateway {
+    host_name           = "${azurerm_dns_cname_record.test.name}.${data.azurerm_dns_zone.test.name}"
+    certificate_source  = "Managed"
+  }
+
+ lifecycle {
+    ignore_changes = [gateway.0.certificate_source]
+  }
+}
+`, data.RandomInteger, data.Locations.Primary, data.RandomString, dnsZone, dnsZoneResourceGroup)
 }

@@ -56,7 +56,6 @@ func apiManagementResourceHostnameSchema() map[string]*pluginsdk.Schema {
 		"certificate_source": {
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
-			Default:      apimanagementservice.CertificateSourceBuiltIn,
 			ValidateFunc: validation.StringInSlice(apimanagementservice.PossibleValuesForCertificateSource(), false),
 		},
 
