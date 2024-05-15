@@ -119,7 +119,6 @@ resource "azurerm_app_service_managed_certificate" "import" {
 func (AppServiceManagedCertificateResource) linuxTemplate(data acceptance.TestData) string {
 	dnsZone := os.Getenv("ARM_TEST_DNS_ZONE")
 	dataResourceGroup := os.Getenv("ARM_TEST_DATA_RESOURCE_GROUP")
-
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}

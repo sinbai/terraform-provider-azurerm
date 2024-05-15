@@ -86,7 +86,7 @@ func resourceApiManagementCustomDomain() *pluginsdk.Resource {
 				Optional:     true,
 				AtLeastOneOf: []string{"management", "portal", "developer_portal", "gateway", "scm"},
 				Elem: &pluginsdk.Resource{
-					Schema: apiManagementResourceHostnameProxySchema(),
+					Schema: apiManagementResourceCustomDomainHostnameProxySchema(),
 				},
 			},
 		},
@@ -157,27 +157,19 @@ func apiManagementCustomDomainCreateUpdate(d *pluginsdk.ResourceData, meta inter
 	}
 
 	// The managed certificate for the Gateway endpoint only.
-	// Can only be configured when updating an existing API Management instance with patch update
+	// Can only be configured when updating an existing API Management instance using patch update
 	if _, ok := d.GetOk("gateway"); ok {
 		v := expandApiManagementCustomDomains(d, false)
-		isIncludedManaged := false
+		isManagedCertificateConfigured := false
 		hnConfigs := make([]apimanagementservice.HostnameConfiguration, 0)
-		defaultConfig := apimanagementservice.HostnameConfiguration{
-			Type:                       apimanagementservice.HostnameTypeProxy,
-			HostName:                   apiMgmtId.ServiceName + ".azure-api.net",
-			NegotiateClientCertificate: pointer.To(false),
-			DefaultSslBinding:          pointer.To(true),
-			CertificateSource:          pointer.To(apimanagementservice.CertificateSourceBuiltIn),
-		}
-		hnConfigs = append(hnConfigs, defaultConfig)
 		for _, data := range *v {
 			if pointer.From(data.CertificateSource) == apimanagementservice.CertificateSourceManaged {
-				isIncludedManaged = true
+				isManagedCertificateConfigured = true
 				hnConfigs = append(hnConfigs, data)
 			}
 		}
 
-		if isIncludedManaged {
+		if isManagedCertificateConfigured {
 			params := apimanagementservice.ApiManagementServiceUpdateParameters{
 				Properties: &apimanagementservice.ApiManagementServiceUpdateProperties{
 					HostnameConfigurations: pointer.To(hnConfigs),
@@ -332,6 +324,7 @@ func expandApiManagementCustomDomains(input *pluginsdk.ResourceData, isCreation 
 			v := rawVal.(map[string]interface{})
 			output := expandApiManagementCommonHostnameConfiguration(v, apimanagementservice.HostnameTypeProxy)
 			if cs, ok := v["certificate_source"]; ok && cs.(string) == string(apimanagementservice.CertificateSourceManaged) {
+				// Can only be configured when updating an existing API Management instance using patch update
 				if isCreation {
 					continue
 				}
@@ -380,7 +373,7 @@ func flattenApiManagementHostnameConfiguration(input *[]apimanagementservice.Hos
 		output["key_vault_id"] = pointer.From(config.KeyVaultId)
 		output["ssl_keyvault_identity_client_id"] = pointer.From(config.IdentityClientId)
 
-		if *config.CertificateSource == apimanagementservice.CertificateSourceManaged {
+		if pointer.From(config.CertificateSource) == apimanagementservice.CertificateSourceManaged {
 			output["certificate_source"] = string(pointer.From(config.CertificateSource))
 		}
 

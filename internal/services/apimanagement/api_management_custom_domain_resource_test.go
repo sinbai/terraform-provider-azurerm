@@ -138,10 +138,6 @@ resource "azurerm_api_management_custom_domain" "test" {
     host_name    = "portal.example.com"
     key_vault_id = azurerm_key_vault_certificate.test.secret_id
   }
-
-  lifecycle {
-    ignore_changes = [gateway.0.certificate_source, developer_portal.0.certificate_source]
-  }
 }
 `, r.template(data, true))
 }
@@ -157,10 +153,6 @@ resource "azurerm_api_management_custom_domain" "test" {
     host_name    = "api.example.com"
     key_vault_id = azurerm_key_vault_certificate.test.secret_id
   }
-
-lifecycle {
-    ignore_changes = [gateway.0.certificate_source]
-  }
 }
 `, r.template(data, true))
 }
@@ -175,10 +167,6 @@ resource "azurerm_api_management_custom_domain" "test" {
   developer_portal {
     host_name    = "portal.example.com"
     key_vault_id = azurerm_key_vault_certificate.test.secret_id
-  }
-
-lifecycle {
-    ignore_changes = [ developer_portal.0.certificate_source]
   }
 }
 `, r.template(data, true))
@@ -366,17 +354,14 @@ resource "azurerm_api_management_custom_domain" "test" {
     host_name    = "portal.example.com"
     key_vault_id = azurerm_key_vault_certificate.test.secret_id
   }
-
-lifecycle {
-    ignore_changes = [gateway.0.certificate_source, developer_portal.0.certificate_source]
-  }
 }
 `, r.template(data, false))
 }
 
 func (r ApiManagementCustomDomainResource) certificateManaged(data acceptance.TestData) string {
-	dnsZone := "sinbai.store"           //os.Getenv("ARM_TEST_DNS_ZONE")
-	dnsZoneResourceGroup := "elenatest" //os.Getenv("ARM_TEST_DNS_ZONE_RESOURCE_GROUP")
+	dnsZone := "sinbai.store"                                        //os.Getenv("ARM_TEST_DNS_ZONE")
+	dnsZoneResourceGroup := "elenatest"                              //os.Getenv("ARM_TEST_DNS_ZONE_RESOURCE_GROUP")
+	txtRecordValue := "7fGTFuan5vQ2VZNUc4DGEPZ9c+WMCWZ+5tfl2ejjtMg=" //os.Getenv("ARM_TEST_DNS_ZONE_RESOURCE_GROUP")
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
@@ -413,7 +398,7 @@ resource "azurerm_dns_txt_record" "test" {
   zone_name           = data.azurerm_dns_zone.test.name
   ttl                 = 3600
   record {
-    value = "n2M2sJ8QNszT87bHLKFAzTUpwdo4w4YyJstg5Ko9rDk=."
+    value = "%[6]s"
   }
 }
 resource "azurerm_api_management_custom_domain" "test" {
@@ -422,10 +407,6 @@ resource "azurerm_api_management_custom_domain" "test" {
     host_name           = "${azurerm_dns_cname_record.test.name}.${data.azurerm_dns_zone.test.name}"
     certificate_source  = "Managed"
   }
-
- lifecycle {
-    ignore_changes = [gateway.0.certificate_source]
-  }
 }
-`, data.RandomInteger, data.Locations.Primary, data.RandomString, dnsZone, dnsZoneResourceGroup)
+`, data.RandomInteger, data.Locations.Primary, data.RandomString, dnsZone, dnsZoneResourceGroup, txtRecordValue)
 }

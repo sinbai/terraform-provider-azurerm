@@ -54,9 +54,8 @@ func apiManagementResourceHostnameSchema() map[string]*pluginsdk.Schema {
 		},
 
 		"certificate_source": {
-			Type:         pluginsdk.TypeString,
-			Optional:     true,
-			ValidateFunc: validation.StringInSlice(apimanagementservice.PossibleValuesForCertificateSource(), false),
+			Type:     pluginsdk.TypeString,
+			Computed: true,
 		},
 
 		"certificate_status": {
@@ -89,6 +88,17 @@ func apiManagementResourceHostnameProxySchema() map[string]*pluginsdk.Schema {
 		Optional: true,
 		Computed: true, // Azure has certain logic to set this, which we cannot predict
 	}
+
+	return hostnameSchema
+}
+
+func apiManagementResourceCustomDomainHostnameProxySchema() map[string]*pluginsdk.Schema {
+	hostnameSchema := apiManagementResourceHostnameProxySchema()
+
+	// The managed certificate for the Gateway endpoint only.
+	hostnameSchema["certificate_source"].Computed = false
+	hostnameSchema["certificate_source"].Optional = true
+	hostnameSchema["certificate_source"].ValidateFunc = validation.StringInSlice([]string{string(apimanagementservice.CertificateSourceManaged)}, false)
 
 	return hostnameSchema
 }
