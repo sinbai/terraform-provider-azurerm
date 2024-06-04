@@ -108,6 +108,7 @@ import (
 	mysql "github.com/hashicorp/terraform-provider-azurerm/internal/services/mysql/client"
 	netapp "github.com/hashicorp/terraform-provider-azurerm/internal/services/netapp/client"
 	network "github.com/hashicorp/terraform-provider-azurerm/internal/services/network/client"
+	networkanalytics "github.com/hashicorp/terraform-provider-azurerm/internal/services/networkanalytics/client"
 	networkfunction "github.com/hashicorp/terraform-provider-azurerm/internal/services/networkfunction/client"
 	newrelic "github.com/hashicorp/terraform-provider-azurerm/internal/services/newrelic/client"
 	nginx "github.com/hashicorp/terraform-provider-azurerm/internal/services/nginx/client"
@@ -245,6 +246,7 @@ type Client struct {
 	MySQL                             *mysql.Client
 	NetApp                            *netapp.Client
 	Network                           *network.Client
+	NetworkAnalytics                  *networkanalytics.Client
 	NetworkFunction                   *networkfunction.Client
 	NewRelic                          *newrelic.Client
 	Nginx                             *nginx_2024_01_01_preview.Client
@@ -545,6 +547,9 @@ func (client *Client) Build(ctx context.Context, o *common.ClientOptions) error 
 	}
 	if client.Network, err = network.NewClient(o); err != nil {
 		return fmt.Errorf("building clients for Network: %+v", err)
+	}
+	if client.NetworkAnalytics, err = networkanalytics.NewClient(o); err != nil {
+		return fmt.Errorf("building clients for NetworkAnalytics: %+v", err)
 	}
 	if client.NetworkFunction, err = networkfunction.NewClient(o); err != nil {
 		return fmt.Errorf("building clients for NetworkFunction: %+v", err)

@@ -91,6 +91,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/mysql"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/netapp"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/network"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/services/networkanalytics"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/networkfunction"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/newrelic"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/nginx"
@@ -194,6 +195,7 @@ func SupportedTypedServices() []sdk.TypedServiceRegistration {
 		mysql.Registration{},
 		network.Registration{},
 		netapp.Registration{},
+		networkanalytics.Registration{},
 		networkfunction.Registration{},
 		newrelic.Registration{},
 		nginx.Registration{},
