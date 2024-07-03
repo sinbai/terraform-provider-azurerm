@@ -110,10 +110,8 @@ func apiManagementCustomDomainCreate(d *pluginsdk.ResourceData, meta interface{}
 		return fmt.Errorf("retrieving %s: %+v", *apiMgmtId, err)
 	}
 
-	if d.IsNewResource() {
-		if existing.Model != nil && existing.Model.Properties.HostnameConfigurations != nil && len(*existing.Model.Properties.HostnameConfigurations) > 1 {
-			return tf.ImportAsExistsError(apiManagementCustomDomainResourceName, *existing.Model.Id)
-		}
+	if existing.Model != nil && existing.Model.Properties.HostnameConfigurations != nil && len(*existing.Model.Properties.HostnameConfigurations) > 1 {
+		return tf.ImportAsExistsError(apiManagementCustomDomainResourceName, *existing.Model.Id)
 	}
 
 	existing.Model.Properties.HostnameConfigurations = expandApiManagementCustomDomains(d, false)
@@ -127,12 +125,8 @@ func apiManagementCustomDomainCreate(d *pluginsdk.ResourceData, meta interface{}
 		MinTimeout:                1 * time.Minute,
 		ContinuousTargetOccurence: 6,
 	}
-	if d.IsNewResource() {
-		stateConf.Timeout = d.Timeout(pluginsdk.TimeoutCreate)
-	} else {
-		stateConf.Timeout = d.Timeout(pluginsdk.TimeoutUpdate)
-	}
 
+	stateConf.Timeout = d.Timeout(pluginsdk.TimeoutCreate)
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
 		return fmt.Errorf("waiting for %s to become ready: %+v", id, err)
 	}
@@ -147,7 +141,7 @@ func apiManagementCustomDomainCreate(d *pluginsdk.ResourceData, meta interface{}
 	}
 
 	if err := client.CreateOrUpdateThenPoll(ctx, *apiMgmtId, *existing.Model); err != nil {
-		return fmt.Errorf("creating/updating %s: %+v", id, err)
+		return fmt.Errorf("creating %s: %+v", id, err)
 	}
 
 	// Wait for the ProvisioningState to become "Succeeded" before attempting to update
