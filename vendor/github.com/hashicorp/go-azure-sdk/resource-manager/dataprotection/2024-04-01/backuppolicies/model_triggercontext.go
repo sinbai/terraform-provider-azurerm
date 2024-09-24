@@ -48,9 +48,9 @@ func UnmarshalTriggerContextImplementation(input []byte) (TriggerContext, error)
 		return nil, fmt.Errorf("unmarshaling TriggerContext into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["objectType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["objectType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "AdhocBasedTriggerContext") {

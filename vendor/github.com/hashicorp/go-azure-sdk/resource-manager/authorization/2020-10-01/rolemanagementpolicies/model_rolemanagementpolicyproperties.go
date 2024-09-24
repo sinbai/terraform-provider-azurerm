@@ -38,17 +38,10 @@ func (o *RoleManagementPolicyProperties) SetLastModifiedDateTimeAsTime(input tim
 var _ json.Unmarshaler = &RoleManagementPolicyProperties{}
 
 func (s *RoleManagementPolicyProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Description           *string           `json:"description,omitempty"`
-		DisplayName           *string           `json:"displayName,omitempty"`
-		IsOrganizationDefault *bool             `json:"isOrganizationDefault,omitempty"`
-		LastModifiedBy        *Principal        `json:"lastModifiedBy,omitempty"`
-		LastModifiedDateTime  *string           `json:"lastModifiedDateTime,omitempty"`
-		PolicyProperties      *PolicyProperties `json:"policyProperties,omitempty"`
-		Scope                 *string           `json:"scope,omitempty"`
-	}
+	type alias RoleManagementPolicyProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into RoleManagementPolicyProperties: %+v", err)
 	}
 
 	s.Description = decoded.Description
@@ -97,6 +90,5 @@ func (s *RoleManagementPolicyProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Rules = &output
 	}
-
 	return nil
 }

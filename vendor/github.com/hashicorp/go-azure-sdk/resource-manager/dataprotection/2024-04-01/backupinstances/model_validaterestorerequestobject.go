@@ -28,6 +28,5 @@ func (s *ValidateRestoreRequestObject) UnmarshalJSON(bytes []byte) error {
 		}
 		s.RestoreRequestObject = impl
 	}
-
 	return nil
 }

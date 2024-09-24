@@ -17,12 +17,10 @@ type FirewallPolicyRuleCollectionGroupDraftProperties struct {
 var _ json.Unmarshaler = &FirewallPolicyRuleCollectionGroupDraftProperties{}
 
 func (s *FirewallPolicyRuleCollectionGroupDraftProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Priority *int64  `json:"priority,omitempty"`
-		Size     *string `json:"size,omitempty"`
-	}
+	type alias FirewallPolicyRuleCollectionGroupDraftProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into FirewallPolicyRuleCollectionGroupDraftProperties: %+v", err)
 	}
 
 	s.Priority = decoded.Priority
@@ -49,6 +47,5 @@ func (s *FirewallPolicyRuleCollectionGroupDraftProperties) UnmarshalJSON(bytes [
 		}
 		s.RuleCollections = &output
 	}
-
 	return nil
 }

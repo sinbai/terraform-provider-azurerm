@@ -37,6 +37,5 @@ func (s *DeliveryAttributeListResult) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Value = &output
 	}
-
 	return nil
 }

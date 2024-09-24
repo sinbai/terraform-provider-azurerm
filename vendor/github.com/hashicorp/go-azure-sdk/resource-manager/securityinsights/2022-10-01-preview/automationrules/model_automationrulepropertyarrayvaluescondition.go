@@ -17,12 +17,10 @@ type AutomationRulePropertyArrayValuesCondition struct {
 var _ json.Unmarshaler = &AutomationRulePropertyArrayValuesCondition{}
 
 func (s *AutomationRulePropertyArrayValuesCondition) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		ArrayConditionType *AutomationRulePropertyArrayConditionSupportedArrayConditionType `json:"arrayConditionType,omitempty"`
-		ArrayType          *AutomationRulePropertyArrayConditionSupportedArrayType          `json:"arrayType,omitempty"`
-	}
+	type alias AutomationRulePropertyArrayValuesCondition
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into AutomationRulePropertyArrayValuesCondition: %+v", err)
 	}
 
 	s.ArrayConditionType = decoded.ArrayConditionType
@@ -49,6 +47,5 @@ func (s *AutomationRulePropertyArrayValuesCondition) UnmarshalJSON(bytes []byte)
 		}
 		s.ItemConditions = &output
 	}
-
 	return nil
 }

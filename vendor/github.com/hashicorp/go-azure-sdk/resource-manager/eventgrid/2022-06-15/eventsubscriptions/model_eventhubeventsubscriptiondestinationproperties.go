@@ -16,11 +16,10 @@ type EventHubEventSubscriptionDestinationProperties struct {
 var _ json.Unmarshaler = &EventHubEventSubscriptionDestinationProperties{}
 
 func (s *EventHubEventSubscriptionDestinationProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		ResourceId *string `json:"resourceId,omitempty"`
-	}
+	type alias EventHubEventSubscriptionDestinationProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into EventHubEventSubscriptionDestinationProperties: %+v", err)
 	}
 
 	s.ResourceId = decoded.ResourceId
@@ -46,6 +45,5 @@ func (s *EventHubEventSubscriptionDestinationProperties) UnmarshalJSON(bytes []b
 		}
 		s.DeliveryAttributeMappings = &output
 	}
-
 	return nil
 }

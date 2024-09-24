@@ -49,9 +49,9 @@ func UnmarshalBasePolicyRuleImplementation(input []byte) (BasePolicyRule, error)
 		return nil, fmt.Errorf("unmarshaling BasePolicyRule into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["objectType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["objectType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "AzureBackupRule") {

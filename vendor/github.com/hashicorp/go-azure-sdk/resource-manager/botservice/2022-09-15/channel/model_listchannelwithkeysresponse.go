@@ -31,23 +31,10 @@ type ListChannelWithKeysResponse struct {
 var _ json.Unmarshaler = &ListChannelWithKeysResponse{}
 
 func (s *ListChannelWithKeysResponse) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		ChangedTime       *string            `json:"changedTime,omitempty"`
-		EntityTag         *string            `json:"entityTag,omitempty"`
-		Etag              *string            `json:"etag,omitempty"`
-		Id                *string            `json:"id,omitempty"`
-		Kind              *Kind              `json:"kind,omitempty"`
-		Location          *string            `json:"location,omitempty"`
-		Name              *string            `json:"name,omitempty"`
-		ProvisioningState *string            `json:"provisioningState,omitempty"`
-		Setting           *ChannelSettings   `json:"setting,omitempty"`
-		Sku               *Sku               `json:"sku,omitempty"`
-		Tags              *map[string]string `json:"tags,omitempty"`
-		Type              *string            `json:"type,omitempty"`
-		Zones             *zones.Schema      `json:"zones,omitempty"`
-	}
+	type alias ListChannelWithKeysResponse
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into ListChannelWithKeysResponse: %+v", err)
 	}
 
 	s.ChangedTime = decoded.ChangedTime
@@ -84,6 +71,5 @@ func (s *ListChannelWithKeysResponse) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Resource = impl
 	}
-
 	return nil
 }

@@ -50,9 +50,9 @@ func UnmarshalRestoreTargetInfoBaseImplementation(input []byte) (RestoreTargetIn
 		return nil, fmt.Errorf("unmarshaling RestoreTargetInfoBase into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["objectType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["objectType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "ItemLevelRestoreTargetInfo") {

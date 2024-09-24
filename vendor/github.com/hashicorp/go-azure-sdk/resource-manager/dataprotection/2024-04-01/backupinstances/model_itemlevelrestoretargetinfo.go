@@ -59,15 +59,10 @@ func (s ItemLevelRestoreTargetInfo) MarshalJSON() ([]byte, error) {
 var _ json.Unmarshaler = &ItemLevelRestoreTargetInfo{}
 
 func (s *ItemLevelRestoreTargetInfo) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		DatasourceInfo    Datasource     `json:"datasourceInfo"`
-		DatasourceSetInfo *DatasourceSet `json:"datasourceSetInfo,omitempty"`
-		ObjectType        string         `json:"objectType"`
-		RecoveryOption    RecoveryOption `json:"recoveryOption"`
-		RestoreLocation   *string        `json:"restoreLocation,omitempty"`
-	}
+	type alias ItemLevelRestoreTargetInfo
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into ItemLevelRestoreTargetInfo: %+v", err)
 	}
 
 	s.DatasourceInfo = decoded.DatasourceInfo
@@ -105,6 +100,5 @@ func (s *ItemLevelRestoreTargetInfo) UnmarshalJSON(bytes []byte) error {
 		}
 		s.RestoreCriteria = output
 	}
-
 	return nil
 }

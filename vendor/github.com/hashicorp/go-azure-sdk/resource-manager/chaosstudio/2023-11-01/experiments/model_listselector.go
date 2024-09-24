@@ -56,17 +56,14 @@ func (s ListSelector) MarshalJSON() ([]byte, error) {
 var _ json.Unmarshaler = &ListSelector{}
 
 func (s *ListSelector) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Targets []TargetReference `json:"targets"`
-		Id      string            `json:"id"`
-		Type    SelectorType      `json:"type"`
-	}
+	type alias ListSelector
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into ListSelector: %+v", err)
 	}
 
-	s.Targets = decoded.Targets
 	s.Id = decoded.Id
+	s.Targets = decoded.Targets
 	s.Type = decoded.Type
 
 	var temp map[string]json.RawMessage
@@ -81,6 +78,5 @@ func (s *ListSelector) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Filter = impl
 	}
-
 	return nil
 }

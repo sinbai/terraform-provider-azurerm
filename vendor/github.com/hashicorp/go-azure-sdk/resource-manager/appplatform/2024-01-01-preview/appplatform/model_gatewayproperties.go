@@ -30,25 +30,10 @@ type GatewayProperties struct {
 var _ json.Unmarshaler = &GatewayProperties{}
 
 func (s *GatewayProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		AddonConfigs          *map[string]interface{}                `json:"addonConfigs,omitempty"`
-		ApiMetadataProperties *GatewayApiMetadataProperties          `json:"apiMetadataProperties,omitempty"`
-		ApmTypes              *[]ApmType                             `json:"apmTypes,omitempty"`
-		Apms                  *[]ApmReference                        `json:"apms,omitempty"`
-		ClientAuth            *GatewayPropertiesClientAuth           `json:"clientAuth,omitempty"`
-		CorsProperties        *GatewayCorsProperties                 `json:"corsProperties,omitempty"`
-		EnvironmentVariables  *GatewayPropertiesEnvironmentVariables `json:"environmentVariables,omitempty"`
-		HTTPSOnly             *bool                                  `json:"httpsOnly,omitempty"`
-		Instances             *[]GatewayInstance                     `json:"instances,omitempty"`
-		OperatorProperties    *GatewayOperatorProperties             `json:"operatorProperties,omitempty"`
-		ProvisioningState     *GatewayProvisioningState              `json:"provisioningState,omitempty"`
-		Public                *bool                                  `json:"public,omitempty"`
-		ResourceRequests      *GatewayResourceRequests               `json:"resourceRequests,omitempty"`
-		SsoProperties         *SsoProperties                         `json:"ssoProperties,omitempty"`
-		Url                   *string                                `json:"url,omitempty"`
-	}
+	type alias GatewayProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into GatewayProperties: %+v", err)
 	}
 
 	s.AddonConfigs = decoded.AddonConfigs
@@ -79,6 +64,5 @@ func (s *GatewayProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.ResponseCacheProperties = impl
 	}
-
 	return nil
 }

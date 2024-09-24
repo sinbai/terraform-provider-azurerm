@@ -37,17 +37,10 @@ func (o *FactoryProperties) SetCreateTimeAsTime(input time.Time) {
 var _ json.Unmarshaler = &FactoryProperties{}
 
 func (s *FactoryProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		CreateTime           *string                                  `json:"createTime,omitempty"`
-		Encryption           *EncryptionConfiguration                 `json:"encryption,omitempty"`
-		GlobalParameters     *map[string]GlobalParameterSpecification `json:"globalParameters,omitempty"`
-		ProvisioningState    *string                                  `json:"provisioningState,omitempty"`
-		PublicNetworkAccess  *PublicNetworkAccess                     `json:"publicNetworkAccess,omitempty"`
-		PurviewConfiguration *PurviewConfiguration                    `json:"purviewConfiguration,omitempty"`
-		Version              *string                                  `json:"version,omitempty"`
-	}
+	type alias FactoryProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into FactoryProperties: %+v", err)
 	}
 
 	s.CreateTime = decoded.CreateTime
@@ -70,6 +63,5 @@ func (s *FactoryProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.RepoConfiguration = impl
 	}
-
 	return nil
 }

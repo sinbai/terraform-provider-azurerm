@@ -21,16 +21,10 @@ type AcceleratorGitRepository struct {
 var _ json.Unmarshaler = &AcceleratorGitRepository{}
 
 func (s *AcceleratorGitRepository) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Branch            *string `json:"branch,omitempty"`
-		Commit            *string `json:"commit,omitempty"`
-		GitTag            *string `json:"gitTag,omitempty"`
-		IntervalInSeconds *int64  `json:"intervalInSeconds,omitempty"`
-		SubPath           *string `json:"subPath,omitempty"`
-		Url               string  `json:"url"`
-	}
+	type alias AcceleratorGitRepository
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into AcceleratorGitRepository: %+v", err)
 	}
 
 	s.Branch = decoded.Branch
@@ -52,6 +46,5 @@ func (s *AcceleratorGitRepository) UnmarshalJSON(bytes []byte) error {
 		}
 		s.AuthSetting = impl
 	}
-
 	return nil
 }

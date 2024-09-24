@@ -49,9 +49,9 @@ func UnmarshalEnvironmentUpdateParametersImplementation(input []byte) (Environme
 		return nil, fmt.Errorf("unmarshaling EnvironmentUpdateParameters into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["kind"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["kind"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "Gen1") {

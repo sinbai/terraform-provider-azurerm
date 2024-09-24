@@ -16,11 +16,10 @@ type ReverseReplicationInputProperties struct {
 var _ json.Unmarshaler = &ReverseReplicationInputProperties{}
 
 func (s *ReverseReplicationInputProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		FailoverDirection *string `json:"failoverDirection,omitempty"`
-	}
+	type alias ReverseReplicationInputProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into ReverseReplicationInputProperties: %+v", err)
 	}
 
 	s.FailoverDirection = decoded.FailoverDirection
@@ -37,6 +36,5 @@ func (s *ReverseReplicationInputProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.ProviderSpecificDetails = impl
 	}
-
 	return nil
 }

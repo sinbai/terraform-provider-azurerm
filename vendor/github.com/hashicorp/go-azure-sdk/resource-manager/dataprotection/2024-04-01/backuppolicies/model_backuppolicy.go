@@ -54,12 +54,10 @@ func (s BackupPolicy) MarshalJSON() ([]byte, error) {
 var _ json.Unmarshaler = &BackupPolicy{}
 
 func (s *BackupPolicy) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		DatasourceTypes []string `json:"datasourceTypes"`
-		ObjectType      string   `json:"objectType"`
-	}
+	type alias BackupPolicy
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into BackupPolicy: %+v", err)
 	}
 
 	s.DatasourceTypes = decoded.DatasourceTypes
@@ -86,6 +84,5 @@ func (s *BackupPolicy) UnmarshalJSON(bytes []byte) error {
 		}
 		s.PolicyRules = output
 	}
-
 	return nil
 }

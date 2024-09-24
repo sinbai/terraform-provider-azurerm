@@ -56,13 +56,10 @@ func (s AzureBackupRule) MarshalJSON() ([]byte, error) {
 var _ json.Unmarshaler = &AzureBackupRule{}
 
 func (s *AzureBackupRule) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		DataStore  DataStoreInfoBase `json:"dataStore"`
-		Name       string            `json:"name"`
-		ObjectType string            `json:"objectType"`
-	}
+	type alias AzureBackupRule
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into AzureBackupRule: %+v", err)
 	}
 
 	s.DataStore = decoded.DataStore
@@ -89,6 +86,5 @@ func (s *AzureBackupRule) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Trigger = impl
 	}
-
 	return nil
 }

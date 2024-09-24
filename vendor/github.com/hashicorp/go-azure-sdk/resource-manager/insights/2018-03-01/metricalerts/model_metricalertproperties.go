@@ -42,22 +42,10 @@ func (o *MetricAlertProperties) SetLastUpdatedTimeAsTime(input time.Time) {
 var _ json.Unmarshaler = &MetricAlertProperties{}
 
 func (s *MetricAlertProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Actions              *[]MetricAlertAction `json:"actions,omitempty"`
-		AutoMitigate         *bool                `json:"autoMitigate,omitempty"`
-		Description          *string              `json:"description,omitempty"`
-		Enabled              bool                 `json:"enabled"`
-		EvaluationFrequency  string               `json:"evaluationFrequency"`
-		IsMigrated           *bool                `json:"isMigrated,omitempty"`
-		LastUpdatedTime      *string              `json:"lastUpdatedTime,omitempty"`
-		Scopes               []string             `json:"scopes"`
-		Severity             int64                `json:"severity"`
-		TargetResourceRegion *string              `json:"targetResourceRegion,omitempty"`
-		TargetResourceType   *string              `json:"targetResourceType,omitempty"`
-		WindowSize           string               `json:"windowSize"`
-	}
+	type alias MetricAlertProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into MetricAlertProperties: %+v", err)
 	}
 
 	s.Actions = decoded.Actions
@@ -85,6 +73,5 @@ func (s *MetricAlertProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Criteria = impl
 	}
-
 	return nil
 }

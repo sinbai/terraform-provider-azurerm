@@ -37,6 +37,5 @@ func (s *DataConnectionListResult) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Value = &output
 	}
-
 	return nil
 }

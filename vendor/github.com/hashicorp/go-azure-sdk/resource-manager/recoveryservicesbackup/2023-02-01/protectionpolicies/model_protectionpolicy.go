@@ -50,9 +50,9 @@ func UnmarshalProtectionPolicyImplementation(input []byte) (ProtectionPolicy, er
 		return nil, fmt.Errorf("unmarshaling ProtectionPolicy into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["backupManagementType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["backupManagementType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "AzureStorage") {

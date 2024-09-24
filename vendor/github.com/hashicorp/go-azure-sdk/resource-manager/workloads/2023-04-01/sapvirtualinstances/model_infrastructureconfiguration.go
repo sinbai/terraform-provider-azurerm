@@ -49,9 +49,9 @@ func UnmarshalInfrastructureConfigurationImplementation(input []byte) (Infrastru
 		return nil, fmt.Errorf("unmarshaling InfrastructureConfiguration into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["deploymentType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["deploymentType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "SingleServer") {

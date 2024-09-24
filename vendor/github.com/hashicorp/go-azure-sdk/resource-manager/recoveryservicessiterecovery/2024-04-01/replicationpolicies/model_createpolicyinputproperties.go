@@ -28,6 +28,5 @@ func (s *CreatePolicyInputProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.ProviderSpecificInput = impl
 	}
-
 	return nil
 }

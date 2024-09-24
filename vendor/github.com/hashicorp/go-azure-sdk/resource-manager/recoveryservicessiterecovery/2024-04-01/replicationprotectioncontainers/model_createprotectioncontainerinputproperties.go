@@ -37,6 +37,5 @@ func (s *CreateProtectionContainerInputProperties) UnmarshalJSON(bytes []byte) e
 		}
 		s.ProviderSpecificInput = &output
 	}
-
 	return nil
 }

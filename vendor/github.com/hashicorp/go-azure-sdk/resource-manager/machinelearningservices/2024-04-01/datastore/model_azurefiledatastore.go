@@ -68,35 +68,23 @@ func (s AzureFileDatastore) MarshalJSON() ([]byte, error) {
 var _ json.Unmarshaler = &AzureFileDatastore{}
 
 func (s *AzureFileDatastore) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		AccountName                   string                         `json:"accountName"`
-		Endpoint                      *string                        `json:"endpoint,omitempty"`
-		FileShareName                 string                         `json:"fileShareName"`
-		Protocol                      *string                        `json:"protocol,omitempty"`
-		ResourceGroup                 *string                        `json:"resourceGroup,omitempty"`
-		ServiceDataAccessAuthIdentity *ServiceDataAccessAuthIdentity `json:"serviceDataAccessAuthIdentity,omitempty"`
-		SubscriptionId                *string                        `json:"subscriptionId,omitempty"`
-		DatastoreType                 DatastoreType                  `json:"datastoreType"`
-		Description                   *string                        `json:"description,omitempty"`
-		IsDefault                     *bool                          `json:"isDefault,omitempty"`
-		Properties                    *map[string]string             `json:"properties,omitempty"`
-		Tags                          *map[string]string             `json:"tags,omitempty"`
-	}
+	type alias AzureFileDatastore
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into AzureFileDatastore: %+v", err)
 	}
 
 	s.AccountName = decoded.AccountName
+	s.DatastoreType = decoded.DatastoreType
+	s.Description = decoded.Description
 	s.Endpoint = decoded.Endpoint
 	s.FileShareName = decoded.FileShareName
+	s.IsDefault = decoded.IsDefault
+	s.Properties = decoded.Properties
 	s.Protocol = decoded.Protocol
 	s.ResourceGroup = decoded.ResourceGroup
 	s.ServiceDataAccessAuthIdentity = decoded.ServiceDataAccessAuthIdentity
 	s.SubscriptionId = decoded.SubscriptionId
-	s.DatastoreType = decoded.DatastoreType
-	s.Description = decoded.Description
-	s.IsDefault = decoded.IsDefault
-	s.Properties = decoded.Properties
 	s.Tags = decoded.Tags
 
 	var temp map[string]json.RawMessage
@@ -111,6 +99,5 @@ func (s *AzureFileDatastore) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Credentials = impl
 	}
-
 	return nil
 }

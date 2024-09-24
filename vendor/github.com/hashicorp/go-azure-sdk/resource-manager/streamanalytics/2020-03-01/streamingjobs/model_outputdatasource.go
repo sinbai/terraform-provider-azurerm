@@ -48,9 +48,9 @@ func UnmarshalOutputDataSourceImplementation(input []byte) (OutputDataSource, er
 		return nil, fmt.Errorf("unmarshaling OutputDataSource into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["type"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["type"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "Microsoft.DataLake/Accounts") {

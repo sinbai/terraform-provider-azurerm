@@ -48,9 +48,9 @@ func UnmarshalSAPConfigurationImplementation(input []byte) (SAPConfiguration, er
 		return nil, fmt.Errorf("unmarshaling SAPConfiguration into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["configurationType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["configurationType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "Deployment") {

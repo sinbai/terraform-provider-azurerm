@@ -28,6 +28,5 @@ func (s *AddDisksInputProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.ProviderSpecificDetails = impl
 	}
-
 	return nil
 }

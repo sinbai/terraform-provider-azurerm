@@ -59,22 +59,17 @@ func (s AzureFileShareProtectionPolicy) MarshalJSON() ([]byte, error) {
 var _ json.Unmarshaler = &AzureFileShareProtectionPolicy{}
 
 func (s *AzureFileShareProtectionPolicy) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		TimeZone                       *string       `json:"timeZone,omitempty"`
-		WorkLoadType                   *WorkloadType `json:"workLoadType,omitempty"`
-		BackupManagementType           string        `json:"backupManagementType"`
-		ProtectedItemsCount            *int64        `json:"protectedItemsCount,omitempty"`
-		ResourceGuardOperationRequests *[]string     `json:"resourceGuardOperationRequests,omitempty"`
-	}
+	type alias AzureFileShareProtectionPolicy
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into AzureFileShareProtectionPolicy: %+v", err)
 	}
 
-	s.TimeZone = decoded.TimeZone
-	s.WorkLoadType = decoded.WorkLoadType
 	s.BackupManagementType = decoded.BackupManagementType
 	s.ProtectedItemsCount = decoded.ProtectedItemsCount
 	s.ResourceGuardOperationRequests = decoded.ResourceGuardOperationRequests
+	s.TimeZone = decoded.TimeZone
+	s.WorkLoadType = decoded.WorkLoadType
 
 	var temp map[string]json.RawMessage
 	if err := json.Unmarshal(bytes, &temp); err != nil {
@@ -96,6 +91,5 @@ func (s *AzureFileShareProtectionPolicy) UnmarshalJSON(bytes []byte) error {
 		}
 		s.SchedulePolicy = impl
 	}
-
 	return nil
 }

@@ -57,14 +57,10 @@ func (s FirewallPolicyFilterRuleCollection) MarshalJSON() ([]byte, error) {
 var _ json.Unmarshaler = &FirewallPolicyFilterRuleCollection{}
 
 func (s *FirewallPolicyFilterRuleCollection) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Action             *FirewallPolicyFilterRuleCollectionAction `json:"action,omitempty"`
-		Name               *string                                   `json:"name,omitempty"`
-		Priority           *int64                                    `json:"priority,omitempty"`
-		RuleCollectionType FirewallPolicyRuleCollectionType          `json:"ruleCollectionType"`
-	}
+	type alias FirewallPolicyFilterRuleCollection
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into FirewallPolicyFilterRuleCollection: %+v", err)
 	}
 
 	s.Action = decoded.Action
@@ -93,6 +89,5 @@ func (s *FirewallPolicyFilterRuleCollection) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Rules = &output
 	}
-
 	return nil
 }

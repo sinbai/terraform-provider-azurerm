@@ -25,20 +25,10 @@ type ProtectionContainerMappingProperties struct {
 var _ json.Unmarshaler = &ProtectionContainerMappingProperties{}
 
 func (s *ProtectionContainerMappingProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Health                                *string        `json:"health,omitempty"`
-		HealthErrorDetails                    *[]HealthError `json:"healthErrorDetails,omitempty"`
-		PolicyFriendlyName                    *string        `json:"policyFriendlyName,omitempty"`
-		PolicyId                              *string        `json:"policyId,omitempty"`
-		SourceFabricFriendlyName              *string        `json:"sourceFabricFriendlyName,omitempty"`
-		SourceProtectionContainerFriendlyName *string        `json:"sourceProtectionContainerFriendlyName,omitempty"`
-		State                                 *string        `json:"state,omitempty"`
-		TargetFabricFriendlyName              *string        `json:"targetFabricFriendlyName,omitempty"`
-		TargetProtectionContainerFriendlyName *string        `json:"targetProtectionContainerFriendlyName,omitempty"`
-		TargetProtectionContainerId           *string        `json:"targetProtectionContainerId,omitempty"`
-	}
+	type alias ProtectionContainerMappingProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into ProtectionContainerMappingProperties: %+v", err)
 	}
 
 	s.Health = decoded.Health
@@ -64,6 +54,5 @@ func (s *ProtectionContainerMappingProperties) UnmarshalJSON(bytes []byte) error
 		}
 		s.ProviderSpecificDetails = impl
 	}
-
 	return nil
 }

@@ -24,19 +24,10 @@ type TopicProperties struct {
 var _ json.Unmarshaler = &TopicProperties{}
 
 func (s *TopicProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		DataResidencyBoundary      *DataResidencyBoundary       `json:"dataResidencyBoundary,omitempty"`
-		DisableLocalAuth           *bool                        `json:"disableLocalAuth,omitempty"`
-		Endpoint                   *string                      `json:"endpoint,omitempty"`
-		InboundIPRules             *[]InboundIPRule             `json:"inboundIpRules,omitempty"`
-		InputSchema                *InputSchema                 `json:"inputSchema,omitempty"`
-		MetricResourceId           *string                      `json:"metricResourceId,omitempty"`
-		PrivateEndpointConnections *[]PrivateEndpointConnection `json:"privateEndpointConnections,omitempty"`
-		ProvisioningState          *TopicProvisioningState      `json:"provisioningState,omitempty"`
-		PublicNetworkAccess        *PublicNetworkAccess         `json:"publicNetworkAccess,omitempty"`
-	}
+	type alias TopicProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into TopicProperties: %+v", err)
 	}
 
 	s.DataResidencyBoundary = decoded.DataResidencyBoundary
@@ -61,6 +52,5 @@ func (s *TopicProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.InputSchemaMapping = impl
 	}
-
 	return nil
 }

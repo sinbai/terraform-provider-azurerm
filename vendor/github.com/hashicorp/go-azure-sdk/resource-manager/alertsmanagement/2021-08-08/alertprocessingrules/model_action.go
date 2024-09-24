@@ -48,9 +48,9 @@ func UnmarshalActionImplementation(input []byte) (Action, error) {
 		return nil, fmt.Errorf("unmarshaling Action into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["actionType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["actionType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "AddActionGroups") {

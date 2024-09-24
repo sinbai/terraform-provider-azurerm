@@ -17,12 +17,10 @@ type FunctionConfiguration struct {
 var _ json.Unmarshaler = &FunctionConfiguration{}
 
 func (s *FunctionConfiguration) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Inputs *[]FunctionInput `json:"inputs,omitempty"`
-		Output *FunctionOutput  `json:"output,omitempty"`
-	}
+	type alias FunctionConfiguration
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into FunctionConfiguration: %+v", err)
 	}
 
 	s.Inputs = decoded.Inputs
@@ -40,6 +38,5 @@ func (s *FunctionConfiguration) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Binding = impl
 	}
-
 	return nil
 }

@@ -24,19 +24,10 @@ type UpdateReplicationProtectedItemInputProperties struct {
 var _ json.Unmarshaler = &UpdateReplicationProtectedItemInputProperties{}
 
 func (s *UpdateReplicationProtectedItemInputProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		EnableRdpOnTargetOption        *string              `json:"enableRdpOnTargetOption,omitempty"`
-		LicenseType                    *LicenseType         `json:"licenseType,omitempty"`
-		RecoveryAvailabilitySetId      *string              `json:"recoveryAvailabilitySetId,omitempty"`
-		RecoveryAzureVMName            *string              `json:"recoveryAzureVMName,omitempty"`
-		RecoveryAzureVMSize            *string              `json:"recoveryAzureVMSize,omitempty"`
-		SelectedRecoveryAzureNetworkId *string              `json:"selectedRecoveryAzureNetworkId,omitempty"`
-		SelectedSourceNicId            *string              `json:"selectedSourceNicId,omitempty"`
-		SelectedTfoAzureNetworkId      *string              `json:"selectedTfoAzureNetworkId,omitempty"`
-		VMNics                         *[]VMNicInputDetails `json:"vmNics,omitempty"`
-	}
+	type alias UpdateReplicationProtectedItemInputProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into UpdateReplicationProtectedItemInputProperties: %+v", err)
 	}
 
 	s.EnableRdpOnTargetOption = decoded.EnableRdpOnTargetOption
@@ -61,6 +52,5 @@ func (s *UpdateReplicationProtectedItemInputProperties) UnmarshalJSON(bytes []by
 		}
 		s.ProviderSpecificDetails = impl
 	}
-
 	return nil
 }

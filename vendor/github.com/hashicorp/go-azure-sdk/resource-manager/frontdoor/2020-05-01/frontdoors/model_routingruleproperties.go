@@ -22,17 +22,10 @@ type RoutingRuleProperties struct {
 var _ json.Unmarshaler = &RoutingRuleProperties{}
 
 func (s *RoutingRuleProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		AcceptedProtocols                *[]FrontDoorProtocol                                         `json:"acceptedProtocols,omitempty"`
-		EnabledState                     *RoutingRuleEnabledState                                     `json:"enabledState,omitempty"`
-		FrontendEndpoints                *[]SubResource                                               `json:"frontendEndpoints,omitempty"`
-		PatternsToMatch                  *[]string                                                    `json:"patternsToMatch,omitempty"`
-		ResourceState                    *FrontDoorResourceState                                      `json:"resourceState,omitempty"`
-		RulesEngine                      *SubResource                                                 `json:"rulesEngine,omitempty"`
-		WebApplicationFirewallPolicyLink *RoutingRuleUpdateParametersWebApplicationFirewallPolicyLink `json:"webApplicationFirewallPolicyLink,omitempty"`
-	}
+	type alias RoutingRuleProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into RoutingRuleProperties: %+v", err)
 	}
 
 	s.AcceptedProtocols = decoded.AcceptedProtocols
@@ -55,6 +48,5 @@ func (s *RoutingRuleProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.RouteConfiguration = impl
 	}
-
 	return nil
 }

@@ -50,9 +50,9 @@ func UnmarshalRecurrenceImplementation(input []byte) (Recurrence, error) {
 		return nil, fmt.Errorf("unmarshaling Recurrence into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["recurrenceType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["recurrenceType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "Daily") {

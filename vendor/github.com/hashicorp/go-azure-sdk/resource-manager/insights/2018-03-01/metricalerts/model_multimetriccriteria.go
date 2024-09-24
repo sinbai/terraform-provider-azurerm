@@ -54,9 +54,9 @@ func UnmarshalMultiMetricCriteriaImplementation(input []byte) (MultiMetricCriter
 		return nil, fmt.Errorf("unmarshaling MultiMetricCriteria into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["criterionType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["criterionType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "DynamicThresholdCriterion") {

@@ -57,9 +57,9 @@ func UnmarshalComputeImplementation(input []byte) (Compute, error) {
 		return nil, fmt.Errorf("unmarshaling Compute into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["computeType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["computeType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "AKS") {

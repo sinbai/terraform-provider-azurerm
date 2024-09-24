@@ -16,11 +16,10 @@ type SwitchProviderInputProperties struct {
 var _ json.Unmarshaler = &SwitchProviderInputProperties{}
 
 func (s *SwitchProviderInputProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		TargetInstanceType *string `json:"targetInstanceType,omitempty"`
-	}
+	type alias SwitchProviderInputProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into SwitchProviderInputProperties: %+v", err)
 	}
 
 	s.TargetInstanceType = decoded.TargetInstanceType
@@ -37,6 +36,5 @@ func (s *SwitchProviderInputProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.ProviderSpecificDetails = impl
 	}
-
 	return nil
 }

@@ -54,12 +54,10 @@ func (s DeploymentConfiguration) MarshalJSON() ([]byte, error) {
 var _ json.Unmarshaler = &DeploymentConfiguration{}
 
 func (s *DeploymentConfiguration) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		AppLocation       *string              `json:"appLocation,omitempty"`
-		ConfigurationType SAPConfigurationType `json:"configurationType"`
-	}
+	type alias DeploymentConfiguration
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into DeploymentConfiguration: %+v", err)
 	}
 
 	s.AppLocation = decoded.AppLocation
@@ -85,6 +83,5 @@ func (s *DeploymentConfiguration) UnmarshalJSON(bytes []byte) error {
 		}
 		s.SoftwareConfiguration = impl
 	}
-
 	return nil
 }

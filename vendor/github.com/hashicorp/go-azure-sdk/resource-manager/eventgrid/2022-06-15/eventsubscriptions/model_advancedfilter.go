@@ -49,9 +49,9 @@ func UnmarshalAdvancedFilterImplementation(input []byte) (AdvancedFilter, error)
 		return nil, fmt.Errorf("unmarshaling AdvancedFilter into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["operatorType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["operatorType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "BoolEquals") {

@@ -18,13 +18,10 @@ type TaggingCriteria struct {
 var _ json.Unmarshaler = &TaggingCriteria{}
 
 func (s *TaggingCriteria) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		IsDefault       bool         `json:"isDefault"`
-		TagInfo         RetentionTag `json:"tagInfo"`
-		TaggingPriority int64        `json:"taggingPriority"`
-	}
+	type alias TaggingCriteria
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into TaggingCriteria: %+v", err)
 	}
 
 	s.IsDefault = decoded.IsDefault
@@ -52,6 +49,5 @@ func (s *TaggingCriteria) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Criteria = &output
 	}
-
 	return nil
 }

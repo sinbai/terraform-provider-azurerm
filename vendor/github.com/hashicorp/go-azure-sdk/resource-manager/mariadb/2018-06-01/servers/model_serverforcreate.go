@@ -18,13 +18,10 @@ type ServerForCreate struct {
 var _ json.Unmarshaler = &ServerForCreate{}
 
 func (s *ServerForCreate) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Location string             `json:"location"`
-		Sku      *Sku               `json:"sku,omitempty"`
-		Tags     *map[string]string `json:"tags,omitempty"`
-	}
+	type alias ServerForCreate
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into ServerForCreate: %+v", err)
 	}
 
 	s.Location = decoded.Location
@@ -43,6 +40,5 @@ func (s *ServerForCreate) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Properties = impl
 	}
-
 	return nil
 }

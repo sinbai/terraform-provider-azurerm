@@ -48,9 +48,9 @@ func UnmarshalRouteConfigurationImplementation(input []byte) (RouteConfiguration
 		return nil, fmt.Errorf("unmarshaling RouteConfiguration into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["@odata.type"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["@odata.type"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration") {

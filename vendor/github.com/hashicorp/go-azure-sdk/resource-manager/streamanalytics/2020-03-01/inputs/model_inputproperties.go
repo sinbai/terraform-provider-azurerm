@@ -46,15 +46,10 @@ func (s RawInputPropertiesImpl) InputProperties() BaseInputPropertiesImpl {
 var _ json.Unmarshaler = &BaseInputPropertiesImpl{}
 
 func (s *BaseInputPropertiesImpl) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Compression  *Compression `json:"compression,omitempty"`
-		Diagnostics  *Diagnostics `json:"diagnostics,omitempty"`
-		Etag         *string      `json:"etag,omitempty"`
-		PartitionKey *string      `json:"partitionKey,omitempty"`
-		Type         string       `json:"type"`
-	}
+	type alias BaseInputPropertiesImpl
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into BaseInputPropertiesImpl: %+v", err)
 	}
 
 	s.Compression = decoded.Compression
@@ -75,7 +70,6 @@ func (s *BaseInputPropertiesImpl) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Serialization = impl
 	}
-
 	return nil
 }
 
@@ -89,9 +83,9 @@ func UnmarshalInputPropertiesImplementation(input []byte) (InputProperties, erro
 		return nil, fmt.Errorf("unmarshaling InputProperties into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["type"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["type"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "Reference") {

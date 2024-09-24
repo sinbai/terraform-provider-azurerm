@@ -16,11 +16,10 @@ type ServiceBusQueueEventSubscriptionDestinationProperties struct {
 var _ json.Unmarshaler = &ServiceBusQueueEventSubscriptionDestinationProperties{}
 
 func (s *ServiceBusQueueEventSubscriptionDestinationProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		ResourceId *string `json:"resourceId,omitempty"`
-	}
+	type alias ServiceBusQueueEventSubscriptionDestinationProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into ServiceBusQueueEventSubscriptionDestinationProperties: %+v", err)
 	}
 
 	s.ResourceId = decoded.ResourceId
@@ -46,6 +45,5 @@ func (s *ServiceBusQueueEventSubscriptionDestinationProperties) UnmarshalJSON(by
 		}
 		s.DeliveryAttributeMappings = &output
 	}
-
 	return nil
 }

@@ -50,9 +50,9 @@ func UnmarshalFirewallPolicyRuleCollectionImplementation(input []byte) (Firewall
 		return nil, fmt.Errorf("unmarshaling FirewallPolicyRuleCollection into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["ruleCollectionType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["ruleCollectionType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "FirewallPolicyFilterRuleCollection") {

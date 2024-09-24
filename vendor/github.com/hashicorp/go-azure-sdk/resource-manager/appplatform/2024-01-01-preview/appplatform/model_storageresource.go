@@ -21,14 +21,10 @@ type StorageResource struct {
 var _ json.Unmarshaler = &StorageResource{}
 
 func (s *StorageResource) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Id         *string                `json:"id,omitempty"`
-		Name       *string                `json:"name,omitempty"`
-		SystemData *systemdata.SystemData `json:"systemData,omitempty"`
-		Type       *string                `json:"type,omitempty"`
-	}
+	type alias StorageResource
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into StorageResource: %+v", err)
 	}
 
 	s.Id = decoded.Id
@@ -48,6 +44,5 @@ func (s *StorageResource) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Properties = impl
 	}
-
 	return nil
 }

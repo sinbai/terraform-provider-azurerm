@@ -43,12 +43,10 @@ func (s RawSelectorImpl) Selector() BaseSelectorImpl {
 var _ json.Unmarshaler = &BaseSelectorImpl{}
 
 func (s *BaseSelectorImpl) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Id   string       `json:"id"`
-		Type SelectorType `json:"type"`
-	}
+	type alias BaseSelectorImpl
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into BaseSelectorImpl: %+v", err)
 	}
 
 	s.Id = decoded.Id
@@ -66,7 +64,6 @@ func (s *BaseSelectorImpl) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Filter = impl
 	}
-
 	return nil
 }
 
@@ -80,9 +77,9 @@ func UnmarshalSelectorImplementation(input []byte) (Selector, error) {
 		return nil, fmt.Errorf("unmarshaling Selector into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["type"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["type"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "List") {

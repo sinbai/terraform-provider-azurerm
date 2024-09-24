@@ -48,9 +48,9 @@ func UnmarshalItemLevelRestoreCriteriaImplementation(input []byte) (ItemLevelRes
 		return nil, fmt.Errorf("unmarshaling ItemLevelRestoreCriteria into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["objectType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["objectType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "ItemPathBasedRestoreCriteria") {

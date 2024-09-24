@@ -16,11 +16,10 @@ type FactoryRepoUpdate struct {
 var _ json.Unmarshaler = &FactoryRepoUpdate{}
 
 func (s *FactoryRepoUpdate) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		FactoryResourceId *string `json:"factoryResourceId,omitempty"`
-	}
+	type alias FactoryRepoUpdate
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into FactoryRepoUpdate: %+v", err)
 	}
 
 	s.FactoryResourceId = decoded.FactoryResourceId
@@ -37,6 +36,5 @@ func (s *FactoryRepoUpdate) UnmarshalJSON(bytes []byte) error {
 		}
 		s.RepoConfiguration = impl
 	}
-
 	return nil
 }

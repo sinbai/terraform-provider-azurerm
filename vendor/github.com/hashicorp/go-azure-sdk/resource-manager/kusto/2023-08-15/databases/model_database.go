@@ -52,9 +52,9 @@ func UnmarshalDatabaseImplementation(input []byte) (Database, error) {
 		return nil, fmt.Errorf("unmarshaling Database into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["kind"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["kind"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "ReadOnlyFollowing") {

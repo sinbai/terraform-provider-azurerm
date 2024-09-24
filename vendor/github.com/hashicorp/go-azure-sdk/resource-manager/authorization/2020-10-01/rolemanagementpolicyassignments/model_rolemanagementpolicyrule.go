@@ -49,9 +49,9 @@ func UnmarshalRoleManagementPolicyRuleImplementation(input []byte) (RoleManageme
 		return nil, fmt.Errorf("unmarshaling RoleManagementPolicyRule into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["ruleType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["ruleType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	var parent BaseRoleManagementPolicyRuleImpl

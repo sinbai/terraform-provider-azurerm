@@ -49,17 +49,10 @@ func (o *AutomationRuleProperties) SetLastModifiedTimeUtcAsTime(input time.Time)
 var _ json.Unmarshaler = &AutomationRuleProperties{}
 
 func (s *AutomationRuleProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		CreatedBy           *ClientInfo                   `json:"createdBy,omitempty"`
-		CreatedTimeUtc      *string                       `json:"createdTimeUtc,omitempty"`
-		DisplayName         string                        `json:"displayName"`
-		LastModifiedBy      *ClientInfo                   `json:"lastModifiedBy,omitempty"`
-		LastModifiedTimeUtc *string                       `json:"lastModifiedTimeUtc,omitempty"`
-		Order               int64                         `json:"order"`
-		TriggeringLogic     AutomationRuleTriggeringLogic `json:"triggeringLogic"`
-	}
+	type alias AutomationRuleProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into AutomationRuleProperties: %+v", err)
 	}
 
 	s.CreatedBy = decoded.CreatedBy
@@ -91,6 +84,5 @@ func (s *AutomationRuleProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Actions = output
 	}
-
 	return nil
 }

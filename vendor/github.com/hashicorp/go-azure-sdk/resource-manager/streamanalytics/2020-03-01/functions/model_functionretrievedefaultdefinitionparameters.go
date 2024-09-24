@@ -48,9 +48,9 @@ func UnmarshalFunctionRetrieveDefaultDefinitionParametersImplementation(input []
 		return nil, fmt.Errorf("unmarshaling FunctionRetrieveDefaultDefinitionParameters into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["bindingType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["bindingType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "Microsoft.MachineLearning/WebService") {

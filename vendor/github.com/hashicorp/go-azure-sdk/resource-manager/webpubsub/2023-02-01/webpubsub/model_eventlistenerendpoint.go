@@ -48,9 +48,9 @@ func UnmarshalEventListenerEndpointImplementation(input []byte) (EventListenerEn
 		return nil, fmt.Errorf("unmarshaling EventListenerEndpoint into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["type"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["type"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "EventHub") {

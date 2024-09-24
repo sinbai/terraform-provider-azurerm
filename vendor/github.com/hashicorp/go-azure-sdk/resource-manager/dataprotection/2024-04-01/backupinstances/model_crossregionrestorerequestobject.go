@@ -16,11 +16,10 @@ type CrossRegionRestoreRequestObject struct {
 var _ json.Unmarshaler = &CrossRegionRestoreRequestObject{}
 
 func (s *CrossRegionRestoreRequestObject) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		CrossRegionRestoreDetails CrossRegionRestoreDetails `json:"crossRegionRestoreDetails"`
-	}
+	type alias CrossRegionRestoreRequestObject
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into CrossRegionRestoreRequestObject: %+v", err)
 	}
 
 	s.CrossRegionRestoreDetails = decoded.CrossRegionRestoreDetails
@@ -37,6 +36,5 @@ func (s *CrossRegionRestoreRequestObject) UnmarshalJSON(bytes []byte) error {
 		}
 		s.RestoreRequestObject = impl
 	}
-
 	return nil
 }

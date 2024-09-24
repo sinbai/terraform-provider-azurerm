@@ -20,15 +20,10 @@ type AlertProcessingRuleProperties struct {
 var _ json.Unmarshaler = &AlertProcessingRuleProperties{}
 
 func (s *AlertProcessingRuleProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Conditions  *[]Condition `json:"conditions,omitempty"`
-		Description *string      `json:"description,omitempty"`
-		Enabled     *bool        `json:"enabled,omitempty"`
-		Schedule    *Schedule    `json:"schedule,omitempty"`
-		Scopes      []string     `json:"scopes"`
-	}
+	type alias AlertProcessingRuleProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into AlertProcessingRuleProperties: %+v", err)
 	}
 
 	s.Conditions = decoded.Conditions
@@ -58,6 +53,5 @@ func (s *AlertProcessingRuleProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Actions = output
 	}
-
 	return nil
 }

@@ -16,11 +16,10 @@ type UpdateApplianceForReplicationProtectedItemInputProperties struct {
 var _ json.Unmarshaler = &UpdateApplianceForReplicationProtectedItemInputProperties{}
 
 func (s *UpdateApplianceForReplicationProtectedItemInputProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		TargetApplianceId string `json:"targetApplianceId"`
-	}
+	type alias UpdateApplianceForReplicationProtectedItemInputProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into UpdateApplianceForReplicationProtectedItemInputProperties: %+v", err)
 	}
 
 	s.TargetApplianceId = decoded.TargetApplianceId
@@ -37,6 +36,5 @@ func (s *UpdateApplianceForReplicationProtectedItemInputProperties) UnmarshalJSO
 		}
 		s.ProviderSpecificDetails = impl
 	}
-
 	return nil
 }

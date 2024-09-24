@@ -52,9 +52,9 @@ func UnmarshalServiceResourcePropertiesImplementation(input []byte) (ServiceReso
 		return nil, fmt.Errorf("unmarshaling ServiceResourceProperties into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["serviceType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["serviceType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "DataTransfer") {

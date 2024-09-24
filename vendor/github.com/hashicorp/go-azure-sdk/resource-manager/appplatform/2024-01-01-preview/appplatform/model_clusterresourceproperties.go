@@ -26,21 +26,10 @@ type ClusterResourceProperties struct {
 var _ json.Unmarshaler = &ClusterResourceProperties{}
 
 func (s *ClusterResourceProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Fqdn                 *string              `json:"fqdn,omitempty"`
-		InfraResourceGroup   *string              `json:"infraResourceGroup,omitempty"`
-		ManagedEnvironmentId *string              `json:"managedEnvironmentId,omitempty"`
-		MarketplaceResource  *MarketplaceResource `json:"marketplaceResource,omitempty"`
-		NetworkProfile       *NetworkProfile      `json:"networkProfile,omitempty"`
-		PowerState           *PowerState          `json:"powerState,omitempty"`
-		ProvisioningState    *ProvisioningState   `json:"provisioningState,omitempty"`
-		ServiceId            *string              `json:"serviceId,omitempty"`
-		Version              *int64               `json:"version,omitempty"`
-		VnetAddons           *ServiceVNetAddons   `json:"vnetAddons,omitempty"`
-		ZoneRedundant        *bool                `json:"zoneRedundant,omitempty"`
-	}
+	type alias ClusterResourceProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into ClusterResourceProperties: %+v", err)
 	}
 
 	s.Fqdn = decoded.Fqdn
@@ -67,6 +56,5 @@ func (s *ClusterResourceProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.MaintenanceScheduleConfiguration = impl
 	}
-
 	return nil
 }

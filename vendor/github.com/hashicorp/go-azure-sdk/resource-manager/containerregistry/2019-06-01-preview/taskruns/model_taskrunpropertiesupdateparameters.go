@@ -16,11 +16,10 @@ type TaskRunPropertiesUpdateParameters struct {
 var _ json.Unmarshaler = &TaskRunPropertiesUpdateParameters{}
 
 func (s *TaskRunPropertiesUpdateParameters) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		ForceUpdateTag *string `json:"forceUpdateTag,omitempty"`
-	}
+	type alias TaskRunPropertiesUpdateParameters
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into TaskRunPropertiesUpdateParameters: %+v", err)
 	}
 
 	s.ForceUpdateTag = decoded.ForceUpdateTag
@@ -37,6 +36,5 @@ func (s *TaskRunPropertiesUpdateParameters) UnmarshalJSON(bytes []byte) error {
 		}
 		s.RunRequest = impl
 	}
-
 	return nil
 }

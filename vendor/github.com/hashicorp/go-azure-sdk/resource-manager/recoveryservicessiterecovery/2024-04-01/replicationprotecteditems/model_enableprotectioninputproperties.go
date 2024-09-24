@@ -17,12 +17,10 @@ type EnableProtectionInputProperties struct {
 var _ json.Unmarshaler = &EnableProtectionInputProperties{}
 
 func (s *EnableProtectionInputProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		PolicyId          *string `json:"policyId,omitempty"`
-		ProtectableItemId *string `json:"protectableItemId,omitempty"`
-	}
+	type alias EnableProtectionInputProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into EnableProtectionInputProperties: %+v", err)
 	}
 
 	s.PolicyId = decoded.PolicyId
@@ -40,6 +38,5 @@ func (s *EnableProtectionInputProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.ProviderSpecificDetails = impl
 	}
-
 	return nil
 }

@@ -49,9 +49,9 @@ func UnmarshalAutomationRuleActionImplementation(input []byte) (AutomationRuleAc
 		return nil, fmt.Errorf("unmarshaling AutomationRuleAction into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["actionType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["actionType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "ModifyProperties") {

@@ -16,11 +16,10 @@ type ActiveSecurityAdminRulesListResult struct {
 var _ json.Unmarshaler = &ActiveSecurityAdminRulesListResult{}
 
 func (s *ActiveSecurityAdminRulesListResult) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		SkipToken *string `json:"skipToken,omitempty"`
-	}
+	type alias ActiveSecurityAdminRulesListResult
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into ActiveSecurityAdminRulesListResult: %+v", err)
 	}
 
 	s.SkipToken = decoded.SkipToken
@@ -46,6 +45,5 @@ func (s *ActiveSecurityAdminRulesListResult) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Value = &output
 	}
-
 	return nil
 }

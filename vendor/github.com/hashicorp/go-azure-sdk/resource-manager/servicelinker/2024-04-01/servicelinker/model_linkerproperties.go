@@ -23,17 +23,10 @@ type LinkerProperties struct {
 var _ json.Unmarshaler = &LinkerProperties{}
 
 func (s *LinkerProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		ClientType            *ClientType            `json:"clientType,omitempty"`
-		ConfigurationInfo     *ConfigurationInfo     `json:"configurationInfo,omitempty"`
-		ProvisioningState     *string                `json:"provisioningState,omitempty"`
-		PublicNetworkSolution *PublicNetworkSolution `json:"publicNetworkSolution,omitempty"`
-		Scope                 *string                `json:"scope,omitempty"`
-		SecretStore           *SecretStore           `json:"secretStore,omitempty"`
-		VNetSolution          *VNetSolution          `json:"vNetSolution,omitempty"`
-	}
+	type alias LinkerProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into LinkerProperties: %+v", err)
 	}
 
 	s.ClientType = decoded.ClientType
@@ -64,6 +57,5 @@ func (s *LinkerProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.TargetService = impl
 	}
-
 	return nil
 }

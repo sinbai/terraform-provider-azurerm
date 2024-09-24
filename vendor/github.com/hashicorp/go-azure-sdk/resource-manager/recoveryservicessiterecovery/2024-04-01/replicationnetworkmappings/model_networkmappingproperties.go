@@ -23,18 +23,10 @@ type NetworkMappingProperties struct {
 var _ json.Unmarshaler = &NetworkMappingProperties{}
 
 func (s *NetworkMappingProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		PrimaryFabricFriendlyName   *string `json:"primaryFabricFriendlyName,omitempty"`
-		PrimaryNetworkFriendlyName  *string `json:"primaryNetworkFriendlyName,omitempty"`
-		PrimaryNetworkId            *string `json:"primaryNetworkId,omitempty"`
-		RecoveryFabricArmId         *string `json:"recoveryFabricArmId,omitempty"`
-		RecoveryFabricFriendlyName  *string `json:"recoveryFabricFriendlyName,omitempty"`
-		RecoveryNetworkFriendlyName *string `json:"recoveryNetworkFriendlyName,omitempty"`
-		RecoveryNetworkId           *string `json:"recoveryNetworkId,omitempty"`
-		State                       *string `json:"state,omitempty"`
-	}
+	type alias NetworkMappingProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into NetworkMappingProperties: %+v", err)
 	}
 
 	s.PrimaryFabricFriendlyName = decoded.PrimaryFabricFriendlyName
@@ -58,6 +50,5 @@ func (s *NetworkMappingProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.FabricSpecificSettings = impl
 	}
-
 	return nil
 }

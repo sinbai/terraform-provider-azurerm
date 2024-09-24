@@ -16,11 +16,10 @@ type DeadLetterWithResourceIdentity struct {
 var _ json.Unmarshaler = &DeadLetterWithResourceIdentity{}
 
 func (s *DeadLetterWithResourceIdentity) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Identity *EventSubscriptionIdentity `json:"identity,omitempty"`
-	}
+	type alias DeadLetterWithResourceIdentity
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into DeadLetterWithResourceIdentity: %+v", err)
 	}
 
 	s.Identity = decoded.Identity
@@ -37,6 +36,5 @@ func (s *DeadLetterWithResourceIdentity) UnmarshalJSON(bytes []byte) error {
 		}
 		s.DeadLetterDestination = impl
 	}
-
 	return nil
 }

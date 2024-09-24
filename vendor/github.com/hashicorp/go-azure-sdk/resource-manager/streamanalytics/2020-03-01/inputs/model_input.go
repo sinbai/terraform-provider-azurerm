@@ -18,13 +18,10 @@ type Input struct {
 var _ json.Unmarshaler = &Input{}
 
 func (s *Input) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Id   *string `json:"id,omitempty"`
-		Name *string `json:"name,omitempty"`
-		Type *string `json:"type,omitempty"`
-	}
+	type alias Input
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into Input: %+v", err)
 	}
 
 	s.Id = decoded.Id
@@ -43,6 +40,5 @@ func (s *Input) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Properties = impl
 	}
-
 	return nil
 }

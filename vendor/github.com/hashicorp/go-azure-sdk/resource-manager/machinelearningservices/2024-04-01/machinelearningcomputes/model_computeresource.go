@@ -26,18 +26,10 @@ type ComputeResource struct {
 var _ json.Unmarshaler = &ComputeResource{}
 
 func (s *ComputeResource) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		Id         *string                                  `json:"id,omitempty"`
-		Identity   *identity.LegacySystemAndUserAssignedMap `json:"identity,omitempty"`
-		Location   *string                                  `json:"location,omitempty"`
-		Name       *string                                  `json:"name,omitempty"`
-		Sku        *Sku                                     `json:"sku,omitempty"`
-		SystemData *systemdata.SystemData                   `json:"systemData,omitempty"`
-		Tags       *map[string]string                       `json:"tags,omitempty"`
-		Type       *string                                  `json:"type,omitempty"`
-	}
+	type alias ComputeResource
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into ComputeResource: %+v", err)
 	}
 
 	s.Id = decoded.Id
@@ -61,6 +53,5 @@ func (s *ComputeResource) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Properties = impl
 	}
-
 	return nil
 }

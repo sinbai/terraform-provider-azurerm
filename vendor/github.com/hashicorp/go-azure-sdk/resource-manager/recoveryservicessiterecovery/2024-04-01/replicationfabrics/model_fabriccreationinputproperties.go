@@ -28,6 +28,5 @@ func (s *FabricCreationInputProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.CustomDetails = impl
 	}
-
 	return nil
 }

@@ -48,9 +48,9 @@ func UnmarshalRecoveryPlanProviderSpecificInputImplementation(input []byte) (Rec
 		return nil, fmt.Errorf("unmarshaling RecoveryPlanProviderSpecificInput into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["instanceType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["instanceType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "A2A") {

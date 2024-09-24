@@ -16,11 +16,10 @@ type HybridConnectionEventSubscriptionDestinationProperties struct {
 var _ json.Unmarshaler = &HybridConnectionEventSubscriptionDestinationProperties{}
 
 func (s *HybridConnectionEventSubscriptionDestinationProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		ResourceId *string `json:"resourceId,omitempty"`
-	}
+	type alias HybridConnectionEventSubscriptionDestinationProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into HybridConnectionEventSubscriptionDestinationProperties: %+v", err)
 	}
 
 	s.ResourceId = decoded.ResourceId
@@ -46,6 +45,5 @@ func (s *HybridConnectionEventSubscriptionDestinationProperties) UnmarshalJSON(b
 		}
 		s.DeliveryAttributeMappings = &output
 	}
-
 	return nil
 }

@@ -48,9 +48,9 @@ func UnmarshalEventSubscriptionDestinationImplementation(input []byte) (EventSub
 		return nil, fmt.Errorf("unmarshaling EventSubscriptionDestination into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["endpointType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["endpointType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "AzureFunction") {

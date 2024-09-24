@@ -48,9 +48,9 @@ func UnmarshalDatastoreCredentialsImplementation(input []byte) (DatastoreCredent
 		return nil, fmt.Errorf("unmarshaling DatastoreCredentials into map[string]interface: %+v", err)
 	}
 
-	var value string
-	if v, ok := temp["credentialsType"]; ok {
-		value = fmt.Sprintf("%v", v)
+	value, ok := temp["credentialsType"].(string)
+	if !ok {
+		return nil, nil
 	}
 
 	if strings.EqualFold(value, "AccountKey") {

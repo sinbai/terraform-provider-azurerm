@@ -23,18 +23,10 @@ type TaskPropertiesUpdateParameters struct {
 var _ json.Unmarshaler = &TaskPropertiesUpdateParameters{}
 
 func (s *TaskPropertiesUpdateParameters) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		AgentConfiguration *AgentProperties          `json:"agentConfiguration,omitempty"`
-		AgentPoolName      *string                   `json:"agentPoolName,omitempty"`
-		Credentials        *Credentials              `json:"credentials,omitempty"`
-		LogTemplate        *string                   `json:"logTemplate,omitempty"`
-		Platform           *PlatformUpdateParameters `json:"platform,omitempty"`
-		Status             *TaskStatus               `json:"status,omitempty"`
-		Timeout            *int64                    `json:"timeout,omitempty"`
-		Trigger            *TriggerUpdateParameters  `json:"trigger,omitempty"`
-	}
+	type alias TaskPropertiesUpdateParameters
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into TaskPropertiesUpdateParameters: %+v", err)
 	}
 
 	s.AgentConfiguration = decoded.AgentConfiguration
@@ -58,6 +50,5 @@ func (s *TaskPropertiesUpdateParameters) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Step = impl
 	}
-
 	return nil
 }

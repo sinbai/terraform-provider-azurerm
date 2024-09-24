@@ -40,19 +40,10 @@ func (o *EventSubscriptionProperties) SetExpirationTimeUtcAsTime(input time.Time
 var _ json.Unmarshaler = &EventSubscriptionProperties{}
 
 func (s *EventSubscriptionProperties) UnmarshalJSON(bytes []byte) error {
-	var decoded struct {
-		DeadLetterWithResourceIdentity *DeadLetterWithResourceIdentity     `json:"deadLetterWithResourceIdentity,omitempty"`
-		DeliveryWithResourceIdentity   *DeliveryWithResourceIdentity       `json:"deliveryWithResourceIdentity,omitempty"`
-		EventDeliverySchema            *EventDeliverySchema                `json:"eventDeliverySchema,omitempty"`
-		ExpirationTimeUtc              *string                             `json:"expirationTimeUtc,omitempty"`
-		Filter                         *EventSubscriptionFilter            `json:"filter,omitempty"`
-		Labels                         *[]string                           `json:"labels,omitempty"`
-		ProvisioningState              *EventSubscriptionProvisioningState `json:"provisioningState,omitempty"`
-		RetryPolicy                    *RetryPolicy                        `json:"retryPolicy,omitempty"`
-		Topic                          *string                             `json:"topic,omitempty"`
-	}
+	type alias EventSubscriptionProperties
+	var decoded alias
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
-		return fmt.Errorf("unmarshaling: %+v", err)
+		return fmt.Errorf("unmarshaling into EventSubscriptionProperties: %+v", err)
 	}
 
 	s.DeadLetterWithResourceIdentity = decoded.DeadLetterWithResourceIdentity
@@ -85,6 +76,5 @@ func (s *EventSubscriptionProperties) UnmarshalJSON(bytes []byte) error {
 		}
 		s.Destination = impl
 	}
-
 	return nil
 }
