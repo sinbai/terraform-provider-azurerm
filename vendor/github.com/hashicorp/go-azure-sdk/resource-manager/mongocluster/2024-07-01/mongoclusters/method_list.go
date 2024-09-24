@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
-	
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 

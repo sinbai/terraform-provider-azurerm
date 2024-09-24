@@ -4,11 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	
 
-	
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
-	
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
@@ -49,7 +46,6 @@ func (c MongoClustersClient) ListConnectionStrings(ctx context.Context, id Mongo
 
 	var model ListConnectionStringsResult
 	result.Model = &model
-
 	if err = resp.Unmarshal(result.Model); err != nil {
 		return
 	}

@@ -2,11 +2,9 @@ package mongoclusters
 
 import (
 	"context"
-
 	"net/http"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
-
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
@@ -47,7 +45,6 @@ func (c MongoClustersClient) Get(ctx context.Context, id MongoClusterId) (result
 
 	var model MongoCluster
 	result.Model = &model
-
 	if err = resp.Unmarshal(result.Model); err != nil {
 		return
 	}
