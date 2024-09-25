@@ -15,7 +15,11 @@ type MongoClustersClient struct {
 }
 
 func NewMongoClustersClientWithBaseURI(sdkApi sdkEnv.Api) (*MongoClustersClient, error) {
+<<<<<<< HEAD
 	client, err := resourcemanager.NewResourceManagerClient(sdkApi, "mongoclusters", defaultApiVersion)
+=======
+	client, err := resourcemanager.NewClient(sdkApi, "mongoclusters", defaultApiVersion)
+>>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 	if err != nil {
 		return nil, fmt.Errorf("instantiating MongoClustersClient: %+v", err)
 	}

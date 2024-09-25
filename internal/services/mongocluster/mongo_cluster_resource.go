@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
@@ -35,22 +37,22 @@ func (r MongoClusterResource) ModelObject() interface{} {
 }
 
 type MongoClusterResourceModel struct {
-	Name                        string                  `tfschema:"name"`
-	ResourceGroupName           string                  `tfschema:"resource_group_name"`
-	Location                    string                  `tfschema:"location"`
-	AdministratorLogin          string                  `tfschema:"administrator_login"`
-	AdministratorLoginPassword  string                  `tfschema:"administrator_login_password"`
-	CreateMode                  string                  `tfschema:"create_mode"`
-	PointInTimeRestoreTimeInUtc string                  `tfschema:"point_in_time_restore_time_in_utc"`
-	ShardCount                  int64                   `tfschema:"shard_count"`
-	SourceServerId              string                  `tfschema:"source_server_id"`
-	SourceLocation              string                  `tfschema:"source_location"`
-	ComputeTier                 string                  `tfschema:"compute_tier"`
-	HighAvailability            []HighAvailabilityModel `tfschema:"high_availability"`
-	PublicNetworkAccessEnabled  bool                    `tfschema:"public_network_access_enabled"`
-	StorageSizeInGb             int64                   `tfschema:"storage_size_in_gb"`
-	Tags                        map[string]string       `tfschema:"tags"`
-	Version                     string                  `tfschema:"version"`
+	Name                       string            `tfschema:"name"`
+	ResourceGroupName          string            `tfschema:"resource_group_name"`
+	Location                   string            `tfschema:"location"`
+	AdministratorLogin         string            `tfschema:"administrator_login"`
+	AdministratorLoginPassword string            `tfschema:"administrator_login_password"`
+	CreateMode                 string            `tfschema:"create_mode"`
+	ShardCount                 int64             `tfschema:"shard_count"`
+	SourceServerId             string            `tfschema:"source_server_id"`
+	SourceLocation             string            `tfschema:"source_location"`
+	ComputeTier                string            `tfschema:"compute_tier"`
+	HighAvailabilityMode       string            `tfschema:"high_availability_mode"`
+	PublicNetworkAccessEnabled bool              `tfschema:"public_network_access_enabled"`
+	PreviewFeatures            []string          `tfschema:"preview_features"`
+	StorageSizeInGb            int64             `tfschema:"storage_size_in_gb"`
+	Tags                       map[string]string `tfschema:"tags"`
+	Version                    string            `tfschema:"version"`
 }
 
 func (r MongoClusterResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
@@ -81,36 +83,35 @@ func (r MongoClusterResource) Arguments() map[string]*pluginsdk.Schema {
 		"location": commonschema.Location(),
 
 		"administrator_login": {
-			Type:     pluginsdk.TypeString,
-			Optional: true,
-			ForceNew: true,
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			ForceNew:     true,
+			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"administrator_login_password": {
-			Type:      pluginsdk.TypeString,
-			Optional:  true,
-			Sensitive: true,
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			Sensitive:    true,
+			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"create_mode": {
-			Type:         pluginsdk.TypeString,
-			Optional:     true,
-			ForceNew:     true,
-			ValidateFunc: validation.StringInSlice(mongoclusters.PossibleValuesForCreateMode(), false),
-		},
-
-		"point_in_time_restore_time_in_utc": {
-			Type:         pluginsdk.TypeString,
-			Optional:     true,
-			ForceNew:     true,
-			ValidateFunc: validation.IsRFC3339Time,
+			Type:     pluginsdk.TypeString,
+			Optional: true,
+			ForceNew: true,
+			Default:  string(mongoclusters.CreateModeDefault),
+			ValidateFunc: validation.StringInSlice([]string{
+				string(mongoclusters.CreateModeDefault),
+				string(mongoclusters.CreateModeGeoReplica),
+			}, false),
 		},
 
 		"shard_count": {
 			Type:         pluginsdk.TypeInt,
 			Optional:     true,
 			ValidateFunc: validation.IntAtLeast(1),
-			//ForceNew: true,
+			ForceNew:     true,
 		},
 
 		"source_server_id": {
@@ -120,7 +121,24 @@ func (r MongoClusterResource) Arguments() map[string]*pluginsdk.Schema {
 			ValidateFunc: mongoclusters.ValidateMongoClusterID,
 		},
 
-		"source_location": commonschema.LocationOptional(),
+		"source_location": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			StateFunc:        location.StateFunc,
+			DiffSuppressFunc: location.DiffSuppressFunc,
+			RequiredWith:     []string{"source_server_id"},
+		},
+
+		"preview_features": {
+			Type:     pluginsdk.TypeList,
+			Optional: true,
+			ForceNew: true,
+			Elem: &pluginsdk.Schema{
+				Type:         pluginsdk.TypeString,
+				ValidateFunc: validation.StringInSlice(mongoclusters.PossibleValuesForPreviewFeature(), false),
+			},
+		},
 
 		"compute_tier": {
 			Type:     pluginsdk.TypeString,
@@ -136,19 +154,13 @@ func (r MongoClusterResource) Arguments() map[string]*pluginsdk.Schema {
 			}, false),
 		},
 
-		"high_availability": {
-			Type:     pluginsdk.TypeList,
+		"high_availability_mode": {
+			Type:     pluginsdk.TypeString,
 			Optional: true,
-			MaxItems: 1,
-			Elem: &pluginsdk.Resource{
-				Schema: map[string]*pluginsdk.Schema{
-					"mode": {
-						Type:         pluginsdk.TypeString,
-						Required:     true,
-						ValidateFunc: validation.StringInSlice(mongoclusters.PossibleValuesForHighAvailabilityMode(), false),
-					},
-				},
-			},
+			ValidateFunc: validation.StringInSlice([]string{
+				string(mongoclusters.HighAvailabilityModeDisabled),
+				string(mongoclusters.HighAvailabilityModeZoneRedundantPreferred),
+			}, false),
 		},
 
 		"public_network_access_enabled": {
@@ -166,9 +178,13 @@ func (r MongoClusterResource) Arguments() map[string]*pluginsdk.Schema {
 		"tags": commonschema.Tags(),
 
 		"version": {
-			Type:         pluginsdk.TypeString,
-			Optional:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
+			Type:     pluginsdk.TypeString,
+			Optional: true,
+			ValidateFunc: validation.StringInSlice([]string{
+				"5.0",
+				"6.0",
+				"7.0",
+			}, false),
 		},
 	}
 }
@@ -239,9 +255,9 @@ func (r MongoClusterResource) Create() sdk.ResourceFunc {
 				parameter.Properties.CreateMode = pointer.To(mongoclusters.CreateMode(state.CreateMode))
 			}
 
-			if _, ok := metadata.ResourceData.GetOk("high_availability"); ok {
+			if _, ok := metadata.ResourceData.GetOk("high_availability_mode"); ok {
 				parameter.Properties.HighAvailability = &mongoclusters.HighAvailabilityProperties{
-					TargetMode: pointer.To(mongoclusters.HighAvailabilityMode(state.HighAvailability[0].Mode)),
+					TargetMode: pointer.To(mongoclusters.HighAvailabilityMode(state.HighAvailabilityMode)),
 				}
 			}
 
@@ -251,29 +267,15 @@ func (r MongoClusterResource) Create() sdk.ResourceFunc {
 				parameter.Properties.PublicNetworkAccess = pointer.To(mongoclusters.PublicNetworkAccessDisabled)
 			}
 
-			if _, ok := metadata.ResourceData.GetOk("source_server_id"); ok {
-				switch state.CreateMode {
-				case string(mongoclusters.CreateModeGeoReplica):
-					parameter.Properties.ReplicaParameters = &mongoclusters.MongoClusterReplicaParameters{
-						SourceResourceId: state.SourceServerId,
-						SourceLocation:   state.SourceLocation,
-					}
-				case string(mongoclusters.CreateModeReplica):
-					parameter.Properties.ReplicaParameters = &mongoclusters.MongoClusterReplicaParameters{
-						SourceResourceId: state.SourceServerId,
-					}
-				case string(mongoclusters.CreateModePointInTimeRestore):
-					parameter.Properties.RestoreParameters = &mongoclusters.MongoClusterRestoreParameters{
-						SourceResourceId: pointer.To(state.SourceServerId),
-					}
-					if state.PointInTimeRestoreTimeInUtc != "" {
-						v, err := time.Parse(time.RFC3339, state.PointInTimeRestoreTimeInUtc)
-						if err != nil {
-							return fmt.Errorf("unable to parse `point_in_time_restore_time_in_utc` value")
-						}
-						parameter.Properties.RestoreParameters.SetPointInTimeUTCAsTime(v)
-					}
+			if state.CreateMode == string(mongoclusters.CreateModeGeoReplica) {
+				parameter.Properties.ReplicaParameters = &mongoclusters.MongoClusterReplicaParameters{
+					SourceResourceId: state.SourceServerId,
+					SourceLocation:   state.SourceLocation,
 				}
+			}
+
+			if v, ok := metadata.ResourceData.GetOk("preview_features"); ok {
+				parameter.Properties.PreviewFeatures = expandPreviewFeatures(v.([]string))
 			}
 
 			if _, ok := metadata.ResourceData.GetOk("tags"); ok {
@@ -344,9 +346,9 @@ func (r MongoClusterResource) Update() sdk.ResourceFunc {
 				}
 			}
 
-			if metadata.ResourceData.HasChange("high_availability") {
+			if metadata.ResourceData.HasChange("high_availability_mode") {
 				model.Properties.HighAvailability = &mongoclusters.HighAvailabilityProperties{
-					TargetMode: pointer.To(mongoclusters.HighAvailabilityMode(state.HighAvailability[0].Mode)),
+					TargetMode: pointer.To(mongoclusters.HighAvailabilityMode(state.HighAvailabilityMode)),
 				}
 			}
 
@@ -381,71 +383,6 @@ func (r MongoClusterResource) Update() sdk.ResourceFunc {
 			if err := client.CreateOrUpdateThenPoll(ctx, *id, *model); err != nil {
 				return fmt.Errorf("updating %s: %+v", id, err)
 			}
-
-			//metadata.Logger.Infof("updating %s", id)
-			//parameter := mongoclusters.MongoClusterUpdate{
-			//	Properties: &mongoclusters.MongoClusterUpdateProperties{},
-			//}
-			//
-			//if metadata.ResourceData.HasChange("compute_tier") {
-			//	parameter.Properties.Compute = &mongoclusters.ComputeProperties{
-			//		Tier: pointer.To(state.ComputeTier),
-			//	}
-			//	oldComputeTier, newComputeTier := metadata.ResourceData.GetChange("compute_tier")
-			//	if (oldComputeTier == "Free" || oldComputeTier == "M25") && newComputeTier != "Free" && newComputeTier != "M25" {
-			//		metadata.Logger.Infof("updating cluster tier for %s", id)
-			//		// upgrades involving Free or M25(Burstable) cluster tier require first upgrading the cluster tier, after which other configurations can be updated.
-			//		if err := client.UpdateThenPoll(ctx, *id, parameter); err != nil {
-			//			return fmt.Errorf("updating %s: %+v", id, err)
-			//		}
-			//	}
-			//}
-			//
-			//metadata.Logger.Infof("updating other configurations for %s", id)
-			//if metadata.ResourceData.HasChange("administrator_login_password") {
-			//	parameter.Properties.Administrator = &mongoclusters.AdministratorProperties{
-			//		UserName: pointer.To(state.AdministratorLogin),
-			//		Password: pointer.To(state.AdministratorLoginPassword),
-			//	}
-			//}
-			//
-			//if metadata.ResourceData.HasChange("high_availability") {
-			//	parameter.Properties.HighAvailability = &mongoclusters.HighAvailabilityProperties{
-			//		TargetMode: pointer.To(mongoclusters.HighAvailabilityMode(state.HighAvailability[0].Mode)),
-			//	}
-			//}
-			//
-			//if metadata.ResourceData.HasChange("public_network_access_enabled") {
-			//	if state.PublicNetworkAccessEnabled {
-			//		parameter.Properties.PublicNetworkAccess = pointer.To(mongoclusters.PublicNetworkAccessEnabled)
-			//	} else {
-			//		parameter.Properties.PublicNetworkAccess = pointer.To(mongoclusters.PublicNetworkAccessDisabled)
-			//	}
-			//}
-			//
-			//if metadata.ResourceData.HasChange("storage_size_in_gb") {
-			//	parameter.Properties.Storage = &mongoclusters.StorageProperties{
-			//		SizeGb: pointer.To(state.StorageSizeInGb),
-			//	}
-			//}
-			//
-			//if metadata.ResourceData.HasChange("shard_count") {
-			//	parameter.Properties.Sharding = &mongoclusters.ShardingProperties{
-			//		ShardCount: pointer.To(state.ShardCount),
-			//	}
-			//}
-			//
-			//if metadata.ResourceData.HasChange("version") {
-			//	parameter.Properties.ServerVersion = pointer.To(state.Version)
-			//}
-			//
-			//if metadata.ResourceData.HasChange("tags") {
-			//	parameter.Tags = pointer.To(state.Tags)
-			//}
-			//
-			//if err := client.UpdateThenPoll(ctx, *id, parameter); err != nil {
-			//	return fmt.Errorf("updating %s: %+v", id, err)
-			//}
 
 			return nil
 		},
@@ -489,10 +426,6 @@ func (r MongoClusterResource) Read() sdk.ResourceFunc {
 						state.AdministratorLogin = pointer.From(v.UserName)
 					}
 
-					if v := props.RestoreParameters; v != nil {
-						state.PointInTimeRestoreTimeInUtc = pointer.From(v.PointInTimeUTC)
-						state.SourceServerId = pointer.From(v.SourceResourceId)
-					}
 					if v := props.ReplicaParameters; v != nil {
 						state.SourceLocation = v.SourceLocation
 						state.SourceServerId = v.SourceResourceId
@@ -503,13 +436,16 @@ func (r MongoClusterResource) Read() sdk.ResourceFunc {
 					if v := props.Compute; v != nil {
 						state.ComputeTier = pointer.From(v.Tier)
 					}
-					state.HighAvailability = flattenMongoClusterHighAvailability(props.HighAvailability)
 
+					if v := props.HighAvailability; v != nil {
+						state.HighAvailabilityMode = string(pointer.From(v.TargetMode))
+					}
 					state.PublicNetworkAccessEnabled = pointer.From(props.PublicNetworkAccess) == mongoclusters.PublicNetworkAccessEnabled
 
 					if v := props.Storage; v != nil {
 						state.StorageSizeInGb = pointer.From(v.SizeGb)
 					}
+
 					state.Version = pointer.From(props.ServerVersion)
 				}
 			}
@@ -548,8 +484,7 @@ func (r MongoClusterResource) CustomizeDiff() sdk.ResourceFunc {
 				return fmt.Errorf("DecodeDiff: %+v", err)
 			}
 
-			switch mongoclusters.CreateMode(state.CreateMode) {
-			case mongoclusters.CreateModeDefault, "":
+			if state.CreateMode == string(mongoclusters.CreateModeDefault) || state.CreateMode == "" {
 				if _, ok := metadata.ResourceDiff.GetOk("administrator_login"); !ok {
 					return fmt.Errorf("`administrator_login` is required when `create_mode` is not specified or is specified as %s", string(mongoclusters.CreateModeDefault))
 				}
@@ -577,28 +512,24 @@ func (r MongoClusterResource) CustomizeDiff() sdk.ResourceFunc {
 				if _, ok := metadata.ResourceDiff.GetOk("version"); !ok {
 					return fmt.Errorf("`version` is required when `create_mode` is not specified or is specified as  %s", string(mongoclusters.CreateModeDefault))
 				}
-			case mongoclusters.CreateModeReplica:
-				if state.SourceServerId == "" {
-					return fmt.Errorf("`source_server_id` is required when create_mode is %s", string(mongoclusters.CreateModeReplica))
-				}
-			case mongoclusters.CreateModeGeoReplica:
-				if state.SourceLocation == "" || state.SourceServerId == "" {
-					return fmt.Errorf("`source_location` and `source_server_id` are required when create_mode is %s", string(mongoclusters.CreateModeGeoReplica))
-				}
-
-			case mongoclusters.CreateModePointInTimeRestore:
-				if state.PointInTimeRestoreTimeInUtc == "" || state.SourceServerId == "" {
-					return fmt.Errorf("`source_server_id` and `point_in_time_restore_time_in_utc` are required when create_mode is %s", string(mongoclusters.CreateModePointInTimeRestore))
-				}
 			}
 
 			if state.ComputeTier == "Free" || state.ComputeTier == "M25" {
-				if len(state.HighAvailability) > 0 && (state.HighAvailability[0].Mode == string(mongoclusters.HighAvailabilityModeSameZone) || state.HighAvailability[0].Mode == string(mongoclusters.HighAvailabilityModeZoneRedundantPreferred)) {
+				if state.HighAvailabilityMode == string(mongoclusters.HighAvailabilityModeZoneRedundantPreferred) {
 					return fmt.Errorf("high Availability is not available with the 'Free' or 'M25' Cluster Tier")
 				}
 
 				if state.ShardCount > 1 {
-					return fmt.Errorf("shard count > 1 is not supported for the 'Free' or 'M25' Cluster Tier")
+					return fmt.Errorf("the value of `shard_count` cannot exceed 1 for the 'Free' or 'M25' Cluster Tier")
+				}
+			}
+
+			if state.CreateMode == string(mongoclusters.CreateModeGeoReplica) {
+				if state.SourceServerId == "" {
+					return fmt.Errorf("`source_serverId` is required when `create_mode` is set to `GeoReplica`")
+				}
+				if state.SourceLocation == "" {
+					return fmt.Errorf("`source_location` is required when `create_mode` is set to `GeoReplica`")
 				}
 			}
 
@@ -607,14 +538,14 @@ func (r MongoClusterResource) CustomizeDiff() sdk.ResourceFunc {
 	}
 }
 
-func flattenMongoClusterHighAvailability(ha *mongoclusters.HighAvailabilityProperties) []HighAvailabilityModel {
-	if ha == nil {
-		return []HighAvailabilityModel{}
+func expandPreviewFeatures(input []string) *[]mongoclusters.PreviewFeature {
+	result := make([]mongoclusters.PreviewFeature, 0)
+
+	for _, v := range input {
+		if v != "" {
+			result = append(result, mongoclusters.PreviewFeature(v))
+		}
 	}
 
-	return []HighAvailabilityModel{
-		{
-			Mode: string(pointer.From(ha.TargetMode)),
-		},
-	}
+	return &result
 }
