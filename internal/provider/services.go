@@ -165,6 +165,7 @@ func SupportedTypedServices() []sdk.TypedServiceRegistration {
 		elasticsan.Registration{},
 		eventhub.Registration{},
 		extendedlocation.Registration{},
+		fabriccapacities.Registration{},
 		fluidrelay.Registration{},
 		graphservices.Registration{},
 		hybridcompute.Registration{},

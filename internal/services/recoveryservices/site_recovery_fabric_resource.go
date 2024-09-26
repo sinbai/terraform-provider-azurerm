@@ -133,7 +133,7 @@ func resourceSiteRecoveryFabricRead(d *pluginsdk.ResourceData, meta interface{})
 				if !ok {
 					return fmt.Errorf("expected `details` to be an AzureFabricSpecificDetails but it wasn't: %+v", details)
 				}
-				d.Set("location", location.NormalizeNilable(fabric.Location))
+				d.Set("location", location.NormalizeNilable(fabriccapacities.Location))
 			}
 		}
 	}

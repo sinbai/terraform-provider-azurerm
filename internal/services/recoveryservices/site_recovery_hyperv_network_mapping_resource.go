@@ -227,8 +227,8 @@ func fetchFabricIdByFriendlyName(ctx context.Context, fabricClient *replicationf
 	}
 
 	for _, fabric := range fabrics.Items {
-		if fabric.Properties != nil && fabric.Properties.FriendlyName != nil && *fabric.Properties.FriendlyName == friendlyName && fabric.Id != nil {
-			return handleAzureSdkForGoBug2824(*fabric.Id), nil
+		if fabriccapacities.Properties != nil && fabriccapacities.Properties.FriendlyName != nil && *fabriccapacities.Properties.FriendlyName == friendlyName && fabriccapacities.Id != nil {
+			return handleAzureSdkForGoBug2824(*fabriccapacities.Id), nil
 		}
 	}
 
