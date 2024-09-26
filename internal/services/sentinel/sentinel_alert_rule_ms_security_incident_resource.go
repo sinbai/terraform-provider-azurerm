@@ -179,14 +179,14 @@ func resourceSentinelAlertRuleMsSecurityIncidentCreateUpdate(d *pluginsdk.Resour
 	}
 
 	if !d.IsNewResource() {
-		resp, err := client.Get(ctx, id)
+		// resp, err := client.Get(ctx, id)
 		if err != nil {
 			return fmt.Errorf("retrieving Sentinel Alert Rule Ms Security Incident %q: %+v", id, err)
 		}
 
-		if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindMicrosoftSecurityIncidentCreation); err != nil {
-			return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
-		}
+		// if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindMicrosoftSecurityIncidentCreation); err != nil {
+		// 	return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
+		// }
 	}
 
 	if _, err := client.CreateOrUpdate(ctx, id, param); err != nil {
@@ -220,11 +220,11 @@ func resourceSentinelAlertRuleMsSecurityIncidentRead(d *pluginsdk.ResourceData, 
 	}
 
 	if model := resp.Model; model != nil {
-		if err = assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindMicrosoftSecurityIncidentCreation); err != nil {
-			return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
-		}
+		// if err = assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindMicrosoftSecurityIncidentCreation); err != nil {
+		// 	return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
+		// }
 
-		modelPtr := *model
+		modelPtr := model
 		rule := modelPtr.(alertrules.MicrosoftSecurityIncidentCreationAlertRule)
 
 		d.Set("name", id.RuleId)

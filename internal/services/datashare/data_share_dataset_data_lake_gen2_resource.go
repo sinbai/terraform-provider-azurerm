@@ -182,7 +182,7 @@ func resourceDataShareDataSetDataLakeGen2Read(d *pluginsdk.ResourceData, meta in
 	d.Set("share_id", shareId.ID())
 
 	if model := resp.Model; model != nil {
-		m := *model
+		m := model
 		if ds, ok := m.(dataset.ADLSGen2FileDataSet); ok {
 			props := ds.Properties
 			d.Set("storage_account_id", commonids.NewStorageAccountID(props.SubscriptionId, props.ResourceGroup, props.StorageAccountName).ID())

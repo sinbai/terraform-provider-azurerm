@@ -167,9 +167,9 @@ func resourceSentinelAlertRuleFusionCreateUpdate(d *pluginsdk.ResourceData, meta
 		if resp.Model == nil {
 			return fmt.Errorf("retrieving %q: model was nil", id)
 		}
-		if err = assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindFusion); err != nil {
-			return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
-		}
+		// if err = assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindFusion); err != nil {
+		// 	return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
+		// }
 	}
 
 	if _, err := client.CreateOrUpdate(ctx, id, params); err != nil {
@@ -203,10 +203,10 @@ func resourceSentinelAlertRuleFusionRead(d *pluginsdk.ResourceData, meta interfa
 	}
 
 	if model := resp.Model; model != nil {
-		if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindFusion); err != nil {
-			return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
-		}
-		modelPtr := *model
+		// if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindFusion); err != nil {
+		// 	return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
+		// }
+		modelPtr := model
 		rule := modelPtr.(alertrules.FusionAlertRule)
 
 		d.Set("name", id.RuleId)

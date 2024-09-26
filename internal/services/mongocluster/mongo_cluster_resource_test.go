@@ -29,7 +29,7 @@ func TestAccMongoCluster_basic(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_login_password"),
+		data.ImportStep("administrator_login_password", "create_mode"),
 	})
 }
 
@@ -44,14 +44,14 @@ func TestAccMongoCluster_update(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_login_password"),
+		data.ImportStep("administrator_login_password", "create_mode"),
 		{
 			Config: r.update(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_login_password"),
+		data.ImportStep("administrator_login_password", "create_mode"),
 	})
 }
 
@@ -66,7 +66,14 @@ func TestAccMongoCluster_previewFeature(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_login_password"),
+		data.ImportStep("administrator_login_password", "create_mode"),
+		{
+			Config: r.geoReplica(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("administrator_login_password", "create_mode"),
 	})
 }
 
@@ -149,13 +156,7 @@ resource "azurerm_mongo_cluster" "import" {
   administrator_login_password = azurerm_mongo_cluster.test.administrator_login_password
   shard_count                  = azurerm_mongo_cluster.test.shard_count
   compute_tier                 = azurerm_mongo_cluster.test.compute_tier
-<<<<<<< HEAD
-  high_availability {
-    mode = "SameZone"
-  }
-=======
   high_availability_mode       = azurerm_mongo_cluster.test.high_availability_mode
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
   storage_size_in_gb           = azurerm_mongo_cluster.test.storage_size_in_gb
   version                      = azurerm_mongo_cluster.test.version
 }
@@ -176,9 +177,28 @@ resource "azurerm_mongo_cluster" "test" {
   compute_tier                 = "M30"
   high_availability_mode       = "ZoneRedundantPreferred"
   storage_size_in_gb           = "64"
-  preview_features             = ["GeoReplica"]
+  preview_features             = ["GeoReplicas"]
   version                      = "7.0"
+}
+`, r.template(data), data.RandomInteger)
+}
 
+func (r MongoClusterTestResource) geoReplica(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_mongo_cluster" "test" {
+  name                         = "acctest-mc%d"
+  resource_group_name          = azurerm_resource_group.test.name
+  location                     = azurerm_resource_group.test.location
+  administrator_login          = "adminTerraform"
+  administrator_login_password = "testQAZwsx123"
+  shard_count                  = "1"
+  compute_tier                 = "M30"
+  high_availability_mode       = "ZoneRedundantPreferred"
+  storage_size_in_gb           = "64"
+  preview_features             = ["GeoReplicas"]
+  version                      = "7.0"
 }
 
 resource "azurerm_mongo_cluster" "geo_replica" {
@@ -189,7 +209,6 @@ resource "azurerm_mongo_cluster" "geo_replica" {
   source_location              = "%s"
   create_mode                  = "GeoReplica"
 }
-
 `, r.template(data), data.RandomInteger, data.RandomInteger, data.Locations.Secondary)
 }
 

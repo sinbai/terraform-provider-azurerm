@@ -4,10 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-<<<<<<< HEAD
-=======
 
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
@@ -53,10 +50,6 @@ func (c MongoClustersClient) CheckNameAvailability(ctx context.Context, id Locat
 
 	var model CheckNameAvailabilityResponse
 	result.Model = &model
-<<<<<<< HEAD
-
-=======
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 	if err = resp.Unmarshal(result.Model); err != nil {
 		return
 	}

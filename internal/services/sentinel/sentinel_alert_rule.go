@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-azure-sdk/resource-manager/securityinsights/2022-10-01-preview/alertrules"
-	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azurerm/utils"
@@ -16,20 +15,20 @@ import (
 
 func importSentinelAlertRule(expectKind alertrules.AlertRuleKind) pluginsdk.ImporterFunc {
 	return func(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) (data []*pluginsdk.ResourceData, err error) {
-		id, err := alertrules.ParseAlertRuleID(d.Id())
-		if err != nil {
-			return nil, err
-		}
+		// id, err := alertrules.ParseAlertRuleID(d.Id())
+		// if err != nil {
+		// 	return nil, err
+		// }
 
-		client := meta.(*clients.Client).Sentinel.AlertRulesClient
-		resp, err := client.Get(ctx, *id)
-		if err != nil {
-			return nil, fmt.Errorf("retrieving Sentinel Alert Rule %q: %+v", id, err)
-		}
+		// client := meta.(*clients.Client).Sentinel.AlertRulesClient
+		// resp, err := client.Get(ctx, *id)
+		// if err != nil {
+		// 	return nil, fmt.Errorf("retrieving Sentinel Alert Rule %q: %+v", id, err)
+		// }
 
-		if err = assertAlertRuleKind(resp.Model, expectKind); err != nil {
-			return nil, err
-		}
+		// if err = assertAlertRuleKind(resp.Model, expectKind); err != nil {
+		// 	return nil, err
+		// }
 		return []*pluginsdk.ResourceData{d}, nil
 	}
 }
@@ -41,15 +40,15 @@ func importSentinelAlertRuleForTypedSdk(expectKind alertrules.AlertRuleKind) sdk
 			return err
 		}
 
-		client := metadata.Client.Sentinel.AlertRulesClient
-		resp, err := client.Get(ctx, *id)
+		// client := metadata.Client.Sentinel.AlertRulesClient
+		// resp, err := client.Get(ctx, *id)
 		if err != nil {
 			return fmt.Errorf("retrieving Sentinel Alert Rule %q: %+v", id, err)
 		}
 
-		if err := assertAlertRuleKind(resp.Model, expectKind); err != nil {
-			return err
-		}
+		// if err := assertAlertRuleKind(resp.Model, expectKind); err != nil {
+		// 	return err
+		// }
 		return nil
 	}
 }

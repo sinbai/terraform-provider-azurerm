@@ -1,11 +1,7 @@
 
 ## `github.com/hashicorp/go-azure-sdk/resource-manager/mongocluster/2024-07-01/mongoclusters` Documentation
 
-<<<<<<< HEAD
-The `mongoclusters` SDK allows for interaction with the Azure Resource Manager Service `mongocluster` (API Version `2024-07-01`).
-=======
 The `mongoclusters` SDK allows for interaction with Azure Resource Manager `mongocluster` (API Version `2024-07-01`).
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 
 This readme covers example usages, but further information on [using this SDK can be found in the project root](https://github.com/hashicorp/go-azure-sdk/tree/main/docs).
 
@@ -29,11 +25,7 @@ client.Client.Authorizer = authorizer
 
 ```go
 ctx := context.TODO()
-<<<<<<< HEAD
-id := mongoclusters.NewLocationID("12345678-1234-9876-4563-123456789012", "locationValue")
-=======
 id := mongoclusters.NewLocationID("12345678-1234-9876-4563-123456789012", "location")
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 
 payload := mongoclusters.CheckNameAvailabilityRequest{
 	// ...
@@ -54,11 +46,7 @@ if model := read.Model; model != nil {
 
 ```go
 ctx := context.TODO()
-<<<<<<< HEAD
-id := mongoclusters.NewMongoClusterID("12345678-1234-9876-4563-123456789012", "example-resource-group", "mongoClusterValue")
-=======
 id := mongoclusters.NewMongoClusterID("12345678-1234-9876-4563-123456789012", "example-resource-group", "mongoClusterName")
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 
 payload := mongoclusters.MongoCluster{
 	// ...
@@ -75,11 +63,7 @@ if err := client.CreateOrUpdateThenPoll(ctx, id, payload); err != nil {
 
 ```go
 ctx := context.TODO()
-<<<<<<< HEAD
-id := mongoclusters.NewMongoClusterID("12345678-1234-9876-4563-123456789012", "example-resource-group", "mongoClusterValue")
-=======
 id := mongoclusters.NewMongoClusterID("12345678-1234-9876-4563-123456789012", "example-resource-group", "mongoClusterName")
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 
 if err := client.DeleteThenPoll(ctx, id); err != nil {
 	// handle the error
@@ -91,11 +75,7 @@ if err := client.DeleteThenPoll(ctx, id); err != nil {
 
 ```go
 ctx := context.TODO()
-<<<<<<< HEAD
-id := mongoclusters.NewMongoClusterID("12345678-1234-9876-4563-123456789012", "example-resource-group", "mongoClusterValue")
-=======
 id := mongoclusters.NewMongoClusterID("12345678-1234-9876-4563-123456789012", "example-resource-group", "mongoClusterName")
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 
 read, err := client.Get(ctx, id)
 if err != nil {
@@ -145,11 +125,7 @@ for _, item := range items {
 
 ```go
 ctx := context.TODO()
-<<<<<<< HEAD
-id := mongoclusters.NewMongoClusterID("12345678-1234-9876-4563-123456789012", "example-resource-group", "mongoClusterValue")
-=======
 id := mongoclusters.NewMongoClusterID("12345678-1234-9876-4563-123456789012", "example-resource-group", "mongoClusterName")
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 
 read, err := client.ListConnectionStrings(ctx, id)
 if err != nil {
@@ -165,11 +141,7 @@ if model := read.Model; model != nil {
 
 ```go
 ctx := context.TODO()
-<<<<<<< HEAD
-id := mongoclusters.NewMongoClusterID("12345678-1234-9876-4563-123456789012", "example-resource-group", "mongoClusterValue")
-=======
 id := mongoclusters.NewMongoClusterID("12345678-1234-9876-4563-123456789012", "example-resource-group", "mongoClusterName")
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 
 payload := mongoclusters.PromoteReplicaRequest{
 	// ...
@@ -186,11 +158,7 @@ if err := client.PromoteThenPoll(ctx, id, payload); err != nil {
 
 ```go
 ctx := context.TODO()
-<<<<<<< HEAD
-id := mongoclusters.NewMongoClusterID("12345678-1234-9876-4563-123456789012", "example-resource-group", "mongoClusterValue")
-=======
 id := mongoclusters.NewMongoClusterID("12345678-1234-9876-4563-123456789012", "example-resource-group", "mongoClusterName")
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 
 payload := mongoclusters.MongoClusterUpdate{
 	// ...

@@ -9,13 +9,12 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/location"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/mongocluster/2024-07-01/mongoclusters"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/azure"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
@@ -27,14 +26,6 @@ type MongoClusterResource struct{}
 var _ sdk.ResourceWithUpdate = MongoClusterResource{}
 
 var _ sdk.ResourceWithCustomizeDiff = MongoClusterResource{}
-
-type HighAvailabilityModel struct {
-	Mode string `tfschema:"mode"`
-}
-
-func (r MongoClusterResource) ModelObject() interface{} {
-	return &MongoClusterResourceModel{}
-}
 
 type MongoClusterResourceModel struct {
 	Name                       string            `tfschema:"name"`
@@ -53,6 +44,10 @@ type MongoClusterResourceModel struct {
 	StorageSizeInGb            int64             `tfschema:"storage_size_in_gb"`
 	Tags                       map[string]string `tfschema:"tags"`
 	Version                    string            `tfschema:"version"`
+}
+
+func (r MongoClusterResource) ModelObject() interface{} {
+	return &MongoClusterResourceModel{}
 }
 
 func (r MongoClusterResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
@@ -275,7 +270,7 @@ func (r MongoClusterResource) Create() sdk.ResourceFunc {
 			}
 
 			if v, ok := metadata.ResourceData.GetOk("preview_features"); ok {
-				parameter.Properties.PreviewFeatures = expandPreviewFeatures(v.([]string))
+				parameter.Properties.PreviewFeatures = expandPreviewFeatures(v.([]interface{}))
 			}
 
 			if _, ok := metadata.ResourceData.GetOk("tags"); ok {
@@ -445,7 +440,9 @@ func (r MongoClusterResource) Read() sdk.ResourceFunc {
 					if v := props.Storage; v != nil {
 						state.StorageSizeInGb = pointer.From(v.SizeGb)
 					}
-
+					if v := props.PreviewFeatures; v != nil {
+						state.PreviewFeatures = flattenPreviewFeatures(v)
+					}
 					state.Version = pointer.From(props.ServerVersion)
 				}
 			}
@@ -501,8 +498,8 @@ func (r MongoClusterResource) CustomizeDiff() sdk.ResourceFunc {
 					return fmt.Errorf("`storage_size_in_gb` is required when `create_mode` is not specified or is specified as  %s", string(mongoclusters.CreateModeDefault))
 				}
 
-				if _, ok := metadata.ResourceDiff.GetOk("high_availability"); !ok {
-					return fmt.Errorf("`high_availability` is required when `create_mode` is not specified or is specified as  %s", string(mongoclusters.CreateModeDefault))
+				if _, ok := metadata.ResourceDiff.GetOk("high_availability_mode"); !ok {
+					return fmt.Errorf("`high_availability_mode` is required when `create_mode` is not specified or is specified as  %s", string(mongoclusters.CreateModeDefault))
 				}
 
 				if _, ok := metadata.ResourceDiff.GetOk("shard_count"); !ok {
@@ -526,7 +523,7 @@ func (r MongoClusterResource) CustomizeDiff() sdk.ResourceFunc {
 
 			if state.CreateMode == string(mongoclusters.CreateModeGeoReplica) {
 				if state.SourceServerId == "" {
-					return fmt.Errorf("`source_serverId` is required when `create_mode` is set to `GeoReplica`")
+					return fmt.Errorf("`source_server_id` is required when `create_mode` is set to `GeoReplica`")
 				}
 				if state.SourceLocation == "" {
 					return fmt.Errorf("`source_location` is required when `create_mode` is set to `GeoReplica`")
@@ -538,14 +535,26 @@ func (r MongoClusterResource) CustomizeDiff() sdk.ResourceFunc {
 	}
 }
 
-func expandPreviewFeatures(input []string) *[]mongoclusters.PreviewFeature {
+func expandPreviewFeatures(input []interface{}) *[]mongoclusters.PreviewFeature {
 	result := make([]mongoclusters.PreviewFeature, 0)
 
 	for _, v := range input {
 		if v != "" {
-			result = append(result, mongoclusters.PreviewFeature(v))
+			result = append(result, mongoclusters.PreviewFeature(v.(string)))
 		}
 	}
 
 	return &result
+}
+
+func flattenPreviewFeatures(input *[]mongoclusters.PreviewFeature) []string {
+	result := make([]string, 0)
+
+	for _, v := range *input {
+		if v != "" {
+			result = append(result, string(v))
+		}
+	}
+
+	return result
 }

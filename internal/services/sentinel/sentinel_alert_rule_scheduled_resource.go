@@ -543,14 +543,14 @@ func resourceSentinelAlertRuleScheduledCreateUpdate(d *pluginsdk.ResourceData, m
 	}
 
 	if !d.IsNewResource() {
-		resp, err := client.Get(ctx, id)
-		if err != nil {
-			return fmt.Errorf("retrieving Sentinel Alert Rule Scheduled %q: %+v", id, err)
-		}
+		// resp, err := client.Get(ctx, id)
+		// if err != nil {
+		// 	return fmt.Errorf("retrieving Sentinel Alert Rule Scheduled %q: %+v", id, err)
+		// }
 
-		if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindScheduled); err != nil {
-			return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
-		}
+		// if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindScheduled); err != nil {
+		// 	return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
+		// }
 	}
 
 	if _, err := client.CreateOrUpdate(ctx, id, param); err != nil {
@@ -583,12 +583,12 @@ func resourceSentinelAlertRuleScheduledRead(d *pluginsdk.ResourceData, meta inte
 		return fmt.Errorf("retrieving Sentinel Alert Rule Scheduled %q: %+v", id, err)
 	}
 
-	if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindScheduled); err != nil {
-		return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
-	}
+	// if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindScheduled); err != nil {
+	// 	return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
+	// }
 
 	if model := resp.Model; model != nil {
-		modelPtr := *model
+		modelPtr := model
 		rule := modelPtr.(alertrules.ScheduledAlertRule)
 
 		d.Set("name", id.RuleId)

@@ -399,11 +399,11 @@ func resourceSentinelAlertRuleNrtCreateUpdate(d *pluginsdk.ResourceData, meta in
 			return fmt.Errorf("retrieving %q: %+v", id, err)
 		}
 
-		if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindNRT); err != nil {
-			return fmt.Errorf("asserting %q: %+v", id, err)
-		}
+		// if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindNRT); err != nil {
+		// 	return fmt.Errorf("asserting %q: %+v", id, err)
+		// }
 		if model := resp.Model; model != nil {
-			modelPtr := *model
+			modelPtr := model
 			param.Etag = modelPtr.(alertrules.NrtAlertRule).Etag
 		}
 	}
@@ -438,12 +438,12 @@ func resourceSentinelAlertRuleNrtRead(d *pluginsdk.ResourceData, meta interface{
 		return fmt.Errorf("retrieving %q: %+v", id, err)
 	}
 
-	if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindNRT); err != nil {
-		return fmt.Errorf("asserting %q: %+v", id, err)
-	}
+	// if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindNRT); err != nil {
+	// 	return fmt.Errorf("asserting %q: %+v", id, err)
+	// }
 
 	if model := resp.Model; model != nil {
-		modelPtr := *model
+		modelPtr := model
 		rule := modelPtr.(alertrules.NrtAlertRule)
 
 		d.Set("name", id.RuleId)

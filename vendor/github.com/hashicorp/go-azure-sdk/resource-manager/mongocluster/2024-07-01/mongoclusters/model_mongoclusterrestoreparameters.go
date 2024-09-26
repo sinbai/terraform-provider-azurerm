@@ -1,17 +1,9 @@
 package mongoclusters
 
 import (
-<<<<<<< HEAD
-
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/dates"
-	
-=======
-	"time"
-
-	"github.com/hashicorp/go-azure-helpers/lang/dates"
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 )
 
 // Copyright (c) Microsoft Corporation. All rights reserved.

@@ -103,7 +103,7 @@ func dataSourceDataShareDatasetBlobStorageRead(d *pluginsdk.ResourceData, meta i
 	d.Set("data_share_id", shareId.ID())
 
 	if model := resp.Model; model != nil {
-		m := *model
+		m := model
 		if ds, ok := m.(dataset.BlobDataSet); ok {
 			props := ds.Properties
 			d.Set("container_name", props.ContainerName)

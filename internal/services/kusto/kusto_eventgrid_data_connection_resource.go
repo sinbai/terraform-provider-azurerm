@@ -254,7 +254,7 @@ func resourceKustoEventGridDataConnectionRead(d *pluginsdk.ResourceData, meta in
 	d.Set("database_name", id.DatabaseName)
 
 	if resp.Model != nil {
-		dataConnection := (*resp.Model).(dataconnections.EventGridDataConnection)
+		dataConnection := (resp.Model).(dataconnections.EventGridDataConnection)
 		d.Set("location", location.NormalizeNilable(dataConnection.Location))
 		if props := dataConnection.Properties; props != nil {
 			d.Set("storage_account_id", props.StorageAccountResourceId)

@@ -42,11 +42,7 @@ func ParseMongoClusterID(input string) (*MongoClusterId, error) {
 	}
 
 	id := MongoClusterId{}
-<<<<<<< HEAD
-	if err := id.FromParseResult(*parsed); err != nil {
-=======
 	if err = id.FromParseResult(*parsed); err != nil {
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 		return nil, err
 	}
 
@@ -63,11 +59,7 @@ func ParseMongoClusterIDInsensitively(input string) (*MongoClusterId, error) {
 	}
 
 	id := MongoClusterId{}
-<<<<<<< HEAD
-	if err := id.FromParseResult(*parsed); err != nil {
-=======
 	if err = id.FromParseResult(*parsed); err != nil {
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 		return nil, err
 	}
 
@@ -123,11 +115,7 @@ func (id MongoClusterId) Segments() []resourceids.Segment {
 		resourceids.StaticSegment("staticProviders", "providers", "providers"),
 		resourceids.ResourceProviderSegment("staticMicrosoftDocumentDB", "Microsoft.DocumentDB", "Microsoft.DocumentDB"),
 		resourceids.StaticSegment("staticMongoClusters", "mongoClusters", "mongoClusters"),
-<<<<<<< HEAD
-		resourceids.UserSpecifiedSegment("mongoClusterName", "mongoClusterValue"),
-=======
 		resourceids.UserSpecifiedSegment("mongoClusterName", "mongoClusterName"),
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 	}
 }
 

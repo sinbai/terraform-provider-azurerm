@@ -4,13 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-<<<<<<< HEAD
-	
 
-	
-=======
-
->>>>>>> 7a921d7afc5b9cf5038ddcdec068d7c1c5160c66
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/client/pollers"
 	"github.com/hashicorp/go-azure-sdk/sdk/client/resourcemanager"

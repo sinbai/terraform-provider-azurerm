@@ -81,9 +81,9 @@ func (r HyperVSiteResource) Create() sdk.ResourceFunc {
 			// the instance type `HyperVSite` is not exposed in Swagger, tracked on https://github.com/Azure/azure-rest-api-specs/issues/22016
 			parameters := replicationfabrics.FabricCreationInput{
 				Properties: &replicationfabrics.FabricCreationInputProperties{
-					CustomDetails: HyperVSiteInstanceType{
-						InstanceType: "HyperVSite",
-					},
+					// CustomDetails: HyperVSiteInstanceType{
+					// 	InstanceType: "HyperVSite",
+					// },
 				},
 			}
 

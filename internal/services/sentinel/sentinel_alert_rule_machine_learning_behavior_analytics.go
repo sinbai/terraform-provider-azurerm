@@ -101,14 +101,14 @@ func resourceSentinelAlertRuleMLBehaviorAnalyticsCreateUpdate(d *pluginsdk.Resou
 	}
 
 	if !d.IsNewResource() {
-		resp, err := client.Get(ctx, id)
-		if err != nil {
-			return fmt.Errorf("retrieving Sentinel Alert Rule MLBehaviorAnalytics %q: %+v", id, err)
-		}
+		// resp, err := client.Get(ctx, id)
+		// if err != nil {
+		// 	return fmt.Errorf("retrieving Sentinel Alert Rule MLBehaviorAnalytics %q: %+v", id, err)
+		// }
 
-		if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindMLBehaviorAnalytics); err != nil {
-			return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
-		}
+		// if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindMLBehaviorAnalytics); err != nil {
+		// 	return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
+		// }
 	}
 
 	if _, err := client.CreateOrUpdate(ctx, id, params); err != nil {
@@ -141,11 +141,11 @@ func resourceSentinelAlertRuleMLBehaviorAnalyticsRead(d *pluginsdk.ResourceData,
 		return fmt.Errorf("retrieving Sentinel Alert Rule MLBehaviorAnalytics %q: %+v", id, err)
 	}
 
-	if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindMLBehaviorAnalytics); err != nil {
-		return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
-	}
+	// if err := assertAlertRuleKind(resp.Model, alertrules.AlertRuleKindMLBehaviorAnalytics); err != nil {
+	// 	return fmt.Errorf("asserting alert rule of %q: %+v", id, err)
+	// }
 	if model := resp.Model; model != nil {
-		modelPtr := *model
+		modelPtr := model
 		rule := modelPtr.(alertrules.MLBehaviorAnalyticsAlertRule)
 
 		d.Set("name", id.RuleId)

@@ -113,7 +113,7 @@ func (h HyperVReplicationPolicyAssociationResource) Create() sdk.ResourceFunc {
 				Properties: &replicationprotectioncontainermappings.CreateProtectionContainerMappingInputProperties{
 					PolicyId:                    &plan.PolicyId,
 					TargetProtectionContainerId: utils.String(TargetContainerIdAzure),
-					ProviderSpecificInput:       hyperVMappingSpecificInput{},
+					// ProviderSpecificInput:       hyperVMappingSpecificInput{},
 				},
 			}
 			if err := client.CreateThenPoll(ctx, id, param); err != nil {

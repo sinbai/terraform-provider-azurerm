@@ -184,24 +184,24 @@ func (r MachineLearningDataStoreDataLakeGen2) Create() sdk.ResourceFunc {
 				Tags:                          pointer.To(model.Tags),
 			}
 
-			creds := map[string]interface{}{
-				"credentialsType": "None",
-			}
+			// creds := map[string]interface{}{
+			// 	"credentialsType": "None",
+			// }
 
 			if len(model.TenantID) != 0 && len(model.ClientID) != 0 && len(model.ClientSecret) != 0 {
-				creds = map[string]interface{}{
-					"credentialsType": string(datastore.CredentialsTypeServicePrincipal),
-					"authorityUrl":    model.AuthorityUrl,
-					"resourceUrl":     "https://datalake.azure.net/",
-					"tenantId":        model.TenantID,
-					"clientId":        model.ClientID,
-					"secrets": map[string]interface{}{
-						"secretsType":  "ServicePrincipal",
-						"clientSecret": model.ClientSecret,
-					},
-				}
+				// creds = map[string]interface{}{
+				// 	"credentialsType": string(datastore.CredentialsTypeServicePrincipal),
+				// 	"authorityUrl":    model.AuthorityUrl,
+				// 	"resourceUrl":     "https://datalake.azure.net/",
+				// 	"tenantId":        model.TenantID,
+				// 	"clientId":        model.ClientID,
+				// 	"secrets": map[string]interface{}{
+				// 		"secretsType":  "ServicePrincipal",
+				// 		"clientSecret": model.ClientSecret,
+				// 	},
+				// }
 			}
-			props.Credentials = creds
+			// props.Credentials = creds
 			datastoreRaw.Properties = props
 
 			_, err = client.CreateOrUpdate(ctx, id, datastoreRaw, datastore.CreateOrUpdateOperationOptions{SkipValidation: pointer.To(true)})
@@ -248,24 +248,24 @@ func (r MachineLearningDataStoreDataLakeGen2) Update() sdk.ResourceFunc {
 				Tags:                          pointer.To(state.Tags),
 			}
 
-			creds := map[string]interface{}{
-				"credentialsType": "None",
-			}
+			// creds := map[string]interface{}{
+			// 	"credentialsType": "None",
+			// }
 
 			if len(state.TenantID) != 0 && len(state.ClientID) != 0 && len(state.ClientSecret) != 0 {
-				creds = map[string]interface{}{
-					"credentialsType": string(datastore.CredentialsTypeServicePrincipal),
-					"authorityUrl":    state.AuthorityUrl,
-					"resourceUrl":     "https://datalake.azure.net/",
-					"tenantId":        state.TenantID,
-					"clientId":        state.ClientID,
-					"secrets": map[string]interface{}{
-						"secretsType":  "ServicePrincipal",
-						"clientSecret": state.ClientSecret,
-					},
-				}
+				// creds = map[string]interface{}{
+				// 	"credentialsType": string(datastore.CredentialsTypeServicePrincipal),
+				// 	"authorityUrl":    state.AuthorityUrl,
+				// 	"resourceUrl":     "https://datalake.azure.net/",
+				// 	"tenantId":        state.TenantID,
+				// 	"clientId":        state.ClientID,
+				// 	"secrets": map[string]interface{}{
+				// 		"secretsType":  "ServicePrincipal",
+				// 		"clientSecret": state.ClientSecret,
+				// 	},
+				// }
 			}
-			props.Credentials = creds
+			// props.Credentials = creds
 			datastoreRaw.Properties = props
 
 			_, err = client.CreateOrUpdate(ctx, *id, datastoreRaw, datastore.CreateOrUpdateOperationOptions{SkipValidation: pointer.To(true)})

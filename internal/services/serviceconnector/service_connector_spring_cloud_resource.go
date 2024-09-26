@@ -287,7 +287,7 @@ func (r SpringCloudConnectorResource) Update() sdk.ResourceFunc {
 			}
 
 			if d.HasChange("authentication") {
-				linkerProps.AuthInfo = state.AuthInfo
+				// linkerProps.AuthInfo = state.AuthInfo
 			}
 
 			props := links.LinkerPatch{

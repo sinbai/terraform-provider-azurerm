@@ -170,24 +170,24 @@ func (r MachineLearningDataStoreFileShare) Create() sdk.ResourceFunc {
 
 			accountKey := model.AccountKey
 			if accountKey != "" {
-				props.Credentials = map[string]interface{}{
-					"credentialsType": string(datastore.CredentialsTypeAccountKey),
-					"secrets": map[string]interface{}{
-						"secretsType": "AccountKey",
-						"key":         accountKey,
-					},
-				}
+				// props.Credentials = map[string]interface{}{
+				// 	"credentialsType": string(datastore.CredentialsTypeAccountKey),
+				// 	"secrets": map[string]interface{}{
+				// 		"secretsType": "AccountKey",
+				// 		"key":         accountKey,
+				// 	},
+				// }
 			}
 
 			sasToken := model.SharedAccessSignature
 			if sasToken != "" {
-				props.Credentials = map[string]interface{}{
-					"credentialsType": string(datastore.CredentialsTypeSas),
-					"secrets": map[string]interface{}{
-						"secretsType": "Sas",
-						"sasToken":    sasToken,
-					},
-				}
+				// props.Credentials = map[string]interface{}{
+				// 	"credentialsType": string(datastore.CredentialsTypeSas),
+				// 	"secrets": map[string]interface{}{
+				// 		"secretsType": "Sas",
+				// 		"sasToken":    sasToken,
+				// 	},
+				// }
 			}
 			datastoreRaw.Properties = props
 
@@ -238,24 +238,24 @@ func (r MachineLearningDataStoreFileShare) Update() sdk.ResourceFunc {
 
 			accountKey := state.AccountKey
 			if accountKey != "" {
-				props.Credentials = map[string]interface{}{
-					"credentialsType": string(datastore.CredentialsTypeAccountKey),
-					"secrets": map[string]interface{}{
-						"secretsType": "AccountKey",
-						"key":         accountKey,
-					},
-				}
+				// props.Credentials = map[string]interface{}{
+				// 	"credentialsType": string(datastore.CredentialsTypeAccountKey),
+				// 	"secrets": map[string]interface{}{
+				// 		"secretsType": "AccountKey",
+				// 		"key":         accountKey,
+				// 	},
+				// }
 			}
 
 			sasToken := state.SharedAccessSignature
 			if sasToken != "" {
-				props.Credentials = map[string]interface{}{
-					"credentialsType": string(datastore.CredentialsTypeSas),
-					"secrets": map[string]interface{}{
-						"secretsType": "Sas",
-						"sasToken":    sasToken,
-					},
-				}
+				// props.Credentials = map[string]interface{}{
+				// 	"credentialsType": string(datastore.CredentialsTypeSas),
+				// 	"secrets": map[string]interface{}{
+				// 		"secretsType": "Sas",
+				// 		"sasToken":    sasToken,
+				// 	},
+				// }
 			}
 			datastoreRaw.Properties = props
 
