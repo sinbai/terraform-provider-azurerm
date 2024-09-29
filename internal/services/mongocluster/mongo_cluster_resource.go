@@ -58,12 +58,12 @@ func (r MongoClusterResource) ResourceType() string {
 	return "azurerm_mongo_cluster"
 }
 
-func (r MongoClusterResource) Arguments() map[string]*pluginsdk.Schema {
-	return map[string]*pluginsdk.Schema{
+func (r MongoClusterResource) Arguments() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
 		"name": {
 			ForceNew: true,
 			Required: true,
-			Type:     pluginsdk.TypeString,
+			Type:     schema.TypeString,
 			ValidateFunc: validation.All(
 				validation.StringLenBetween(3, 40),
 				validation.StringMatch(
@@ -78,21 +78,22 @@ func (r MongoClusterResource) Arguments() map[string]*pluginsdk.Schema {
 		"location": commonschema.Location(),
 
 		"administrator_login": {
-			Type:         pluginsdk.TypeString,
+			Type:         schema.TypeString,
 			Optional:     true,
 			ForceNew:     true,
 			ValidateFunc: validation.StringIsNotEmpty,
+			Computed:     true,
 		},
 
 		"administrator_login_password": {
-			Type:         pluginsdk.TypeString,
+			Type:         schema.TypeString,
 			Optional:     true,
 			Sensitive:    true,
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"create_mode": {
-			Type:     pluginsdk.TypeString,
+			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,
 			Default:  string(mongoclusters.CreateModeDefault),
@@ -103,14 +104,14 @@ func (r MongoClusterResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"shard_count": {
-			Type:         pluginsdk.TypeInt,
+			Type:         schema.TypeInt,
 			Optional:     true,
 			ValidateFunc: validation.IntAtLeast(1),
 			ForceNew:     true,
 		},
 
 		"source_server_id": {
-			Type:         pluginsdk.TypeString,
+			Type:         schema.TypeString,
 			Optional:     true,
 			ForceNew:     true,
 			ValidateFunc: mongoclusters.ValidateMongoClusterID,
@@ -126,17 +127,17 @@ func (r MongoClusterResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"preview_features": {
-			Type:     pluginsdk.TypeList,
+			Type:     schema.TypeList,
 			Optional: true,
 			ForceNew: true,
-			Elem: &pluginsdk.Schema{
-				Type:         pluginsdk.TypeString,
+			Elem: &schema.Schema{
+				Type:         schema.TypeString,
 				ValidateFunc: validation.StringInSlice(mongoclusters.PossibleValuesForPreviewFeature(), false),
 			},
 		},
 
 		"compute_tier": {
-			Type:     pluginsdk.TypeString,
+			Type:     schema.TypeString,
 			Optional: true,
 			ValidateFunc: validation.StringInSlice([]string{
 				"Free",
@@ -150,7 +151,7 @@ func (r MongoClusterResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"high_availability_mode": {
-			Type:     pluginsdk.TypeString,
+			Type:     schema.TypeString,
 			Optional: true,
 			ValidateFunc: validation.StringInSlice([]string{
 				string(mongoclusters.HighAvailabilityModeDisabled),
@@ -159,13 +160,13 @@ func (r MongoClusterResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"public_network_access_enabled": {
-			Type:     pluginsdk.TypeBool,
+			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  true,
 		},
 
 		"storage_size_in_gb": {
-			Type:         pluginsdk.TypeInt,
+			Type:         schema.TypeInt,
 			Optional:     true,
 			ValidateFunc: validation.IntBetween(32, 16384),
 		},
@@ -173,7 +174,7 @@ func (r MongoClusterResource) Arguments() map[string]*pluginsdk.Schema {
 		"tags": commonschema.Tags(),
 
 		"version": {
-			Type:     pluginsdk.TypeString,
+			Type:     schema.TypeString,
 			Optional: true,
 			ValidateFunc: validation.StringInSlice([]string{
 				"5.0",
@@ -184,13 +185,13 @@ func (r MongoClusterResource) Arguments() map[string]*pluginsdk.Schema {
 	}
 }
 
-func (r MongoClusterResource) Attributes() map[string]*pluginsdk.Schema {
-	return map[string]*pluginsdk.Schema{}
+func (r MongoClusterResource) Attributes() map[string]*schema.Schema {
+	return map[string]*schema.Schema{}
 }
 
 func (r MongoClusterResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
-		Timeout: 30 * time.Minute,
+		Timeout: 110 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.MongoCluster.MongoClustersClient
 			subscriptionId := metadata.Client.Account.SubscriptionId
@@ -421,9 +422,8 @@ func (r MongoClusterResource) Read() sdk.ResourceFunc {
 						state.AdministratorLogin = pointer.From(v.UserName)
 					}
 
-					if v := props.ReplicaParameters; v != nil {
-						state.SourceLocation = v.SourceLocation
-						state.SourceServerId = v.SourceResourceId
+					if v := props.Replica; v != nil {
+						state.SourceServerId = pointer.From(v.SourceResourceId)
 					}
 					if v := props.Sharding; v != nil {
 						state.ShardCount = pointer.From(v.ShardCount)

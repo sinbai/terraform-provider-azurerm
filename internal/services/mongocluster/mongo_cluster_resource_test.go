@@ -6,6 +6,7 @@ package mongocluster_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -56,6 +57,11 @@ func TestAccMongoCluster_update(t *testing.T) {
 }
 
 func TestAccMongoCluster_previewFeature(t *testing.T) {
+	if os.Getenv("ARM_GEO_RESTORE_LOCATION") == "" {
+		t.Skip("Skipping as `ARM_GEO_RESTORE_LOCATION` is not specified")
+		return
+	}
+
 	data := acceptance.BuildTestData(t, "azurerm_mongo_cluster", "test")
 	r := MongoClusterTestResource{}
 
@@ -68,6 +74,7 @@ func TestAccMongoCluster_previewFeature(t *testing.T) {
 		},
 		data.ImportStep("administrator_login_password", "create_mode"),
 		{
+			// PreConfig: func() { time.Sleep(10 * time.Minute) },
 			Config: r.geoReplica(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
@@ -187,29 +194,21 @@ func (r MongoClusterTestResource) geoReplica(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %s
 
-resource "azurerm_mongo_cluster" "test" {
-  name                         = "acctest-mc%d"
-  resource_group_name          = azurerm_resource_group.test.name
-  location                     = azurerm_resource_group.test.location
-  administrator_login          = "adminTerraform"
-  administrator_login_password = "testQAZwsx123"
-  shard_count                  = "1"
-  compute_tier                 = "M30"
-  high_availability_mode       = "ZoneRedundantPreferred"
-  storage_size_in_gb           = "64"
-  preview_features             = ["GeoReplicas"]
-  version                      = "7.0"
-}
-
 resource "azurerm_mongo_cluster" "geo_replica" {
   name                         = "acctest-mc-replica%d"
   resource_group_name          = azurerm_resource_group.test.name
-  location                     = azurerm_resource_group.test.location
+  location                     = "%s"
   source_server_id             = azurerm_mongo_cluster.test.id
-  source_location              = "%s"
+  source_location              = azurerm_resource_group.test.location
   create_mode                  = "GeoReplica"
+
+  compute_tier                  = "M30" 
+
+  lifecycle {
+    ignore_changes = ["source_location", "high_availability_mode", "preview_features", "shard_count", "storage_size_in_gb", "version"]
+  }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger, data.Locations.Secondary)
+`, r.enablePreviewFeature(data), data.RandomInteger, os.Getenv("ARM_GEO_RESTORE_LOCATION"))
 }
 
 func (r MongoClusterTestResource) template(data acceptance.TestData) string {
