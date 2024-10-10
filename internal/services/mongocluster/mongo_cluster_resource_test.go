@@ -194,13 +194,13 @@ func (r MongoClusterResource) geoReplica(data acceptance.TestData) string {
 %s
 
 resource "azurerm_mongo_cluster" "geo_replica" {
-  name                         = "acctest-mc-replica%d"
-  resource_group_name          = azurerm_resource_group.test.name
-  location                     = "%s"
-  source_server_id             = azurerm_mongo_cluster.test.id
-  source_location              = azurerm_mongo_cluster.test.location
-  create_mode                  = "GeoReplica"
-  compute_tier                  = "M30" 
+  name                = "acctest-mc-replica%d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%s"
+  source_server_id    = azurerm_mongo_cluster.test.id
+  source_location     = azurerm_mongo_cluster.test.location
+  create_mode         = "GeoReplica"
+  compute_tier        = "M30"
 
   lifecycle {
     ignore_changes = ["administrator_login", "high_availability_mode", "preview_features", "shard_count", "storage_size_in_gb", "version"]
