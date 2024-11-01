@@ -1,7 +1,9 @@
 package client
 
 import (
-	"github.com/hashicorp/go-azure-sdk/resource-manager/azurefleet/2024-05-01-preview/fleets"
+	"fmt"
+
+	"github.com/hashicorp/go-azure-sdk/resource-manager/azurefleet/2024-11-01/fleets"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/common"
 )
 
@@ -10,10 +12,7 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) (*Client, error) {
-	fleetsClient := fleets.NewFleetsClientWithBaseURI(o.ResourceManagerEndpoint)
-	o.ConfigureClient(&fleetsClient.Client, o.ResourceManagerAuthorizer)
-
-	fleetsClient, err := fleets.NewFleetsClientWithBaseURI(o.ResourceManagerEndpoint)
+	fleetsClient, err := fleets.NewFleetsClientWithBaseURI(o.Environment.ResourceManager)
 	if err != nil {
 		return nil, fmt.Errorf("building fleets  client: %+v", err)
 	}
