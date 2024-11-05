@@ -14,22 +14,22 @@ import (
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
-type WorkspaceApiCreateOrUpdateOperationResponse struct {
+type CreateOrUpdateOperationResponse struct {
 	Poller       pollers.Poller
 	HttpResponse *http.Response
 	OData        *odata.OData
 	Model        *ApiContract
 }
 
-type WorkspaceApiCreateOrUpdateOperationOptions struct {
+type CreateOrUpdateOperationOptions struct {
 	IfMatch *string
 }
 
-func DefaultWorkspaceApiCreateOrUpdateOperationOptions() WorkspaceApiCreateOrUpdateOperationOptions {
-	return WorkspaceApiCreateOrUpdateOperationOptions{}
+func DefaultCreateOrUpdateOperationOptions() CreateOrUpdateOperationOptions {
+	return CreateOrUpdateOperationOptions{}
 }
 
-func (o WorkspaceApiCreateOrUpdateOperationOptions) ToHeaders() *client.Headers {
+func (o CreateOrUpdateOperationOptions) ToHeaders() *client.Headers {
 	out := client.Headers{}
 	if o.IfMatch != nil {
 		out.Append("If-Match", fmt.Sprintf("%v", *o.IfMatch))
@@ -37,23 +37,24 @@ func (o WorkspaceApiCreateOrUpdateOperationOptions) ToHeaders() *client.Headers 
 	return &out
 }
 
-func (o WorkspaceApiCreateOrUpdateOperationOptions) ToOData() *odata.Query {
+func (o CreateOrUpdateOperationOptions) ToOData() *odata.Query {
 	out := odata.Query{}
 
 	return &out
 }
 
-func (o WorkspaceApiCreateOrUpdateOperationOptions) ToQuery() *client.QueryParams {
+func (o CreateOrUpdateOperationOptions) ToQuery() *client.QueryParams {
 	out := client.QueryParams{}
 
 	return &out
 }
 
-// WorkspaceApiCreateOrUpdate ...
-func (c ApiClient) WorkspaceApiCreateOrUpdate(ctx context.Context, id WorkspaceApiId, input ApiCreateOrUpdateParameter, options WorkspaceApiCreateOrUpdateOperationOptions) (result WorkspaceApiCreateOrUpdateOperationResponse, err error) {
+// CreateOrUpdate ...
+func (c ApiClient) CreateOrUpdate(ctx context.Context, id ApiId, input ApiCreateOrUpdateParameter, options CreateOrUpdateOperationOptions) (result CreateOrUpdateOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
+			http.StatusAccepted,
 			http.StatusCreated,
 			http.StatusOK,
 		},
@@ -89,15 +90,15 @@ func (c ApiClient) WorkspaceApiCreateOrUpdate(ctx context.Context, id WorkspaceA
 	return
 }
 
-// WorkspaceApiCreateOrUpdateThenPoll performs WorkspaceApiCreateOrUpdate then polls until it's completed
-func (c ApiClient) WorkspaceApiCreateOrUpdateThenPoll(ctx context.Context, id WorkspaceApiId, input ApiCreateOrUpdateParameter, options WorkspaceApiCreateOrUpdateOperationOptions) error {
-	result, err := c.WorkspaceApiCreateOrUpdate(ctx, id, input, options)
+// CreateOrUpdateThenPoll performs CreateOrUpdate then polls until it's completed
+func (c ApiClient) CreateOrUpdateThenPoll(ctx context.Context, id ApiId, input ApiCreateOrUpdateParameter, options CreateOrUpdateOperationOptions) error {
+	result, err := c.CreateOrUpdate(ctx, id, input, options)
 	if err != nil {
-		return fmt.Errorf("performing WorkspaceApiCreateOrUpdate: %+v", err)
+		return fmt.Errorf("performing CreateOrUpdate: %+v", err)
 	}
 
 	if err := result.Poller.PollUntilDone(ctx); err != nil {
-		return fmt.Errorf("polling after WorkspaceApiCreateOrUpdate: %+v", err)
+		return fmt.Errorf("polling after CreateOrUpdate: %+v", err)
 	}
 
 	return nil

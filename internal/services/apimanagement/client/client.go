@@ -6,7 +6,7 @@ package client
 import (
 	"fmt"
 
-	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/api"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2022-08-01/api"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/apidiagnostic"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/apimanagementservice"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/apioperation"

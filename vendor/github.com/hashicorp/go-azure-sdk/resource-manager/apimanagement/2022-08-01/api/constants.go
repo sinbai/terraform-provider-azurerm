@@ -13,9 +13,7 @@ type ApiType string
 
 const (
 	ApiTypeGraphql   ApiType = "graphql"
-	ApiTypeGrpc      ApiType = "grpc"
 	ApiTypeHTTP      ApiType = "http"
-	ApiTypeOdata     ApiType = "odata"
 	ApiTypeSoap      ApiType = "soap"
 	ApiTypeWebsocket ApiType = "websocket"
 )
@@ -23,9 +21,7 @@ const (
 func PossibleValuesForApiType() []string {
 	return []string{
 		string(ApiTypeGraphql),
-		string(ApiTypeGrpc),
 		string(ApiTypeHTTP),
-		string(ApiTypeOdata),
 		string(ApiTypeSoap),
 		string(ApiTypeWebsocket),
 	}
@@ -47,9 +43,7 @@ func (s *ApiType) UnmarshalJSON(bytes []byte) error {
 func parseApiType(input string) (*ApiType, error) {
 	vals := map[string]ApiType{
 		"graphql":   ApiTypeGraphql,
-		"grpc":      ApiTypeGrpc,
 		"http":      ApiTypeHTTP,
-		"odata":     ApiTypeOdata,
 		"soap":      ApiTypeSoap,
 		"websocket": ApiTypeWebsocket,
 	}
@@ -107,10 +101,6 @@ type ContentFormat string
 
 const (
 	ContentFormatGraphqlNegativelink             ContentFormat = "graphql-link"
-	ContentFormatGrpc                            ContentFormat = "grpc"
-	ContentFormatGrpcNegativelink                ContentFormat = "grpc-link"
-	ContentFormatOdata                           ContentFormat = "odata"
-	ContentFormatOdataNegativelink               ContentFormat = "odata-link"
 	ContentFormatOpenapi                         ContentFormat = "openapi"
 	ContentFormatOpenapiNegativelink             ContentFormat = "openapi-link"
 	ContentFormatOpenapiPositivejson             ContentFormat = "openapi+json"
@@ -126,10 +116,6 @@ const (
 func PossibleValuesForContentFormat() []string {
 	return []string{
 		string(ContentFormatGraphqlNegativelink),
-		string(ContentFormatGrpc),
-		string(ContentFormatGrpcNegativelink),
-		string(ContentFormatOdata),
-		string(ContentFormatOdataNegativelink),
 		string(ContentFormatOpenapi),
 		string(ContentFormatOpenapiNegativelink),
 		string(ContentFormatOpenapiPositivejson),
@@ -159,10 +145,6 @@ func (s *ContentFormat) UnmarshalJSON(bytes []byte) error {
 func parseContentFormat(input string) (*ContentFormat, error) {
 	vals := map[string]ContentFormat{
 		"graphql-link":      ContentFormatGraphqlNegativelink,
-		"grpc":              ContentFormatGrpc,
-		"grpc-link":         ContentFormatGrpcNegativelink,
-		"odata":             ContentFormatOdata,
-		"odata-link":        ContentFormatOdataNegativelink,
 		"openapi":           ContentFormatOpenapi,
 		"openapi-link":      ContentFormatOpenapiNegativelink,
 		"openapi+json":      ContentFormatOpenapiPositivejson,
@@ -234,9 +216,7 @@ type SoapApiType string
 
 const (
 	SoapApiTypeGraphql   SoapApiType = "graphql"
-	SoapApiTypeGrpc      SoapApiType = "grpc"
 	SoapApiTypeHTTP      SoapApiType = "http"
-	SoapApiTypeOdata     SoapApiType = "odata"
 	SoapApiTypeSoap      SoapApiType = "soap"
 	SoapApiTypeWebsocket SoapApiType = "websocket"
 )
@@ -244,9 +224,7 @@ const (
 func PossibleValuesForSoapApiType() []string {
 	return []string{
 		string(SoapApiTypeGraphql),
-		string(SoapApiTypeGrpc),
 		string(SoapApiTypeHTTP),
-		string(SoapApiTypeOdata),
 		string(SoapApiTypeSoap),
 		string(SoapApiTypeWebsocket),
 	}
@@ -268,9 +246,7 @@ func (s *SoapApiType) UnmarshalJSON(bytes []byte) error {
 func parseSoapApiType(input string) (*SoapApiType, error) {
 	vals := map[string]SoapApiType{
 		"graphql":   SoapApiTypeGraphql,
-		"grpc":      SoapApiTypeGrpc,
 		"http":      SoapApiTypeHTTP,
-		"odata":     SoapApiTypeOdata,
 		"soap":      SoapApiTypeSoap,
 		"websocket": SoapApiTypeWebsocket,
 	}

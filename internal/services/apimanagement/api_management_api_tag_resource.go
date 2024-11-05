@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/response"
-	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/api"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2022-08-01/api"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/apitag"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/tag"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/tf"

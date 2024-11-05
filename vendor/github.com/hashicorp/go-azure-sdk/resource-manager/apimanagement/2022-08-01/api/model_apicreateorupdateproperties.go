@@ -21,7 +21,6 @@ type ApiCreateOrUpdateProperties struct {
 	License                          *ApiLicenseInformation                   `json:"license,omitempty"`
 	Path                             string                                   `json:"path"`
 	Protocols                        *[]Protocol                              `json:"protocols,omitempty"`
-	ProvisioningState                *string                                  `json:"provisioningState,omitempty"`
 	ServiceURL                       *string                                  `json:"serviceUrl,omitempty"`
 	SourceApiId                      *string                                  `json:"sourceApiId,omitempty"`
 	SubscriptionKeyParameterNames    *SubscriptionKeyParameterNamesContract   `json:"subscriptionKeyParameterNames,omitempty"`

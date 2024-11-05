@@ -12,21 +12,21 @@ import (
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
-type WorkspaceApiDeleteOperationResponse struct {
+type DeleteOperationResponse struct {
 	HttpResponse *http.Response
 	OData        *odata.OData
 }
 
-type WorkspaceApiDeleteOperationOptions struct {
+type DeleteOperationOptions struct {
 	DeleteRevisions *bool
 	IfMatch         *string
 }
 
-func DefaultWorkspaceApiDeleteOperationOptions() WorkspaceApiDeleteOperationOptions {
-	return WorkspaceApiDeleteOperationOptions{}
+func DefaultDeleteOperationOptions() DeleteOperationOptions {
+	return DeleteOperationOptions{}
 }
 
-func (o WorkspaceApiDeleteOperationOptions) ToHeaders() *client.Headers {
+func (o DeleteOperationOptions) ToHeaders() *client.Headers {
 	out := client.Headers{}
 	if o.IfMatch != nil {
 		out.Append("If-Match", fmt.Sprintf("%v", *o.IfMatch))
@@ -34,13 +34,13 @@ func (o WorkspaceApiDeleteOperationOptions) ToHeaders() *client.Headers {
 	return &out
 }
 
-func (o WorkspaceApiDeleteOperationOptions) ToOData() *odata.Query {
+func (o DeleteOperationOptions) ToOData() *odata.Query {
 	out := odata.Query{}
 
 	return &out
 }
 
-func (o WorkspaceApiDeleteOperationOptions) ToQuery() *client.QueryParams {
+func (o DeleteOperationOptions) ToQuery() *client.QueryParams {
 	out := client.QueryParams{}
 	if o.DeleteRevisions != nil {
 		out.Append("deleteRevisions", fmt.Sprintf("%v", *o.DeleteRevisions))
@@ -48,8 +48,8 @@ func (o WorkspaceApiDeleteOperationOptions) ToQuery() *client.QueryParams {
 	return &out
 }
 
-// WorkspaceApiDelete ...
-func (c ApiClient) WorkspaceApiDelete(ctx context.Context, id WorkspaceApiId, options WorkspaceApiDeleteOperationOptions) (result WorkspaceApiDeleteOperationResponse, err error) {
+// Delete ...
+func (c ApiClient) Delete(ctx context.Context, id ApiId, options DeleteOperationOptions) (result DeleteOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
