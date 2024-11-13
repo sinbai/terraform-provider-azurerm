@@ -407,12 +407,12 @@ func resourceVirtualMachine() *pluginsdk.Resource {
 
 			// lintignore:S018
 			"os_profile": {
-				Type:     pluginsdk.TypeSet,
+				Type:     pluginsdk.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
-						"computer_name": {
+						"computer_name_prefix": {
 							Type:     pluginsdk.TypeString,
 							ForceNew: true,
 							Required: true,

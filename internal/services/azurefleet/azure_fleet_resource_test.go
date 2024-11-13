@@ -188,7 +188,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   compute_profile {
-    base_virtual_machine_profile {
+    virtual_machine_profile {
       storage_profile {
          image_reference {
           offer                      = "0001-com-ubuntu-server-focal"
@@ -217,7 +217,7 @@ resource "azurerm_azure_fleet" "test" {
       }
 
       network_profile {
-        network_interface_configurations {
+        network_interfaces {
           name = "networkProTest"
           properties {
             primary                       = true
@@ -259,21 +259,21 @@ resource "azurerm_azure_fleet" "import" {
   compute_profile {
     compute_api_version         = ""
     platform_fault_domain_count = 0
-    additional_virtual_machine_capabilities {
+    additional_capabilities {
       hibernation_enabled = false
       ultra_ssd_enabled   = false
     }
-    base_virtual_machine_profile {
+    virtual_machine_profile {
       license_type = ""
-      user_data    = ""
+      user_data_base64    = ""
       application_profile {
-        gallery_applications {
+        gallery_application {
           configuration_reference             = ""
           enable_automatic_upgrade            = false
           order                               = 0
           package_reference_id                = ""
           tags                                = ""
-          treat_failure_as_deployment_failure = false
+          treat_failure_as_deployment_failure_enabled = false
         }
       }
       capacity_reservation {
@@ -323,10 +323,10 @@ resource "azurerm_azure_fleet" "import" {
       }
       network_profile {
         network_api_version = ""
-        health_probe {
+        network_health_probe_id {
           id = ""
         }
-        network_interface_configurations {
+        network_interfaces {
           name = ""
           properties {
             auxiliary_mode                = ""
@@ -396,7 +396,7 @@ resource "azurerm_azure_fleet" "import" {
         admin_username                 = ""
         allow_extension_operations     = false
         computer_name_prefix           = ""
-        custom_data                    = ""
+        custom_data_base64                    = ""
         require_guest_provision_signal = false
         linux_configuration {
           disable_password_authentication  = false
@@ -580,15 +580,15 @@ resource "azurerm_azure_fleet" "test" {
       location = "%s"
       virtual_machine_profile_override {
         license_type = ""
-        user_data    = ""
+        user_data_base64    = ""
         application_profile {
-          gallery_applications {
+          gallery_application {
             configuration_reference             = ""
             enable_automatic_upgrade            = false
             order                               = 0
             package_reference_id                = ""
             tags                                = ""
-            treat_failure_as_deployment_failure = false
+            treat_failure_as_deployment_failure_enabled = false
           }
         }
         capacity_reservation {
@@ -638,10 +638,10 @@ resource "azurerm_azure_fleet" "test" {
         }
         network_profile {
           network_api_version = ""
-          health_probe {
+          network_health_probe_id {
             id = ""
           }
-          network_interface_configurations {
+          network_interfaces {
             name = ""
             properties {
               auxiliary_mode                = ""
@@ -711,7 +711,7 @@ resource "azurerm_azure_fleet" "test" {
           admin_username                 = ""
           allow_extension_operations     = false
           computer_name_prefix           = ""
-          custom_data                    = ""
+          custom_data_base64                    = ""
           require_guest_provision_signal = false
           linux_configuration {
             disable_password_authentication  = false
@@ -873,21 +873,21 @@ resource "azurerm_azure_fleet" "test" {
   compute_profile {
     compute_api_version         = ""
     platform_fault_domain_count = 0
-    additional_virtual_machine_capabilities {
+    additional_capabilities {
       hibernation_enabled = false
       ultra_ssd_enabled   = false
     }
-    base_virtual_machine_profile {
+    virtual_machine_profile {
       license_type = ""
-      user_data    = ""
+      user_data_base64    = ""
       application_profile {
-        gallery_applications {
+        gallery_application {
           configuration_reference             = ""
           enable_automatic_upgrade            = false
           order                               = 0
           package_reference_id                = ""
           tags                                = ""
-          treat_failure_as_deployment_failure = false
+          treat_failure_as_deployment_failure_enabled = false
         }
       }
       capacity_reservation {
@@ -937,10 +937,10 @@ resource "azurerm_azure_fleet" "test" {
       }
       network_profile {
         network_api_version = ""
-        health_probe {
+        network_health_probe_id {
           id = ""
         }
-        network_interface_configurations {
+        network_interfaces {
           name = ""
           properties {
             auxiliary_mode                = ""
@@ -1010,7 +1010,7 @@ resource "azurerm_azure_fleet" "test" {
         admin_username                 = ""
         allow_extension_operations     = false
         computer_name_prefix           = ""
-        custom_data                    = ""
+        custom_data_base64                    = ""
         require_guest_provision_signal = false
         linux_configuration {
           disable_password_authentication  = false
@@ -1280,15 +1280,15 @@ resource "azurerm_azure_fleet" "test" {
       location = "%s"
       virtual_machine_profile_override {
         license_type = ""
-        user_data    = ""
+        user_data_base64    = ""
         application_profile {
-          gallery_applications {
+          gallery_application {
             configuration_reference             = ""
             enable_automatic_upgrade            = false
             order                               = 0
             package_reference_id                = ""
             tags                                = ""
-            treat_failure_as_deployment_failure = false
+            treat_failure_as_deployment_failure_enabled = false
           }
         }
         capacity_reservation {
@@ -1338,10 +1338,10 @@ resource "azurerm_azure_fleet" "test" {
         }
         network_profile {
           network_api_version = ""
-          health_probe {
+          network_health_probe_id {
             id = ""
           }
-          network_interface_configurations {
+          network_interfaces {
             name = ""
             properties {
               auxiliary_mode                = ""
@@ -1411,7 +1411,7 @@ resource "azurerm_azure_fleet" "test" {
           admin_username                 = ""
           allow_extension_operations     = false
           computer_name_prefix           = ""
-          custom_data                    = ""
+          custom_data_base64                    = ""
           require_guest_provision_signal = false
           linux_configuration {
             disable_password_authentication  = false
@@ -1573,21 +1573,21 @@ resource "azurerm_azure_fleet" "test" {
   compute_profile {
     compute_api_version         = ""
     platform_fault_domain_count = 0
-    additional_virtual_machine_capabilities {
+    additional_capabilities {
       hibernation_enabled = false
       ultra_ssd_enabled   = false
     }
-    base_virtual_machine_profile {
+    virtual_machine_profile {
       license_type = ""
-      user_data    = ""
+      user_data_base64    = ""
       application_profile {
-        gallery_applications {
+        gallery_application {
           configuration_reference             = ""
           enable_automatic_upgrade            = false
           order                               = 0
           package_reference_id                = ""
           tags                                = ""
-          treat_failure_as_deployment_failure = false
+          treat_failure_as_deployment_failure_enabled = false
         }
       }
       capacity_reservation {
@@ -1637,10 +1637,10 @@ resource "azurerm_azure_fleet" "test" {
       }
       network_profile {
         network_api_version = ""
-        health_probe {
+        network_health_probe_id {
           id = ""
         }
-        network_interface_configurations {
+        network_interfaces {
           name = ""
           properties {
             auxiliary_mode                = ""
@@ -1710,7 +1710,7 @@ resource "azurerm_azure_fleet" "test" {
         admin_username                 = ""
         allow_extension_operations     = false
         computer_name_prefix           = ""
-        custom_data                    = ""
+        custom_data_base64                    = ""
         require_guest_provision_signal = false
         linux_configuration {
           disable_password_authentication  = false

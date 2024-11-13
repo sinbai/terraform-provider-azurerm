@@ -8,12 +8,10 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
-	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/identity"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/location"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/azurefleet/2024-11-01/fleets"
-	"github.com/hashicorp/go-azure-sdk/resource-manager/compute/2022-03-01/capacityreservationgroups"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
@@ -21,73 +19,72 @@ import (
 )
 
 type AzureFleetResourceModel struct {
-	Name                       string                                     `tfschema:"name"`
-	ResourceGroupName          string                                     `tfschema:"resource_group_name"`
-	Identity                   []identity.ModelSystemAssignedUserAssigned `tfschema:"identity"`
-	Location                   string                                     `tfschema:"location"`
-	Plan                       []PlanModel                                `tfschema:"plan"`
-	AdditionalLocationsProfile []AdditionalLocationsProfileModel          `tfschema:"additional_locations_profile"`
-	ComputeProfile             []ComputeProfileModel                      `tfschema:"compute_profile"`
-	RegularPriorityProfile     []RegularPriorityProfileModel              `tfschema:"regular_priority_profile"`
-	SpotPriorityProfile        []SpotPriorityProfileModel                 `tfschema:"spot_priority_profile"`
-	UniqueId                   string                                     `tfschema:"unique_id"`
-	VMAttributes               VMAttributesModel                          `tfschema:"vm_attributes"`
-	VMSizesProfile             []VMSizeProfileModel                       `tfschema:"vm_sizes_profile"`
-	Tags                       map[string]string                          `tfschema:"tags"`
-	Zones                      []string                                   `tfschema:"zones"`
+	Name                      string                                     `tfschema:"name"`
+	ResourceGroupName         string                                     `tfschema:"resource_group_name"`
+	Identity                  []identity.ModelSystemAssignedUserAssigned `tfschema:"identity"`
+	Location                  string                                     `tfschema:"location"`
+	Plan                      []PlanModel                                `tfschema:"plan"`
+	AdditionalLocationProfile []AdditionalLocationProfileModel           `tfschema:"additional_location_profile"`
+	ComputeProfile            []ComputeProfileModel                      `tfschema:"compute_profile"`
+	RegularPriorityProfile    []RegularPriorityProfileModel              `tfschema:"regular_priority_profile"`
+	SpotPriorityProfile       []SpotPriorityProfileModel                 `tfschema:"spot_priority_profile"`
+	UniqueId                  string                                     `tfschema:"unique_id"`
+	VMAttributes              VMAttributesModel                          `tfschema:"vm_attributes"`
+	VMSizesProfile            []VMSizeProfileModel                       `tfschema:"vm_sizes_profile"`
+	Tags                      map[string]string                          `tfschema:"tags"`
+	Zones                     []string                                   `tfschema:"zones"`
 }
 
-type AdditionalLocationsProfileModel struct {
-	Location              string                       `tfschema:"location"`
-	VirtualMachineProfile []VirtualMachineProfileModel `tfschema:"virtual_machine_profile"`
+type AdditionalLocationProfileModel struct {
+	Location                      string                       `tfschema:"location"`
+	VirtualMachineProfileOverride []VirtualMachineProfileModel `tfschema:"virtual_machine_profile_override"`
 }
 
 type VirtualMachineProfileModel struct {
-	VMGalleryApplicationProfile    []VMGalleryApplicationsModel          `tfschema:"gallery_applications"`
-	CapacityReservationGroupId     string                                `tfschema:"capacity_reservation_group_id"`
-	BootDiagnostics                []BootDiagnosticsModel                `tfschema:"boot_diagnostics"`
-	Extensions                     []ExtensionsModel                     `tfschema:"extensions"`
-	ExtensionsTimeBudget           string                                `tfschema:"extensions_time_budget"`
-	VMSize                         []VMSizeModel                         `tfschema:"vm_size"`
-	LicenseType                    string                                `tfschema:"license_type"`
-	NetworkProfile                 []NetworkProfileModel                 `tfschema:"network_profile"`
-	OsProfile                      []OSProfileModel                      `tfschema:"os_profile"`
-	OsImageNotificationProfile     []OSImageNotificationProfileModel     `tfschema:"os_image_notification_profile"`
-	TerminationNotificationProfile []TerminationNotificationProfileModel `tfschema:"termination_notification_profile"`
-	SecurityPostureReference       []SecurityPostureReferenceModel       `tfschema:"security_posture_reference"`
-	SecurityProfile                []SecurityProfileModel                `tfschema:"security_profile"`
-	ServiceArtifactId              string                                `tfschema:"service_artifact_id"`
-	StorageProfile                 []StorageProfileModel                 `tfschema:"storage_profile"`
-	UserData                       string                                `tfschema:"user_data"`
+	GalleryApplicationProfile            []GalleryApplicationModel             `tfschema:"gallery_application"`
+	CapacityReservationGroupId           string                                `tfschema:"capacity_reservation_group_id"`
+	BootDiagnosticStorageAccountEndpoint string                                `tfschema:"boot_diagnostic_storage_account_endpoint"`
+	Extensions                           []ExtensionsModel                     `tfschema:"extensions"`
+	ExtensionsTimeBudget                 string                                `tfschema:"extensions_time_budget"`
+	VMSize                               []VMSizeModel                         `tfschema:"vm_size"`
+	LicenseType                          string                                `tfschema:"license_type"`
+	NetworkHealthProbeId                 string                                `tfschema:"network_health_probe_id"`
+	NetworkApiVersion                    string                                `tfschema:"network_api_version"`
+	NetworkInterface                     []NetworkInterfaceModel               `tfschema:"network_interface"`
+	OsProfile                            []OSProfileModel                      `tfschema:"os_profile"`
+	OsImageScheduledEventTimeout         string                                `tfschema:"os_image_scheduled_event_timeout"`
+	TerminationScheduledEventTimeout     string                                `tfschema:"termination_scheduled_event_timeout"`
+	OsImageNotificationProfile           []OSImageNotificationProfileModel     `tfschema:"os_image_notification_profile"`
+	TerminationNotificationProfile       []TerminationNotificationProfileModel `tfschema:"termination_notification_profile"`
+	SecurityPostureReference             []SecurityPostureReferenceModel       `tfschema:"security_posture_reference"`
+	SecurityProfile                      []SecurityProfileModel                `tfschema:"security_profile"`
+	ServiceArtifactId                    string                                `tfschema:"service_artifact_id"`
+	StorageProfile                       []StorageProfileModel                 `tfschema:"storage_profile"`
+	UserDataBase64                       string                                `tfschema:"user_data_base64"`
 }
 
-type VMGalleryApplicationsModel struct {
-	ConfigurationReference          string `tfschema:"configuration_blob_uri"`
-	EnableAutomaticUpgrade          bool   `tfschema:"automatic_upgrade_enabled"`
-	Order                           int64  `tfschema:"order"`
-	PackageReferenceId              string `tfschema:"version_id"`
-	Tags                            string `tfschema:"tags"`
-	TreatFailureAsDeploymentFailure bool   `tfschema:"treat_failure_as_deployment_failure"`
-}
-
-type BootDiagnosticsModel struct {
-	Enabled                bool   `tfschema:"enabled"`
-	StorageAccountEndpoint string `tfschema:"storage_account_endpoint"`
+type GalleryApplicationModel struct {
+	ConfigurationReference                 string `tfschema:"configuration_blob_uri"`
+	EnableAutomaticUpgrade                 bool   `tfschema:"automatic_upgrade_enabled"`
+	Order                                  int64  `tfschema:"order"`
+	PackageReferenceId                     string `tfschema:"version_id"`
+	Tags                                   string `tfschema:"tags"`
+	TreatFailureAsDeploymentFailureEnabled bool   `tfschema:"treat_failure_as_deployment_failure_enabled"`
 }
 
 type ExtensionsModel struct {
-	Name                          string                               `tfschema:"name"`
-	Publisher                     string                               `tfschema:"publisher"`
-	Type                          string                               `tfschema:"type"`
-	TypeHandlerVersion            string                               `tfschema:"type_handler_version"`
-	AutoUpgradeMinorVersion       bool                                 `tfschema:"auto_upgrade_minor_version"`
-	AutomaticUpgradeEnabled       bool                                 `tfschema:"automatic_upgrade_enabled"`
-	ForceUpdateTag                string                               `tfschema:"force_update_tag"`
-	ProtectedSettings             map[string]interface{}               `tfschema:"protected_settings"`
-	ProtectedSettingsFromKeyVault []ProtectedSettingsFromKeyVaultModel `tfschema:"protected_settings_from_key_vault"`
-	ProvisionAfterExtensions      []string                             `tfschema:"provision_after_extensions"`
-	Settings                      string                               `tfschema:"settings"`
-	SuppressFailures              bool                                 `tfschema:"suppress_failures"`
+	Name                           string                               `tfschema:"name"`
+	Publisher                      string                               `tfschema:"publisher"`
+	Type                           string                               `tfschema:"type"`
+	TypeHandlerVersion             string                               `tfschema:"type_handler_version"`
+	AutoUpgradeMinorVersionEnabled bool                                 `tfschema:"auto_upgrade_minor_version_enabled"`
+	AutomaticUpgradeEnabled        bool                                 `tfschema:"automatic_upgrade_enabled"`
+	ForceUpdateTag                 string                               `tfschema:"force_update_tag"`
+	ProtectedSettings              map[string]interface{}               `tfschema:"protected_settings"`
+	ProtectedSettingsFromKeyVault  []ProtectedSettingsFromKeyVaultModel `tfschema:"protected_settings_from_key_vault"`
+	ProvisionAfterExtensions       []string                             `tfschema:"provision_after_extensions"`
+	Settings                       string                               `tfschema:"settings"`
+	SuppressFailuresEnabled        bool                                 `tfschema:"suppress_failures_enabled"`
 }
 
 type ProtectedSettingsFromKeyVaultModel struct {
@@ -96,85 +93,55 @@ type ProtectedSettingsFromKeyVaultModel struct {
 }
 
 type VMSizeModel struct {
-	VCPUsAvailable int64 `tfschema:"vcp_us_available"`
-	VCPUsPerCore   int64 `tfschema:"vcp_us_per_core"`
+	VCPUAvailableCount int64 `tfschema:"vcpu_available_count"`
+	VCPUPerCoreCount   int64 `tfschema:"vcpu_per_core_count"`
 }
 
-type NetworkProfileModel struct {
-	HealthProbe                    []ApiEntityReferenceModel   `tfschema:"health_probe"`
-	NetworkApiVersion              string                      `tfschema:"network_api_version"`
-	NetworkInterfaceConfigurations []NetworkConfigurationModel `tfschema:"network_interface_configurations"`
+type NetworkInterfaceModel struct {
+	Name                         string                 `tfschema:"name"`
+	AuxiliaryMode                string                 `tfschema:"auxiliary_mode"`
+	AuxiliarySku                 string                 `tfschema:"auxiliary_sku"`
+	DeleteOption                 string                 `tfschema:"delete_option"`
+	TcpStateTrackingEnabled      bool                   `tfschema:"tcp_state_tracking_enabled"`
+	DnsServers                   []string               `tfschema:"dns_servers"`
+	AcceleratedNetworkingEnabled bool                   `tfschema:"accelerated_networking_enabled"`
+	FpgaEnabled                  bool                   `tfschema:"fpga_enabled"`
+	IPForwardingEnabled          bool                   `tfschema:"ip_forwarding_enabled"`
+	IPConfiguration              []IPConfigurationModel `tfschema:"ip_configuration"`
+	NetworkSecurityGroupId       string                 `tfschema:"network_security_group_id"`
+	Primary                      bool                   `tfschema:"primary"`
 }
 
-type ApiEntityReferenceModel struct {
-	Id string `tfschema:"id"`
+type IPConfigurationModel struct {
+	Name                                    string                 `tfschema:"name"`
+	ApplicationGatewayBackendAddressPoolIds []string               `tfschema:"application_gateway_backend_address_pool_ids"`
+	ApplicationSecurityGroupIds             []string               `tfschema:"application_security_group_ids"`
+	LoadBalancerBackendAddressPoolIds       []string               `tfschema:"load_balancer_backend_address_pool_ids"`
+	LoadBalancerInboundNatPoolIds           []string               `tfschema:"load_balancer_inbound_nat_rules_ids"`
+	Primary                                 bool                   `tfschema:"primary"`
+	Version                                 string                 `tfschema:"version"`
+	PublicIPAddress                         []PublicIPAddressModel `tfschema:"public_ip_address"`
+	SubnetId                                string                 `tfschema:"subnet_id"`
 }
 
-type NetworkConfigurationModel struct {
-	Name       string                                                      `tfschema:"name"`
-	Properties []VirtualMachineScaleSetNetworkConfigurationPropertiesModel `tfschema:"properties"`
+type PublicIPAddressModel struct {
+	Name                 string       `tfschema:"name"`
+	DeleteOption         string       `tfschema:"delete_option"`
+	DomainNameLabel      string       `tfschema:"domain_name_label"`
+	DomainNameLabelScope string       `tfschema:"domain_name_label_scope"`
+	IdleTimeoutInMinutes int64        `tfschema:"idle_timeout_in_minutes"`
+	IPTags               []IPTagModel `tfschema:"ip_tags"`
+	Version              string       `tfschema:"version"`
+	PublicIPPrefix       string       `tfschema:"public_ip_prefix_id"`
+	Sku                  []SkuModel   `tfschema:"sku"`
 }
 
-type VirtualMachineScaleSetNetworkConfigurationPropertiesModel struct {
-	AuxiliaryMode               string                  `tfschema:"auxiliary_mode"`
-	AuxiliarySku                string                  `tfschema:"auxiliary_sku"`
-	DeleteOption                string                  `tfschema:"delete_option"`
-	DisableTcpStateTracking     bool                    `tfschema:"disable_tcp_state_tracking"`
-	DnsSettings                 []DnsSettingsModel      `tfschema:"dns_settings"`
-	EnableAcceleratedNetworking bool                    `tfschema:"enable_accelerated_networking"`
-	EnableFpga                  bool                    `tfschema:"enable_fpga"`
-	EnableIPForwarding          bool                    `tfschema:"enable_ip_forwarding"`
-	IPConfigurations            []IPConfigurationsModel `tfschema:"ip_configurations"`
-	NetworkSecurityGroup        []SubResourceModel      `tfschema:"network_security_group"`
-	Primary                     bool                    `tfschema:"primary"`
-}
-
-type DnsSettingsModel struct {
-	DnsServers []string `tfschema:"dns_servers"`
-}
-
-type IPConfigurationsModel struct {
-	Name       string                                       `tfschema:"name"`
-	Properties []VirtualMachineScaleSetIPConfigurationModel `tfschema:"properties"`
-}
-
-type VirtualMachineScaleSetIPConfigurationModel struct {
-	ApplicationGatewayBackendAddressPools []SubResourceModel                                        `tfschema:"application_gateway_backend_address_pools"`
-	ApplicationSecurityGroups             []SubResourceModel                                        `tfschema:"application_security_groups"`
-	LoadBalancerBackendAddressPools       []SubResourceModel                                        `tfschema:"load_balancer_backend_address_pools"`
-	LoadBalancerInboundNatPools           []SubResourceModel                                        `tfschema:"load_balancer_inbound_nat_pools"`
-	Primary                               bool                                                      `tfschema:"primary"`
-	PrivateIPAddressVersion               string                                                    `tfschema:"private_ip_address_version"`
-	PublicIPAddressConfiguration          []VirtualMachineScaleSetPublicIPAddressConfigurationModel `tfschema:"public_ip_address_configuration"`
-	Subnet                                []ApiEntityReferenceModel                                 `tfschema:"subnet"`
-}
-
-type VirtualMachineScaleSetPublicIPAddressConfigurationModel struct {
-	Name       string                                                    `tfschema:"name"`
-	Properties []VirtualMachineScaleSetPublicIPAddressConfigurationModel `tfschema:"properties"`
-	Sku        []PublicIPAddressSkuModel                                 `tfschema:"sku"`
-}
-
-type VirtualMachineScaleSetPublicIPAddressConfigurationModel struct {
-	DeleteOption           string                                                               `tfschema:"delete_option"`
-	DnsSettings            []VirtualMachineScaleSetPublicIPAddressConfigurationDnsSettingsModel `tfschema:"dns_settings"`
-	IPTags                 []VirtualMachineScaleSetIPTagModel                                   `tfschema:"ip_tags"`
-	IdleTimeoutInMinutes   int64                                                                `tfschema:"idle_timeout_in_minutes"`
-	PublicIPAddressVersion string                                                               `tfschema:"public_ip_address_version"`
-	PublicIPPrefix         []SubResourceModel                                                   `tfschema:"public_ip_prefix"`
-}
-
-type VirtualMachineScaleSetPublicIPAddressConfigurationDnsSettingsModel struct {
-	DomainNameLabel      string `tfschema:"domain_name_label"`
-	DomainNameLabelScope string `tfschema:"domain_name_label_scope"`
-}
-
-type VirtualMachineScaleSetIPTagModel struct {
+type IPTagModel struct {
 	IPTagType string `tfschema:"ip_tag_type"`
 	Tag       string `tfschema:"tag"`
 }
 
-type PublicIPAddressSkuModel struct {
+type SkuModel struct {
 	Name string `tfschema:"name"`
 	Tier string `tfschema:"tier"`
 }
@@ -184,51 +151,51 @@ type OSProfileModel struct {
 	AdminUsername               string                      `tfschema:"admin_username"`
 	ExtensionOperationsEnabled  bool                        `tfschema:"extension_operations_enabled"`
 	ComputerNamePrefix          string                      `tfschema:"computer_name_prefix"`
-	CustomData                  string                      `tfschema:"custom_data"`
+	CustomDataBase64            string                      `tfschema:"custom_data_base64"`
 	LinuxConfiguration          []LinuxConfigurationModel   `tfschema:"linux_configuration"`
 	RequireGuestProvisionSignal bool                        `tfschema:"require_guest_provision_signal"`
-	Secrets                     []VaultSecretGroupModel     `tfschema:"secrets"`
+	OsProfileSecrets            []OsProfileSecretsModel     `tfschema:"os_profile_secrets"`
 	WindowsConfiguration        []WindowsConfigurationModel `tfschema:"windows_configuration"`
 }
 
 type LinuxConfigurationModel struct {
-	PasswordAuthenticationEnabled            bool                `tfschema:"password_authentication_enabled"`
-	VMAgentPlatformUpdatesEnabled            bool                `tfschema:"vm_agent_platform_updates_enabled"`
-	AssessmentMode                           string              `tfschema:"assessment_mode"`
-	BypassPlatformSafetyChecksOnUserSchedule bool                `tfschema:"bypass_platform_safety_checks_on_user_schedule"`
-	RebootSetting                            string              `tfschema:"reboot_setting"`
-	PatchMode                                string              `tfschema:"patch_mode"`
-	ProvisionVMAgent                         bool                `tfschema:"provision_vm_agent"`
-	SshPublicKeys                            []SshPublicKeyModel `tfschema:"ssh_public_keys"`
+	PasswordAuthenticationEnabled                        bool          `tfschema:"password_authentication_enabled"`
+	VMAgentPlatformUpdatesEnabled                        bool          `tfschema:"vm_agent_platform_updates_enabled"`
+	PatchAssessmentMode                                  string        `tfschema:"patch_assessment_mode"`
+	PatchBypassPlatformSafetyChecksOnUserScheduleEnabled bool          `tfschema:"patch_bypass_platform_safety_checks_on_user_schedule_enabled"`
+	PatchRebootSetting                                   string        `tfschema:"patch_reboot_setting"`
+	PatchMode                                            string        `tfschema:"patch_mode"`
+	ProvisionVMAgent                                     bool          `tfschema:"provision_vm_agent"`
+	SshKeys                                              []SshKeyModel `tfschema:"ssh_keys"`
 }
 
-type SshPublicKeyModel struct {
+type SshKeyModel struct {
 	KeyData string `tfschema:"key_data"`
 	Path    string `tfschema:"path"`
 }
 
-type VaultSecretGroupModel struct {
-	SourceVaultIds []string           `tfschema:"source_vault_ids"`
-	Certificates   []CertificateModel `tfschema:"certificates"`
+type OsProfileSecretsModel struct {
+	SourceVaultId     string                  `tfschema:"source_vault_id"`
+	VaultCertificates []VaultCertificateModel `tfschema:"vault_certificates"`
 }
 
-type CertificateModel struct {
-	Store string `tfschema:"store"`
-	Url   string `tfschema:"url"`
+type VaultCertificateModel struct {
+	CertificateStore string `tfschema:"certificate_store"`
+	CertificateUrl   string `tfschema:"certificate_url"`
 }
 
 type WindowsConfigurationModel struct {
-	AdditionalUnattendContent                []AdditionalUnattendContentModel `tfschema:"additional_unattend_content"`
-	AutomaticUpdatesEnabled                  bool                             `tfschema:"automatic_updates_enabled"`
-	VMAgentPlatformUpdatesEnabled            bool                             `tfschema:"vm_agent_platform_updates_enabled"`
-	AssessmentMode                           string                           `tfschema:"assessment_mode"`
-	BypassPlatformSafetyChecksOnUserSchedule bool                             `tfschema:"bypass_platform_safety_checks_on_user_schedule"`
-	RebootSetting                            string                           `tfschema:"reboot_setting"`
-	HotPatchingEnabled                       bool                             `tfschema:"hot_patching_enabled"`
-	PatchMode                                string                           `tfschema:"patch_mode"`
-	ProvisionVMAgent                         bool                             `tfschema:"provision_vm_agent"`
-	TimeZone                                 string                           `tfschema:"time_zone"`
-	WinRMListeners                           []WinRMListenerModel             `tfschema:"win_rm_listeners"`
+	AdditionalUnattendContent                       []AdditionalUnattendContentModel `tfschema:"additional_unattend_content"`
+	AutomaticUpdatesEnabled                         bool                             `tfschema:"automatic_updates_enabled"`
+	VMAgentPlatformUpdatesEnabled                   bool                             `tfschema:"vm_agent_platform_updates_enabled"`
+	PatchAssessmentMode                             string                           `tfschema:"patch_assessment_mode"`
+	BypassPlatformSafetyChecksOnUserScheduleEnabled bool                             `tfschema:"patch_bypass_platform_safety_checks_on_user_schedule_enabled"`
+	PatchRebootSetting                              string                           `tfschema:"patch_reboot_setting"`
+	HotPatchingEnabled                              bool                             `tfschema:"hot_patching_enabled"`
+	PatchMode                                       string                           `tfschema:"patch_mode"`
+	ProvisionVMAgent                                bool                             `tfschema:"provision_vm_agent"`
+	TimeZone                                        string                           `tfschema:"time_zone"`
+	WinRM                                           []WinRMModel                     `tfschema:"winrm"`
 }
 
 type AdditionalUnattendContentModel struct {
@@ -238,7 +205,7 @@ type AdditionalUnattendContentModel struct {
 	SettingName   string `tfschema:"setting_name"`
 }
 
-type WinRMListenerModel struct {
+type WinRMModel struct {
 	CertificateUrl string `tfschema:"certificate_url"`
 	Protocol       string `tfschema:"protocol"`
 }
@@ -256,62 +223,48 @@ type TerminationNotificationProfileModel struct {
 type SecurityPostureReferenceModel struct {
 	ExcludeExtensions []string `tfschema:"exclude_extensions"`
 	Id                string   `tfschema:"id"`
-	IsOverridable     bool     `tfschema:"is_overridable"`
+	OverrideEnabled   bool     `tfschema:"override_enabled"`
 }
 
 type SecurityProfileModel struct {
-	EncryptionAtHost               bool                      `tfschema:"encryption_at_host"`
-	UserAssignedIdentityResourceId string                    `tfschema:"user_assigned_identity_resource_id"`
-	ProxyAgentSettings             []ProxyAgentSettingsModel `tfschema:"proxy_agent_settings"`
-	SecurityType                   string                    `tfschema:"security_type"`
-	SecureBootEnabled              bool                      `tfschema:"secure_boot_enabled"`
-	VTpmEnabled                    bool                      `tfschema:"vtpm_enabled"`
-}
-
-type ProxyAgentSettingsModel struct {
-	Enabled          bool   `tfschema:"enabled"`
-	KeyIncarnationId int64  `tfschema:"key_incarnation_id"`
-	Mode             string `tfschema:"mode"`
-}
-
-type ServiceArtifactReferenceModel struct {
-	Id string `tfschema:"id"`
+	EncryptionAtHostEnabled bool   `tfschema:"encryption_at_host_enabled"`
+	UserAssignedIdentityId  string `tfschema:"user_assigned_identity_id"`
+	ProxyAgentKeyValue      int64  `tfschema:"proxy_agent_key_incarnation_value"`
+	ProxyAgentMode          string `tfschema:"proxy_agent_mode"`
+	SecurityType            string `tfschema:"security_type"`
+	UefiSecureBootEnabled   bool   `tfschema:"uefi_secure_boot_enabled"`
+	UefiVTpmEnabled         bool   `tfschema:"uefi_vtpm_enabled"`
 }
 
 type StorageProfileModel struct {
-	DataDisks          []VirtualMachineScaleSetDataDiskModel `tfschema:"data_disks"`
-	DiskControllerType string                                `tfschema:"disk_controller_type"`
-	ImageReference     []ImageReferenceModel                 `tfschema:"image_reference"`
-	OsDisk             []VirtualMachineScaleSetOSDiskModel   `tfschema:"os_disk"`
+	StorageProfileDataDisks                    []StorageProfileDataDiskModel       `tfschema:"storage_profile_data_disk"`
+	DiskControllerType                         string                              `tfschema:"disk_controller_type"`
+	StorageProfileStorageProfileImageReference []StorageProfileImageReferenceModel `tfschema:"storage_profile_image_reference"`
+	StorageProfileOsDisk                       []StorageProfileOSDiskModel         `tfschema:"storage_profile_os_disk"`
 }
 
-type VirtualMachineScaleSetDataDiskModel struct {
-	Caching                 string                                             `tfschema:"caching"`
-	CreateOption            string                                             `tfschema:"create_option"`
-	DeleteOption            string                                             `tfschema:"delete_option"`
-	DiskIOPSReadWrite       int64                                              `tfschema:"disk_iops_read_write"`
-	DiskMBpsReadWrite       int64                                              `tfschema:"disk_m_bps_read_write"`
-	DiskSizeInGB            int64                                              `tfschema:"disk_size_in_gb"`
-	Lun                     int64                                              `tfschema:"lun"`
-	ManagedDisk             []VirtualMachineScaleSetManagedDiskParametersModel `tfschema:"managed_disk"`
-	Name                    string                                             `tfschema:"name"`
-	WriteAcceleratorEnabled bool                                               `tfschema:"write_accelerator_enabled"`
+type StorageProfileDataDiskModel struct {
+	Caching                 string             `tfschema:"caching"`
+	CreateOption            string             `tfschema:"create_option"`
+	DeleteOption            string             `tfschema:"delete_option"`
+	DiskIOPSReadWrite       int64              `tfschema:"disk_iops_read_write"`
+	DiskMBpsReadWrite       int64              `tfschema:"disk_m_bps_read_write"`
+	DiskSizeInGB            int64              `tfschema:"disk_size_in_gb"`
+	Lun                     int64              `tfschema:"lun"`
+	ManagedDisk             []ManagedDiskModel `tfschema:"managed_disk"`
+	Name                    string             `tfschema:"name"`
+	WriteAcceleratorEnabled bool               `tfschema:"write_accelerator_enabled"`
 }
 
-type VirtualMachineScaleSetManagedDiskParametersModel struct {
-	DiskEncryptionSetId string                       `tfschema:"disk_encryption_set_id"`
-	SecurityProfile     []VMDiskSecurityProfileModel `tfschema:"security_profile"`
-	StorageAccountType  string                       `tfschema:"storage_account_type"`
+type ManagedDiskModel struct {
+	DiskEncryptionSetId         string `tfschema:"disk_encryption_set_id"`
+	SecurityDiskEncryptionSetId string `tfschema:"security_disk_encryption_set_id"`
+	SecurityEncryptionType      string `tfschema:"security_encryption_type"`
+	StorageAccountType          string `tfschema:"storage_account_type"`
 }
 
-type VMDiskSecurityProfileModel struct {
-	DiskEncryptionSetId    string `tfschema:"disk_encryption_set_id"`
-	SecurityEncryptionType string `tfschema:"security_encryption_type"`
-}
-
-type ImageReferenceModel struct {
+type StorageProfileImageReferenceModel struct {
 	CommunityGalleryImageId string `tfschema:"community_gallery_image_id"`
-	ExactVersion            string `tfschema:"exact_version"`
 	Id                      string `tfschema:"id"`
 	Offer                   string `tfschema:"offer"`
 	Publisher               string `tfschema:"publisher"`
@@ -320,30 +273,26 @@ type ImageReferenceModel struct {
 	Version                 string `tfschema:"version"`
 }
 
-type VirtualMachineScaleSetOSDiskModel struct {
-	Caching                 string                                             `tfschema:"caching"`
-	CreateOption            string                                             `tfschema:"create_option"`
-	DeleteOption            string                                             `tfschema:"delete_option"`
-	DiffDiskSettings        []DiffDiskSettingsModel                            `tfschema:"diff_disk_settings"`
-	DiskSizeInGB            int64                                              `tfschema:"disk_size_in_gb"`
-	ImageUri                string                                             `tfschema:"image_uri"`
-	ManagedDisk             []VirtualMachineScaleSetManagedDiskParametersModel `tfschema:"managed_disk"`
-	Name                    string                                             `tfschema:"name"`
-	OsType                  string                                             `tfschema:"os_type"`
-	VhdContainers           []string                                           `tfschema:"vhd_containers"`
-	WriteAcceleratorEnabled bool                                               `tfschema:"write_accelerator_enabled"`
-}
-
-type DiffDiskSettingsModel struct {
-	Option    string `tfschema:"option"`
-	Placement string `tfschema:"placement"`
+type StorageProfileOSDiskModel struct {
+	Caching                 string             `tfschema:"caching"`
+	CreateOption            string             `tfschema:"create_option"`
+	DeleteOption            string             `tfschema:"delete_option"`
+	DiffDiskOption          string             `tfschema:"diff_disk_option"`
+	DiffDiskPlacement       string             `tfschema:"diff_disk_placement"`
+	DiskSizeInGB            int64              `tfschema:"disk_size_in_gb"`
+	ImageUri                string             `tfschema:"image_uri"`
+	ManagedDisk             []ManagedDiskModel `tfschema:"managed_disk"`
+	Name                    string             `tfschema:"name"`
+	OsType                  string             `tfschema:"os_type"`
+	VhdContainers           []string           `tfschema:"vhd_containers"`
+	WriteAcceleratorEnabled bool               `tfschema:"write_accelerator_enabled"`
 }
 
 type ComputeProfileModel struct {
-	AdditionalVirtualMachineCapabilities []AdditionalCapabilitiesModel `tfschema:"additional_virtual_machine_capabilities"`
-	BaseVirtualMachineProfile            []VirtualMachineProfileModel  `tfschema:"base_virtual_machine_profile"`
-	ComputeApiVersion                    string                        `tfschema:"compute_api_version"`
-	PlatformFaultDomainCount             int64                         `tfschema:"platform_fault_domain_count"`
+	AdditionalCapabilities   []AdditionalCapabilitiesModel `tfschema:"additional_capabilities"`
+	VirtualMachineProfile    []VirtualMachineProfileModel  `tfschema:"virtual_machine_profile"`
+	ComputeApiVersion        string                        `tfschema:"compute_api_version"`
+	PlatformFaultDomainCount int64                         `tfschema:"platform_fault_domain_count"`
 }
 
 type AdditionalCapabilitiesModel struct {
@@ -385,10 +334,10 @@ type VMAttributesModel struct {
 	DataDiskCount             []VMAttributeMinMaxIntegerModel `tfschema:"data_disk_count"`
 	ExcludedVMSizes           []string                        `tfschema:"excluded_vm_sizes_profile"`
 	LocalStorageDiskTypes     []string                        `tfschema:"local_storage_disk_types"`
-	LocalStorageInGiB         []VMAttributeMinMaxDoubleModel  `tfschema:"local_storage_in_gi_b"`
+	LocalStorageInGib         []VMAttributeMinMaxDoubleModel  `tfschema:"local_storage_in_gib"`
 	LocalStorageSupport       string                          `tfschema:"local_storage_support"`
-	MemoryInGiB               []VMAttributeMinMaxDoubleModel  `tfschema:"memory_in_gi_b"`
-	MemoryInGiBPerVCPU        []VMAttributeMinMaxDoubleModel  `tfschema:"memory_in_gi_b_per_vcpu"`
+	MemoryInGib               []VMAttributeMinMaxDoubleModel  `tfschema:"memory_in_gib"`
+	MemoryInGibPerVCPU        []VMAttributeMinMaxDoubleModel  `tfschema:"memory_in_gib_per_vcpu"`
 	NetworkBandwidthInMbps    []VMAttributeMinMaxDoubleModel  `tfschema:"network_bandwidth_in_mbps"`
 	NetworkInterfaceCount     []VMAttributeMinMaxIntegerModel `tfschema:"network_interface_count"`
 	RdmaNetworkInterfaceCount []VMAttributeMinMaxIntegerModel `tfschema:"rdma_network_interface_count"`
@@ -437,10 +386,21 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
+		"location": commonschema.Location(),
+
 		"resource_group_name": commonschema.ResourceGroupName(),
 
-		// "location": commonschema.LocationWithoutForceNew(),
-		// "additional_locations_profile": azurefleet.additionalLocationsProfileSchema(),
+		"additional_location_profile": {
+			Type:     pluginsdk.TypeList,
+			Optional: true,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"location": commonschema.LocationWithoutForceNew(),
+
+					"virtual_machine_profile_override": virtualMachineProfileSchema(),
+				},
+			},
+		},
 
 		"compute_profile": {
 			Type:     pluginsdk.TypeList,
@@ -448,1613 +408,32 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 			MaxItems: 1,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
-					"additional_virtual_machine_capabilities": {
-						Type:     pluginsdk.TypeList,
+					"additional_capabilities_ultra_ssd_enabled": {
+						Type:     pluginsdk.TypeBool,
 						Optional: true,
-						MaxItems: 1,
-						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"hibernation_enabled": {
-									Type:     pluginsdk.TypeBool,
-									Optional: true,
-								},
-
-								"ultra_ssd_enabled": {
-									Type:     pluginsdk.TypeBool,
-									Optional: true,
-								},
-							},
-						},
 					},
 
-					"base_virtual_machine_profile": {
-						Type:     pluginsdk.TypeList,
-						Required: true,
-						MaxItems: 1,
-						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"application_profile": {
-									Type:     pluginsdk.TypeList,
-									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"gallery_applications": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"configuration_reference": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"enable_automatic_upgrade": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"order": {
-															Type:     pluginsdk.TypeInt,
-															Optional: true,
-														},
-
-														"package_reference_id": {
-															Type:         pluginsdk.TypeString,
-															Required:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"tags": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"treat_failure_as_deployment_failure": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-
-								"capacity_reservation_group_id": {
-									Elem: &schema.Schema{
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: capacityreservationgroups.ValidateCapacityReservationGroupID,
-									},
-								},
-
-								"diagnostics_profile": {
-									Type:     pluginsdk.TypeList,
-									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"boot_diagnostics": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"enabled": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"storage_uri": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-
-								"extensions": {
-									Type:     pluginsdk.TypeList,
-									Optional: true,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"id": {
-												Type:         pluginsdk.TypeString,
-												Optional:     true,
-												ValidateFunc: validation.StringIsNotEmpty,
-											},
-
-											"name": {
-												Type:         pluginsdk.TypeString,
-												Optional:     true,
-												ValidateFunc: validation.StringIsNotEmpty,
-											},
-
-											"properties": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"auto_upgrade_minor_version": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"enable_automatic_upgrade": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"force_update_tag": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"protected_settings": {
-															Type:             pluginsdk.TypeString,
-															Optional:         true,
-															ValidateFunc:     validation.StringIsJSON,
-															DiffSuppressFunc: pluginsdk.SuppressJsonDiff,
-														},
-
-														"protected_settings_from_key_vault": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"secret_url": {
-																		Type:         pluginsdk.TypeString,
-																		Required:     true,
-																		ValidateFunc: validation.StringIsNotEmpty,
-																	},
-
-																	"source_vault_id": commonschema.ResourceIDReferenceRequired(&commonids.KeyVaultId{}),
-																},
-															},
-														},
-
-														"provision_after_extensions": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															Elem: &pluginsdk.Schema{
-																Type: pluginsdk.TypeString,
-															},
-														},
-
-														"provisioning_state": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"publisher": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"settings": {
-															Type:             pluginsdk.TypeString,
-															Optional:         true,
-															ValidateFunc:     validation.StringIsJSON,
-															DiffSuppressFunc: pluginsdk.SuppressJsonDiff,
-														},
-
-														"suppress_failures": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"type": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"type_handler_version": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-													},
-												},
-											},
-
-											"type": {
-												Type:         pluginsdk.TypeString,
-												Optional:     true,
-												ValidateFunc: validation.StringIsNotEmpty,
-											},
-										},
-									},
-								},
-
-								"extensions_time_budget": {
-									Type:         pluginsdk.TypeString,
-									Optional:     true,
-									ValidateFunc: validation.StringIsNotEmpty,
-								},
-
-								"hardware_profile": {
-									Type:     pluginsdk.TypeList,
-									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"vm_size_properties": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"vcp_us_available": {
-															Type:     pluginsdk.TypeInt,
-															Optional: true,
-														},
-
-														"vcp_us_per_core": {
-															Type:     pluginsdk.TypeInt,
-															Optional: true,
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-
-								"license_type": {
-									Type:         pluginsdk.TypeString,
-									Optional:     true,
-									ValidateFunc: validation.StringIsNotEmpty,
-								},
-
-								"network_profile": {
-									Type:     pluginsdk.TypeList,
-									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"health_probe": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"id": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-													},
-												},
-											},
-
-											"network_api_version": {
-												Type:     pluginsdk.TypeString,
-												Optional: true,
-												ValidateFunc: validation.StringInSlice([]string{
-													string(fleets.NetworkApiVersionTwoZeroTwoZeroNegativeOneOneNegativeZeroOne),
-												}, false),
-											},
-
-											"network_interface_configurations": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"name": {
-															Type:         pluginsdk.TypeString,
-															Required:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"properties": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"auxiliary_mode": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.NetworkInterfaceAuxiliaryModeNone),
-																			string(fleets.NetworkInterfaceAuxiliaryModeAcceleratedConnections),
-																			string(fleets.NetworkInterfaceAuxiliaryModeFloating),
-																		}, false),
-																	},
-
-																	"auxiliary_sku": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.NetworkInterfaceAuxiliarySkuNone),
-																			string(fleets.NetworkInterfaceAuxiliarySkuAOne),
-																			string(fleets.NetworkInterfaceAuxiliarySkuATwo),
-																			string(fleets.NetworkInterfaceAuxiliarySkuAFour),
-																			string(fleets.NetworkInterfaceAuxiliarySkuAEight),
-																		}, false),
-																	},
-
-																	"delete_option": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.DeleteOptionsDelete),
-																			string(fleets.DeleteOptionsDetach),
-																		}, false),
-																	},
-
-																	"disable_tcp_state_tracking": {
-																		Type:     pluginsdk.TypeBool,
-																		Optional: true,
-																	},
-
-																	"dns_settings": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		MaxItems: 1,
-																		Elem: &pluginsdk.Resource{
-																			Schema: map[string]*pluginsdk.Schema{
-																				"dns_servers": {
-																					Type:     pluginsdk.TypeList,
-																					Optional: true,
-																					Elem: &pluginsdk.Schema{
-																						Type: pluginsdk.TypeString,
-																					},
-																				},
-																			},
-																		},
-																	},
-
-																	"enable_accelerated_networking": {
-																		Type:     pluginsdk.TypeBool,
-																		Optional: true,
-																	},
-
-																	"enable_fpga": {
-																		Type:     pluginsdk.TypeBool,
-																		Optional: true,
-																	},
-
-																	"enable_ip_forwarding": {
-																		Type:     pluginsdk.TypeBool,
-																		Optional: true,
-																	},
-
-																	"ip_configurations": {
-																		Type:     pluginsdk.TypeList,
-																		Required: true,
-																		Elem: &pluginsdk.Resource{
-																			Schema: map[string]*pluginsdk.Schema{
-																				"name": {
-																					Type:         pluginsdk.TypeString,
-																					Required:     true,
-																					ValidateFunc: validation.StringIsNotEmpty,
-																				},
-
-																				"properties": {
-																					Type:     pluginsdk.TypeList,
-																					Optional: true,
-																					MaxItems: 1,
-																					Elem: &pluginsdk.Resource{
-																						Schema: map[string]*pluginsdk.Schema{
-																							"application_gateway_backend_address_pools": {
-																								Type:     pluginsdk.TypeList,
-																								Optional: true,
-																								Elem: &pluginsdk.Resource{
-																									Schema: map[string]*pluginsdk.Schema{
-																										"id": {
-																											Type:         pluginsdk.TypeString,
-																											Optional:     true,
-																											ValidateFunc: validation.StringIsNotEmpty,
-																										},
-																									},
-																								},
-																							},
-
-																							"application_security_groups": {
-																								Type:     pluginsdk.TypeList,
-																								Optional: true,
-																								Elem: &pluginsdk.Resource{
-																									Schema: map[string]*pluginsdk.Schema{
-																										"id": {
-																											Type:         pluginsdk.TypeString,
-																											Optional:     true,
-																											ValidateFunc: validation.StringIsNotEmpty,
-																										},
-																									},
-																								},
-																							},
-
-																							"load_balancer_backend_address_pools": {
-																								Type:     pluginsdk.TypeList,
-																								Optional: true,
-																								Elem: &pluginsdk.Resource{
-																									Schema: map[string]*pluginsdk.Schema{
-																										"id": {
-																											Type:         pluginsdk.TypeString,
-																											Optional:     true,
-																											ValidateFunc: validation.StringIsNotEmpty,
-																										},
-																									},
-																								},
-																							},
-
-																							"load_balancer_inbound_nat_pools": {
-																								Type:     pluginsdk.TypeList,
-																								Optional: true,
-																								Elem: &pluginsdk.Resource{
-																									Schema: map[string]*pluginsdk.Schema{
-																										"id": {
-																											Type:         pluginsdk.TypeString,
-																											Optional:     true,
-																											ValidateFunc: validation.StringIsNotEmpty,
-																										},
-																									},
-																								},
-																							},
-
-																							"primary": {
-																								Type:     pluginsdk.TypeBool,
-																								Optional: true,
-																							},
-
-																							"private_ip_address_version": {
-																								Type:     pluginsdk.TypeString,
-																								Optional: true,
-																								ValidateFunc: validation.StringInSlice([]string{
-																									string(fleets.IPVersionIPvFour),
-																									string(fleets.IPVersionIPvSix),
-																								}, false),
-																							},
-
-																							"public_ip_address_configuration": {
-																								Type:     pluginsdk.TypeList,
-																								Optional: true,
-																								MaxItems: 1,
-																								Elem: &pluginsdk.Resource{
-																									Schema: map[string]*pluginsdk.Schema{
-																										"name": {
-																											Type:         pluginsdk.TypeString,
-																											Required:     true,
-																											ValidateFunc: validation.StringIsNotEmpty,
-																										},
-
-																										"properties": {
-																											Type:     pluginsdk.TypeList,
-																											Optional: true,
-																											MaxItems: 1,
-																											Elem: &pluginsdk.Resource{
-																												Schema: map[string]*pluginsdk.Schema{
-																													"delete_option": {
-																														Type:     pluginsdk.TypeString,
-																														Optional: true,
-																														ValidateFunc: validation.StringInSlice([]string{
-																															string(fleets.DeleteOptionsDelete),
-																															string(fleets.DeleteOptionsDetach),
-																														}, false),
-																													},
-
-																													"dns_settings": {
-																														Type:     pluginsdk.TypeList,
-																														Optional: true,
-																														MaxItems: 1,
-																														Elem: &pluginsdk.Resource{
-																															Schema: map[string]*pluginsdk.Schema{
-																																"domain_name_label": {
-																																	Type:         pluginsdk.TypeString,
-																																	Required:     true,
-																																	ValidateFunc: validation.StringIsNotEmpty,
-																																},
-
-																																"domain_name_label_scope": {
-																																	Type:     pluginsdk.TypeString,
-																																	Optional: true,
-																																	ValidateFunc: validation.StringInSlice([]string{
-																																		string(fleets.DomainNameLabelScopeTypesTenantReuse),
-																																		string(fleets.DomainNameLabelScopeTypesSubscriptionReuse),
-																																		string(fleets.DomainNameLabelScopeTypesResourceGroupReuse),
-																																		string(fleets.DomainNameLabelScopeTypesNoReuse),
-																																	}, false),
-																																},
-																															},
-																														},
-																													},
-
-																													"ip_tags": {
-																														Type:     pluginsdk.TypeList,
-																														Optional: true,
-																														Elem: &pluginsdk.Resource{
-																															Schema: map[string]*pluginsdk.Schema{
-																																"ip_tag_type": {
-																																	Type:         pluginsdk.TypeString,
-																																	Optional:     true,
-																																	ValidateFunc: validation.StringIsNotEmpty,
-																																},
-
-																																"tag": {
-																																	Type:         pluginsdk.TypeString,
-																																	Optional:     true,
-																																	ValidateFunc: validation.StringIsNotEmpty,
-																																},
-																															},
-																														},
-																													},
-
-																													"idle_timeout_in_minutes": {
-																														Type:     pluginsdk.TypeInt,
-																														Optional: true,
-																													},
-
-																													"public_ip_address_version": {
-																														Type:     pluginsdk.TypeString,
-																														Optional: true,
-																														ValidateFunc: validation.StringInSlice([]string{
-																															string(fleets.IPVersionIPvSix),
-																															string(fleets.IPVersionIPvFour),
-																														}, false),
-																													},
-
-																													"public_ip_prefix": {
-																														Type:     pluginsdk.TypeList,
-																														Optional: true,
-																														MaxItems: 1,
-																														Elem: &pluginsdk.Resource{
-																															Schema: map[string]*pluginsdk.Schema{
-																																"id": {
-																																	Type:         pluginsdk.TypeString,
-																																	Optional:     true,
-																																	ValidateFunc: validation.StringIsNotEmpty,
-																																},
-																															},
-																														},
-																													},
-																												},
-																											},
-																										},
-
-																										"sku": {
-																											Type:     pluginsdk.TypeList,
-																											Optional: true,
-																											MaxItems: 1,
-																											Elem: &pluginsdk.Resource{
-																												Schema: map[string]*pluginsdk.Schema{
-																													"name": {
-																														Type:     pluginsdk.TypeString,
-																														Optional: true,
-																														ValidateFunc: validation.StringInSlice([]string{
-																															string(fleets.PublicIPAddressSkuNameBasic),
-																															string(fleets.PublicIPAddressSkuNameStandard),
-																														}, false),
-																													},
-
-																													"tier": {
-																														Type:     pluginsdk.TypeString,
-																														Optional: true,
-																														ValidateFunc: validation.StringInSlice([]string{
-																															string(fleets.PublicIPAddressSkuTierRegional),
-																															string(fleets.PublicIPAddressSkuTierGlobal),
-																														}, false),
-																													},
-																												},
-																											},
-																										},
-																									},
-																								},
-																							},
-
-																							"subnet": {
-																								Type:     pluginsdk.TypeList,
-																								Optional: true,
-																								MaxItems: 1,
-																								Elem: &pluginsdk.Resource{
-																									Schema: map[string]*pluginsdk.Schema{
-																										"id": {
-																											Type:         pluginsdk.TypeString,
-																											Optional:     true,
-																											ValidateFunc: validation.StringIsNotEmpty,
-																										},
-																									},
-																								},
-																							},
-																						},
-																					},
-																				},
-																			},
-																		},
-																	},
-
-																	"network_security_group": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		MaxItems: 1,
-																		Elem: &pluginsdk.Resource{
-																			Schema: map[string]*pluginsdk.Schema{
-																				"id": {
-																					Type:         pluginsdk.TypeString,
-																					Optional:     true,
-																					ValidateFunc: validation.StringIsNotEmpty,
-																				},
-																			},
-																		},
-																	},
-
-																	"primary": {
-																		Type:     pluginsdk.TypeBool,
-																		Optional: true,
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-
-								"os_profile": {
-									Type:     pluginsdk.TypeList,
-									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"admin_password": {
-												Type:         pluginsdk.TypeString,
-												Optional:     true,
-												ValidateFunc: validation.StringIsNotEmpty,
-											},
-
-											"admin_username": {
-												Type:         pluginsdk.TypeString,
-												Optional:     true,
-												ValidateFunc: validation.StringIsNotEmpty,
-											},
-
-											"allow_extension_operations": {
-												Type:     pluginsdk.TypeBool,
-												Optional: true,
-											},
-
-											"computer_name_prefix": {
-												Type:         pluginsdk.TypeString,
-												Optional:     true,
-												ValidateFunc: validation.StringIsNotEmpty,
-											},
-
-											"custom_data": {
-												Type:         pluginsdk.TypeString,
-												Optional:     true,
-												ValidateFunc: validation.StringIsNotEmpty,
-											},
-
-											"linux_configuration": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"disable_password_authentication": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"enable_vm_agent_platform_updates": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"patch_settings": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"assessment_mode": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.LinuxPatchAssessmentModeImageDefault),
-																			string(fleets.LinuxPatchAssessmentModeAutomaticByPlatform),
-																		}, false),
-																	},
-
-																	"automatic_by_platform_settings": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		MaxItems: 1,
-																		Elem: &pluginsdk.Resource{
-																			Schema: map[string]*pluginsdk.Schema{
-																				"bypass_platform_safety_checks_on_user_schedule": {
-																					Type:     pluginsdk.TypeBool,
-																					Optional: true,
-																				},
-
-																				"reboot_setting": {
-																					Type:     pluginsdk.TypeString,
-																					Optional: true,
-																					ValidateFunc: validation.StringInSlice([]string{
-																						string(fleets.LinuxVMGuestPatchAutomaticByPlatformRebootSettingNever),
-																						string(fleets.LinuxVMGuestPatchAutomaticByPlatformRebootSettingAlways),
-																						string(fleets.LinuxVMGuestPatchAutomaticByPlatformRebootSettingUnknown),
-																						string(fleets.LinuxVMGuestPatchAutomaticByPlatformRebootSettingIfRequired),
-																					}, false),
-																				},
-																			},
-																		},
-																	},
-
-																	"patch_mode": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.LinuxVMGuestPatchModeImageDefault),
-																			string(fleets.LinuxVMGuestPatchModeAutomaticByPlatform),
-																		}, false),
-																	},
-																},
-															},
-														},
-
-														"provision_vm_agent": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"ssh": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"public_keys": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		Elem: &pluginsdk.Resource{
-																			Schema: map[string]*pluginsdk.Schema{
-																				"key_data": {
-																					Type:         pluginsdk.TypeString,
-																					Optional:     true,
-																					ValidateFunc: validation.StringIsNotEmpty,
-																				},
-
-																				"path": {
-																					Type:         pluginsdk.TypeString,
-																					Optional:     true,
-																					ValidateFunc: validation.StringIsNotEmpty,
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-
-											"require_guest_provision_signal": {
-												Type:     pluginsdk.TypeBool,
-												Optional: true,
-											},
-
-											"secrets": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"source_vault_id": commonschema.ResourceIDReferenceOptional(&commonids.KeyVaultId{}),
-
-														"vault_certificates": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"certificate_store": {
-																		Type:         pluginsdk.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringIsNotEmpty,
-																	},
-
-																	"certificate_url": {
-																		Type:         pluginsdk.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringIsNotEmpty,
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-
-											"windows_configuration": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"additional_unattend_content": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"component_name": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.ComponentNameMicrosoftNegativeWindowsNegativeShellNegativeSetup),
-																		}, false),
-																	},
-
-																	"content": {
-																		Type:         pluginsdk.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringIsNotEmpty,
-																	},
-
-																	"pass_name": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.PassNameOobeSystem),
-																		}, false),
-																	},
-
-																	"setting_name": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.SettingNamesAutoLogon),
-																			string(fleets.SettingNamesFirstLogonCommands),
-																		}, false),
-																	},
-																},
-															},
-														},
-
-														"enable_automatic_updates": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"enable_vm_agent_platform_updates": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"patch_settings": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"assessment_mode": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.WindowsPatchAssessmentModeImageDefault),
-																			string(fleets.WindowsPatchAssessmentModeAutomaticByPlatform),
-																		}, false),
-																	},
-
-																	"automatic_by_platform_settings": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		MaxItems: 1,
-																		Elem: &pluginsdk.Resource{
-																			Schema: map[string]*pluginsdk.Schema{
-																				"bypass_platform_safety_checks_on_user_schedule": {
-																					Type:     pluginsdk.TypeBool,
-																					Optional: true,
-																				},
-
-																				"reboot_setting": {
-																					Type:     pluginsdk.TypeString,
-																					Optional: true,
-																					ValidateFunc: validation.StringInSlice([]string{
-																						string(fleets.WindowsVMGuestPatchAutomaticByPlatformRebootSettingIfRequired),
-																						string(fleets.WindowsVMGuestPatchAutomaticByPlatformRebootSettingNever),
-																						string(fleets.WindowsVMGuestPatchAutomaticByPlatformRebootSettingAlways),
-																						string(fleets.WindowsVMGuestPatchAutomaticByPlatformRebootSettingUnknown),
-																					}, false),
-																				},
-																			},
-																		},
-																	},
-
-																	"enable_hotpatching": {
-																		Type:     pluginsdk.TypeBool,
-																		Optional: true,
-																	},
-
-																	"patch_mode": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.WindowsVMGuestPatchModeManual),
-																			string(fleets.WindowsVMGuestPatchModeAutomaticByOS),
-																			string(fleets.WindowsVMGuestPatchModeAutomaticByPlatform),
-																		}, false),
-																	},
-																},
-															},
-														},
-
-														"provision_vm_agent": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"time_zone": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"win_rm": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"listeners": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		Elem: &pluginsdk.Resource{
-																			Schema: map[string]*pluginsdk.Schema{
-																				"certificate_url": {
-																					Type:         pluginsdk.TypeString,
-																					Optional:     true,
-																					ValidateFunc: validation.StringIsNotEmpty,
-																				},
-
-																				"protocol": {
-																					Type:     pluginsdk.TypeString,
-																					Optional: true,
-																					ValidateFunc: validation.StringInSlice([]string{
-																						string(fleets.ProtocolTypesHTTP),
-																						string(fleets.ProtocolTypesHTTPS),
-																					}, false),
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-
-								"scheduled_events_profile": {
-									Type:     pluginsdk.TypeList,
-									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"os_image_notification_profile": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"enable": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"not_before_timeout": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-													},
-												},
-											},
-
-											"terminate_notification_profile": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"enable": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"not_before_timeout": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-
-								"security_posture_reference": {
-									Type:     pluginsdk.TypeList,
-									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"exclude_extensions": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												Elem: &pluginsdk.Schema{
-													Type: pluginsdk.TypeString,
-												},
-											},
-
-											"id": {
-												Type:         pluginsdk.TypeString,
-												Optional:     true,
-												ValidateFunc: validation.StringIsNotEmpty,
-											},
-
-											"is_overridable": {
-												Type:     pluginsdk.TypeBool,
-												Optional: true,
-											},
-										},
-									},
-								},
-
-								"security_profile": {
-									Type:     pluginsdk.TypeList,
-									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"encryption_at_host": {
-												Type:     pluginsdk.TypeBool,
-												Optional: true,
-											},
-
-											"encryption_identity": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"user_assigned_identity_resource_id": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-													},
-												},
-											},
-
-											"proxy_agent_settings": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"enabled": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"key_incarnation_id": {
-															Type:     pluginsdk.TypeInt,
-															Optional: true,
-														},
-
-														"mode": {
-															Type:     pluginsdk.TypeString,
-															Optional: true,
-															ValidateFunc: validation.StringInSlice([]string{
-																string(fleets.ModeAudit),
-																string(fleets.ModeEnforce),
-															}, false),
-														},
-													},
-												},
-											},
-
-											"security_type": {
-												Type:     pluginsdk.TypeString,
-												Optional: true,
-												ValidateFunc: validation.StringInSlice([]string{
-													string(fleets.SecurityTypesTrustedLaunch),
-													string(fleets.SecurityTypesConfidentialVM),
-												}, false),
-											},
-
-											"uefi_settings": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"secure_boot_enabled": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-
-														"v_tpm_enabled": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-
-								"service_artifact_reference": {
-									Type:     pluginsdk.TypeList,
-									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"id": {
-												Type:         pluginsdk.TypeString,
-												Optional:     true,
-												ValidateFunc: validation.StringIsNotEmpty,
-											},
-										},
-									},
-								},
-
-								"storage_profile": {
-									Type:     pluginsdk.TypeList,
-									Optional: true,
-									MaxItems: 1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"data_disks": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"caching": {
-															Type:     pluginsdk.TypeString,
-															Optional: true,
-															ValidateFunc: validation.StringInSlice([]string{
-																string(fleets.CachingTypesNone),
-																string(fleets.CachingTypesReadOnly),
-																string(fleets.CachingTypesReadWrite),
-															}, false),
-														},
-
-														"create_option": {
-															Type:     pluginsdk.TypeString,
-															Required: true,
-															ValidateFunc: validation.StringInSlice([]string{
-																string(fleets.DiskCreateOptionTypesFromImage),
-																string(fleets.DiskCreateOptionTypesEmpty),
-																string(fleets.DiskCreateOptionTypesAttach),
-																string(fleets.DiskCreateOptionTypesCopy),
-																string(fleets.DiskCreateOptionTypesRestore),
-															}, false),
-														},
-
-														"delete_option": {
-															Type:     pluginsdk.TypeString,
-															Optional: true,
-															ValidateFunc: validation.StringInSlice([]string{
-																string(fleets.DiskDeleteOptionTypesDelete),
-																string(fleets.DiskDeleteOptionTypesDetach),
-															}, false),
-														},
-
-														"disk_iops_read_write": {
-															Type:     pluginsdk.TypeInt,
-															Optional: true,
-														},
-
-														"disk_m_bps_read_write": {
-															Type:     pluginsdk.TypeInt,
-															Optional: true,
-														},
-
-														"disk_size_gb": {
-															Type:     pluginsdk.TypeInt,
-															Optional: true,
-														},
-
-														"lun": {
-															Type:     pluginsdk.TypeInt,
-															Required: true,
-														},
-
-														"managed_disk": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"disk_encryption_set": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		MaxItems: 1,
-																		Elem: &pluginsdk.Resource{
-																			Schema: map[string]*pluginsdk.Schema{
-																				"id": {
-																					Type:         pluginsdk.TypeString,
-																					Optional:     true,
-																					ValidateFunc: validation.StringIsNotEmpty,
-																				},
-																			},
-																		},
-																	},
-
-																	"security_profile": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		MaxItems: 1,
-																		Elem: &pluginsdk.Resource{
-																			Schema: map[string]*pluginsdk.Schema{
-																				"disk_encryption_set": {
-																					Type:     pluginsdk.TypeList,
-																					Optional: true,
-																					MaxItems: 1,
-																					Elem: &pluginsdk.Resource{
-																						Schema: map[string]*pluginsdk.Schema{
-																							"id": {
-																								Type:         pluginsdk.TypeString,
-																								Optional:     true,
-																								ValidateFunc: validation.StringIsNotEmpty,
-																							},
-																						},
-																					},
-																				},
-
-																				"security_encryption_type": {
-																					Type:     pluginsdk.TypeString,
-																					Optional: true,
-																					ValidateFunc: validation.StringInSlice([]string{
-																						string(fleets.SecurityEncryptionTypesVMGuestStateOnly),
-																						string(fleets.SecurityEncryptionTypesDiskWithVMGuestState),
-																						string(fleets.SecurityEncryptionTypesNonPersistedTPM),
-																					}, false),
-																				},
-																			},
-																		},
-																	},
-
-																	"storage_account_type": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.StorageAccountTypesStandardSSDLRS),
-																			string(fleets.StorageAccountTypesUltraSSDLRS),
-																			string(fleets.StorageAccountTypesPremiumZRS),
-																			string(fleets.StorageAccountTypesStandardSSDZRS),
-																			string(fleets.StorageAccountTypesPremiumVTwoLRS),
-																			string(fleets.StorageAccountTypesStandardLRS),
-																			string(fleets.StorageAccountTypesPremiumLRS),
-																		}, false),
-																	},
-																},
-															},
-														},
-
-														"name": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"write_accelerator_enabled": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-													},
-												},
-											},
-
-											"disk_controller_type": {
-												Type:     pluginsdk.TypeString,
-												Optional: true,
-												ValidateFunc: validation.StringInSlice([]string{
-													string(fleets.DiskControllerTypesNVMe),
-													string(fleets.DiskControllerTypesSCSI),
-												}, false),
-											},
-
-											"image_reference": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"community_gallery_image_id": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"exact_version": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"id": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"offer": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"publisher": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"shared_gallery_image_id": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"sku": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"version": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-													},
-												},
-											},
-
-											"os_disk": {
-												Type:     pluginsdk.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &pluginsdk.Resource{
-													Schema: map[string]*pluginsdk.Schema{
-														"caching": {
-															Type:     pluginsdk.TypeString,
-															Optional: true,
-															ValidateFunc: validation.StringInSlice([]string{
-																string(fleets.CachingTypesNone),
-																string(fleets.CachingTypesReadOnly),
-																string(fleets.CachingTypesReadWrite),
-															}, false),
-														},
-
-														"create_option": {
-															Type:     pluginsdk.TypeString,
-															Required: true,
-															ValidateFunc: validation.StringInSlice([]string{
-																string(fleets.DiskCreateOptionTypesEmpty),
-																string(fleets.DiskCreateOptionTypesAttach),
-																string(fleets.DiskCreateOptionTypesCopy),
-																string(fleets.DiskCreateOptionTypesRestore),
-																string(fleets.DiskCreateOptionTypesFromImage),
-															}, false),
-														},
-
-														"delete_option": {
-															Type:     pluginsdk.TypeString,
-															Optional: true,
-															ValidateFunc: validation.StringInSlice([]string{
-																string(fleets.DiskDeleteOptionTypesDelete),
-																string(fleets.DiskDeleteOptionTypesDetach),
-															}, false),
-														},
-
-														"diff_disk_settings": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"option": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.DiffDiskOptionsLocal),
-																		}, false),
-																	},
-
-																	"placement": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.DiffDiskPlacementCacheDisk),
-																			string(fleets.DiffDiskPlacementResourceDisk),
-																			string(fleets.DiffDiskPlacementNVMeDisk),
-																		}, false),
-																	},
-																},
-															},
-														},
-
-														"disk_size_gb": {
-															Type:     pluginsdk.TypeInt,
-															Optional: true,
-														},
-
-														"image": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"uri": {
-																		Type:         pluginsdk.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringIsNotEmpty,
-																	},
-																},
-															},
-														},
-
-														"managed_disk": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &pluginsdk.Resource{
-																Schema: map[string]*pluginsdk.Schema{
-																	"disk_encryption_set": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		MaxItems: 1,
-																		Elem: &pluginsdk.Resource{
-																			Schema: map[string]*pluginsdk.Schema{
-																				"id": {
-																					Type:         pluginsdk.TypeString,
-																					Optional:     true,
-																					ValidateFunc: validation.StringIsNotEmpty,
-																				},
-																			},
-																		},
-																	},
-
-																	"security_profile": {
-																		Type:     pluginsdk.TypeList,
-																		Optional: true,
-																		MaxItems: 1,
-																		Elem: &pluginsdk.Resource{
-																			Schema: map[string]*pluginsdk.Schema{
-																				"disk_encryption_set": {
-																					Type:     pluginsdk.TypeList,
-																					Optional: true,
-																					MaxItems: 1,
-																					Elem: &pluginsdk.Resource{
-																						Schema: map[string]*pluginsdk.Schema{
-																							"id": {
-																								Type:         pluginsdk.TypeString,
-																								Optional:     true,
-																								ValidateFunc: validation.StringIsNotEmpty,
-																							},
-																						},
-																					},
-																				},
-
-																				"security_encryption_type": {
-																					Type:     pluginsdk.TypeString,
-																					Optional: true,
-																					ValidateFunc: validation.StringInSlice([]string{
-																						string(fleets.SecurityEncryptionTypesVMGuestStateOnly),
-																						string(fleets.SecurityEncryptionTypesDiskWithVMGuestState),
-																						string(fleets.SecurityEncryptionTypesNonPersistedTPM),
-																					}, false),
-																				},
-																			},
-																		},
-																	},
-
-																	"storage_account_type": {
-																		Type:     pluginsdk.TypeString,
-																		Optional: true,
-																		ValidateFunc: validation.StringInSlice([]string{
-																			string(fleets.StorageAccountTypesPremiumLRS),
-																			string(fleets.StorageAccountTypesStandardSSDLRS),
-																			string(fleets.StorageAccountTypesUltraSSDLRS),
-																			string(fleets.StorageAccountTypesPremiumZRS),
-																			string(fleets.StorageAccountTypesStandardSSDZRS),
-																			string(fleets.StorageAccountTypesPremiumVTwoLRS),
-																			string(fleets.StorageAccountTypesStandardLRS),
-																		}, false),
-																	},
-																},
-															},
-														},
-
-														"name": {
-															Type:         pluginsdk.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringIsNotEmpty,
-														},
-
-														"os_type": {
-															Type:     pluginsdk.TypeString,
-															Optional: true,
-															ValidateFunc: validation.StringInSlice([]string{
-																string(fleets.OperatingSystemTypesWindows),
-																string(fleets.OperatingSystemTypesLinux),
-															}, false),
-														},
-
-														"vhd_containers": {
-															Type:     pluginsdk.TypeList,
-															Optional: true,
-															Elem: &pluginsdk.Schema{
-																Type: pluginsdk.TypeString,
-															},
-														},
-
-														"write_accelerator_enabled": {
-															Type:     pluginsdk.TypeBool,
-															Optional: true,
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-
-								"time_created": {
-									Type:         pluginsdk.TypeString,
-									Optional:     true,
-									ValidateFunc: validation.StringIsNotEmpty,
-								},
-
-								"user_data": {
-									Type:         pluginsdk.TypeString,
-									Optional:     true,
-									ValidateFunc: validation.StringIsNotEmpty,
-								},
-							},
-						},
+					"additional_capabilities_hibernation_enabled": {
+						Type:     pluginsdk.TypeBool,
+						Optional: true,
 					},
 
 					"compute_api_version": {
 						Type:         pluginsdk.TypeString,
-						Optional:     true,
+						Required:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
-
 					"platform_fault_domain_count": {
 						Type:     pluginsdk.TypeInt,
-						Optional: true,
+						Required: true,
 					},
+
+					"virtual_machine_profile": virtualMachineProfileSchema(),
 				},
 			},
 		},
 
 		"identity": commonschema.SystemAssignedUserAssignedIdentityOptional(),
-
-		"location": commonschema.Location(),
 
 		"plan": {
 			Type:     pluginsdk.TypeList,
@@ -2097,13 +476,13 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 
 		"regular_priority_profile": {
 			Type:     pluginsdk.TypeList,
-			Optional: true,
+			Required: true,
 			MaxItems: 1,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"allocation_strategy": {
 						Type:     pluginsdk.TypeString,
-						Optional: true,
+						Required: true,
 						ValidateFunc: validation.StringInSlice([]string{
 							string(fleets.RegularPriorityAllocationStrategyLowestPrice),
 							string(fleets.RegularPriorityAllocationStrategyPrioritized),
@@ -2112,12 +491,12 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 
 					"capacity": {
 						Type:     pluginsdk.TypeInt,
-						Optional: true,
+						Required: true,
 					},
 
 					"min_capacity": {
 						Type:     pluginsdk.TypeInt,
-						Optional: true,
+						Required: true,
 					},
 				},
 			},
@@ -2125,13 +504,13 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 
 		"spot_priority_profile": {
 			Type:     pluginsdk.TypeList,
-			Optional: true,
+			Required: true,
 			MaxItems: 1,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"allocation_strategy": {
 						Type:     pluginsdk.TypeString,
-						Optional: true,
+						Required: true,
 						ValidateFunc: validation.StringInSlice([]string{
 							string(fleets.SpotAllocationStrategyPriceCapacityOptimized),
 							string(fleets.SpotAllocationStrategyLowestPrice),
@@ -2141,12 +520,12 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 
 					"capacity": {
 						Type:     pluginsdk.TypeInt,
-						Optional: true,
+						Required: true,
 					},
 
 					"eviction_policy": {
 						Type:     pluginsdk.TypeString,
-						Optional: true,
+						Required: true,
 						ValidateFunc: validation.StringInSlice([]string{
 							string(fleets.EvictionPolicyDelete),
 							string(fleets.EvictionPolicyDeallocate),
@@ -2155,283 +534,28 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 
 					"maintain": {
 						Type:     pluginsdk.TypeBool,
-						Optional: true,
+						Required: true,
+					},
+
+					"min_capacity": {
+						Type:     pluginsdk.TypeInt,
+						Required: true,
 					},
 
 					"max_price_per_vm": {
 						Type:     pluginsdk.TypeFloat,
 						Optional: true,
 					},
-
-					"min_capacity": {
-						Type:     pluginsdk.TypeInt,
-						Optional: true,
-					},
 				},
 			},
 		},
 
+		// need to confirm is this a required property?
 		"tags": commonschema.Tags(),
 
-		"vm_attributes": {
-			Type:     pluginsdk.TypeList,
-			Optional: true,
-			MaxItems: 1,
-			Elem: &pluginsdk.Resource{
-				Schema: map[string]*pluginsdk.Schema{
-					"accelerator_count": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-						MaxItems: 1,
-						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"max": {
-									Type:     pluginsdk.TypeInt,
-									Optional: true,
-								},
+		"vm_attributes": vmAttributesSchema(),
 
-								"min": {
-									Type:     pluginsdk.TypeInt,
-									Optional: true,
-								},
-							},
-						},
-					},
-
-					"accelerator_manufacturers": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-					},
-
-					"accelerator_support": {
-						Type:     pluginsdk.TypeString,
-						Optional: true,
-						ValidateFunc: validation.StringInSlice([]string{
-							string(fleets.VMAttributeSupportIncluded),
-							string(fleets.VMAttributeSupportRequired),
-							string(fleets.VMAttributeSupportExcluded),
-						}, false),
-					},
-
-					"accelerator_types": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-					},
-
-					"architecture_types": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-					},
-
-					"burstable_support": {
-						Type:     pluginsdk.TypeString,
-						Optional: true,
-						ValidateFunc: validation.StringInSlice([]string{
-							string(fleets.VMAttributeSupportRequired),
-							string(fleets.VMAttributeSupportExcluded),
-							string(fleets.VMAttributeSupportIncluded),
-						}, false),
-					},
-
-					"cpu_manufacturers": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-					},
-
-					"data_disk_count": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-						MaxItems: 1,
-						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"max": {
-									Type:     pluginsdk.TypeInt,
-									Optional: true,
-								},
-
-								"min": {
-									Type:     pluginsdk.TypeInt,
-									Optional: true,
-								},
-							},
-						},
-					},
-
-					"excluded_vm_sizes_profile": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-						Elem: &pluginsdk.Schema{
-							Type: pluginsdk.TypeString,
-						},
-					},
-
-					"local_storage_disk_types": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-					},
-
-					"local_storage_in_gi_b": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-						MaxItems: 1,
-						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"max": {
-									Type:     pluginsdk.TypeFloat,
-									Optional: true,
-								},
-
-								"min": {
-									Type:     pluginsdk.TypeFloat,
-									Optional: true,
-								},
-							},
-						},
-					},
-
-					"local_storage_support": {
-						Type:     pluginsdk.TypeString,
-						Optional: true,
-						ValidateFunc: validation.StringInSlice([]string{
-							string(fleets.VMAttributeSupportRequired),
-							string(fleets.VMAttributeSupportExcluded),
-							string(fleets.VMAttributeSupportIncluded),
-						}, false),
-					},
-
-					"memory_in_gi_b": {
-						Type:     pluginsdk.TypeList,
-						Required: true,
-						MaxItems: 1,
-						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"max": {
-									Type:     pluginsdk.TypeFloat,
-									Optional: true,
-								},
-
-								"min": {
-									Type:     pluginsdk.TypeFloat,
-									Optional: true,
-								},
-							},
-						},
-					},
-
-					"memory_in_gi_b_per_vcpu": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-						MaxItems: 1,
-						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"max": {
-									Type:     pluginsdk.TypeFloat,
-									Optional: true,
-								},
-
-								"min": {
-									Type:     pluginsdk.TypeFloat,
-									Optional: true,
-								},
-							},
-						},
-					},
-
-					"network_bandwidth_in_mbps": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-						MaxItems: 1,
-						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"max": {
-									Type:     pluginsdk.TypeFloat,
-									Optional: true,
-								},
-
-								"min": {
-									Type:     pluginsdk.TypeFloat,
-									Optional: true,
-								},
-							},
-						},
-					},
-
-					"network_interface_count": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-						MaxItems: 1,
-						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"max": {
-									Type:     pluginsdk.TypeInt,
-									Optional: true,
-								},
-
-								"min": {
-									Type:     pluginsdk.TypeInt,
-									Optional: true,
-								},
-							},
-						},
-					},
-
-					"rdma_network_interface_count": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-						MaxItems: 1,
-						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"max": {
-									Type:     pluginsdk.TypeInt,
-									Optional: true,
-								},
-
-								"min": {
-									Type:     pluginsdk.TypeInt,
-									Optional: true,
-								},
-							},
-						},
-					},
-
-					"rdma_support": {
-						Type:     pluginsdk.TypeString,
-						Optional: true,
-						ValidateFunc: validation.StringInSlice([]string{
-							string(fleets.VMAttributeSupportExcluded),
-							string(fleets.VMAttributeSupportIncluded),
-							string(fleets.VMAttributeSupportRequired),
-						}, false),
-					},
-
-					"vcpu_count": {
-						Type:     pluginsdk.TypeList,
-						Required: true,
-						MaxItems: 1,
-						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"max": {
-									Type:     pluginsdk.TypeInt,
-									Optional: true,
-								},
-
-								"min": {
-									Type:     pluginsdk.TypeInt,
-									Optional: true,
-								},
-							},
-						},
-					},
-
-					"vm_categories": {
-						Type:     pluginsdk.TypeList,
-						Optional: true,
-					},
-				},
-			},
-		},
-
-		"vm_sizes_profile_profile": {
+		"vm_sizes_profile": {
 			Type:     pluginsdk.TypeList,
 			Required: true,
 			Elem: &pluginsdk.Resource{
@@ -2454,6 +578,210 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 	}
 }
 
+func vmAttributesSchema() *pluginsdk.Schema {
+	return &pluginsdk.Schema{
+		Type:     pluginsdk.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &pluginsdk.Resource{
+			Schema: map[string]*pluginsdk.Schema{
+				"accelerator_count": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &pluginsdk.Resource{
+						Schema: vmAttributesMaxMinSchema(pluginsdk.TypeInt),
+					},
+				},
+
+				"accelerator_manufacturers": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					Elem: &pluginsdk.Schema{
+						Type:         pluginsdk.TypeString,
+						ValidateFunc: validation.StringIsNotEmpty,
+					},
+				},
+
+				"accelerator_support": {
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						string(fleets.VMAttributeSupportIncluded),
+						string(fleets.VMAttributeSupportRequired),
+						string(fleets.VMAttributeSupportExcluded),
+					}, false),
+				},
+
+				"accelerator_types": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					Elem: &pluginsdk.Schema{
+						Type:         pluginsdk.TypeString,
+						ValidateFunc: validation.StringIsNotEmpty,
+					},
+				},
+
+				"architecture_types": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					Elem: &pluginsdk.Schema{
+						Type:         pluginsdk.TypeString,
+						ValidateFunc: validation.StringIsNotEmpty,
+					},
+				},
+
+				"burstable_support": {
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						string(fleets.VMAttributeSupportRequired),
+						string(fleets.VMAttributeSupportExcluded),
+						string(fleets.VMAttributeSupportIncluded),
+					}, false),
+				},
+
+				"cpu_manufacturers": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					Elem: &pluginsdk.Schema{
+						Type:         pluginsdk.TypeString,
+						ValidateFunc: validation.StringIsNotEmpty,
+					},
+				},
+
+				"data_disk_count": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &pluginsdk.Resource{
+						Schema: vmAttributesMaxMinSchema(pluginsdk.TypeInt),
+					},
+				},
+
+				"excluded_vm_sizes_profile": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					Elem: &pluginsdk.Schema{
+						Type: pluginsdk.TypeString,
+					},
+				},
+
+				"local_storage_disk_types": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+				},
+
+				"local_storage_in_gib": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &pluginsdk.Resource{
+						Schema: vmAttributesMaxMinSchema(pluginsdk.TypeFloat),
+					},
+				},
+
+				"local_storage_support": {
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						string(fleets.VMAttributeSupportRequired),
+						string(fleets.VMAttributeSupportExcluded),
+						string(fleets.VMAttributeSupportIncluded),
+					}, false),
+				},
+
+				"memory_in_gib": {
+					Type:     pluginsdk.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &pluginsdk.Resource{
+						Schema: vmAttributesMaxMinSchema(pluginsdk.TypeFloat),
+					},
+				},
+
+				"memory_in_gib_per_vcpu": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &pluginsdk.Resource{
+						Schema: vmAttributesMaxMinSchema(pluginsdk.TypeFloat),
+					},
+				},
+
+				"network_bandwidth_in_mbps": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &pluginsdk.Resource{
+						Schema: vmAttributesMaxMinSchema(pluginsdk.TypeFloat),
+					},
+				},
+
+				"network_interface_count": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &pluginsdk.Resource{
+						Schema: vmAttributesMaxMinSchema(pluginsdk.TypeInt),
+					},
+				},
+
+				"rdma_network_interface_count": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &pluginsdk.Resource{
+						Schema: vmAttributesMaxMinSchema(pluginsdk.TypeInt),
+					},
+				},
+
+				"rdma_support": {
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						string(fleets.VMAttributeSupportExcluded),
+						string(fleets.VMAttributeSupportIncluded),
+						string(fleets.VMAttributeSupportRequired),
+					}, false),
+				},
+
+				"vcpu_count": {
+					Type:     pluginsdk.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &pluginsdk.Resource{
+						Schema: vmAttributesMaxMinSchema(pluginsdk.TypeInt),
+					},
+				},
+
+				"vm_categories": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					Elem: &pluginsdk.Schema{
+						Type:         pluginsdk.TypeString,
+						ValidateFunc: validation.StringIsNotEmpty,
+					},
+				},
+			},
+		},
+	}
+}
+
+func vmAttributesMaxMinSchema(inputType schema.ValueType) map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{
+		"max": {
+			Type:     inputType,
+			Optional: true,
+		},
+
+		"min": {
+			Type:     inputType,
+			Optional: true,
+		},
+	}
+}
+
 func (r AzureFleetResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"time_created": {
@@ -2472,14 +800,16 @@ func (r AzureFleetResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.AzureFleet.FleetsClient
+			subscriptionId := metadata.Client.Account.SubscriptionId
+
 			var model AzureFleetResourceModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			client := metadata.Client.AzureFleet.FleetsClient
-			subscriptionId := metadata.Client.Account.SubscriptionId
 			id := fleets.NewFleetID(subscriptionId, model.ResourceGroupName, model.Name)
+
 			existing, err := client.Get(ctx, id)
 			if err != nil && !response.WasNotFound(existing.HttpResponse) {
 				return fmt.Errorf("checking for existing %s: %+v", id, err)
@@ -2493,7 +823,8 @@ func (r AzureFleetResource) Create() sdk.ResourceFunc {
 			if err != nil {
 				return fmt.Errorf("expanding `identity`: %+v", err)
 			}
-			properties := &fleets.Fleet{
+
+			properties := fleets.Fleet{
 				Identity: identityValue,
 				Location: location.Normalize(model.Location),
 				Plan:     expandPlanModel(model.Plan),
@@ -2522,7 +853,7 @@ func (r AzureFleetResource) Create() sdk.ResourceFunc {
 
 			properties.Properties.VMSizesProfile = pointer.From(expandVMSizeProfileModelArray(model.VMSizesProfile))
 
-			if err := client.CreateOrUpdateThenPoll(ctx, id, *properties); err != nil {
+			if err := client.CreateOrUpdateThenPoll(ctx, id, properties); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
 
@@ -2548,20 +879,19 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			resp, err := client.Get(ctx, *id)
+			existing, err := client.Get(ctx, *id)
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", *id, err)
 			}
 
-			if resp.Model == nil {
+			if existing.Model == nil {
 				return fmt.Errorf("retrieving %s: `model` was nil", *id)
 			}
-			if resp.Model.Properties == nil {
+			if existing.Model.Properties == nil {
 				return fmt.Errorf("retrieving %s: `properties` was nil", *id)
 			}
 
-			properties := resp.Model
-
+			properties := existing.Model
 			if metadata.ResourceData.HasChange("identity") {
 				identityValue, err := identity.ExpandLegacySystemAndUserAssignedMap(metadata.ResourceData.Get("identity").([]interface{}))
 				if err != nil {
@@ -2574,7 +904,7 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 				properties.Plan = expandPlanModel(model.Plan)
 			}
 
-			if metadata.ResourceData.HasChange("additional_locations_profile") {
+			if metadata.ResourceData.HasChange("additional_location_profile") {
 				additionalLocationsProfileValue, err := expandAdditionalLocationsProfileModel(model.AdditionalLocationsProfile)
 				if err != nil {
 					return err
@@ -2665,34 +995,34 @@ func (r AzureFleetResource) Read() sdk.ResourceFunc {
 				}
 
 				state.Plan = flattenPlanModel(model.Plan)
-				if properties := model.Properties; properties != nil {
-					additionalLocationsProfileValue, err := flattenAdditionalLocationsProfileModel(properties.AdditionalLocationsProfile)
+				if props := model.Properties; props != nil {
+					additionalLocationsProfileValue, err := flattenAdditionalLocationsProfileModel(props.AdditionalLocationsProfile)
 					if err != nil {
 						return err
 					}
 					state.AdditionalLocationsProfile = additionalLocationsProfileValue
 
-					computeProfileValue, err := flattenComputeProfileModel(&properties.ComputeProfile)
+					computeProfileValue, err := flattenComputeProfileModel(&props.ComputeProfile)
 					if err != nil {
 						return err
 					}
 					state.ComputeProfile = computeProfileValue
 
-					state.RegularPriorityProfile = flattenRegularPriorityProfileModel(properties.RegularPriorityProfile)
+					state.RegularPriorityProfile = flattenRegularPriorityProfileModel(props.RegularPriorityProfile)
 
-					state.SpotPriorityProfile = flattenSpotPriorityProfileModel(properties.SpotPriorityProfile)
+					state.SpotPriorityProfile = flattenSpotPriorityProfileModel(props.SpotPriorityProfile)
 
-					if properties.TimeCreated != nil {
-						state.TimeCreated = *properties.TimeCreated
+					if props.TimeCreated != nil {
+						state.TimeCreated = *props.TimeCreated
 					}
 
-					if properties.UniqueId != nil {
-						state.UniqueId = *properties.UniqueId
+					if props.UniqueId != nil {
+						state.UniqueId = *props.UniqueId
 					}
 
-					state.VMAttributes = flattenVMAttributesModel(properties.VMAttributes)
+					state.VMAttributes = flattenVMAttributesModel(props.VMAttributes)
 
-					state.VMSizesProfile = flattenVMSizeProfileModelArray(&properties.VMSizesProfile)
+					state.VMSizesProfile = flattenVMSizeProfileModelArray(&props.VMSizesProfile)
 				}
 				if model.Tags != nil {
 					state.Tags = *model.Tags
@@ -2727,7 +1057,7 @@ func (r AzureFleetResource) Delete() sdk.ResourceFunc {
 	}
 }
 
-func expandAdditionalLocationsProfileModel(inputList []AdditionalLocationsProfileModel) (*fleets.AdditionalLocationsProfile, error) {
+func expandAdditionalLocationsProfileModel(inputList []AdditionalLocationProfileModel) (*fleets.AdditionalLocationsProfile, error) {
 	if len(inputList) == 0 {
 		return nil, nil
 	}
@@ -2744,7 +1074,7 @@ func expandAdditionalLocationsProfileModel(inputList []AdditionalLocationsProfil
 	return &output, nil
 }
 
-func expandLocationProfileModelArray(inputList []LocationProfileModel) (*[]fleets.LocationProfile, error) {
+func expandLocationProfileModelArray(inputList []LocationModel) (*[]fleets.LocationProfile, error) {
 	var outputList []fleets.LocationProfile
 	for _, v := range inputList {
 		input := v
@@ -2821,7 +1151,7 @@ func expandVMGalleryApplicationModelArray(inputList []VMGalleryApplicationModel)
 			EnableAutomaticUpgrade:          &input.EnableAutomaticUpgrade,
 			Order:                           &input.Order,
 			PackageReferenceId:              input.PackageReferenceId,
-			TreatFailureAsDeploymentFailure: &input.TreatFailureAsDeploymentFailure,
+			TreatFailureAsDeploymentFailure: &input.TreatFailureAsDeploymentFailureEnabled,
 		}
 
 		if input.ConfigurationReference != "" {
@@ -2937,7 +1267,7 @@ func expandVirtualMachineScaleSetExtensionModel(inputList []VirtualMachineScaleS
 	}
 	input := &inputList[0]
 	output := fleets.VirtualMachineScaleSetExtensionProperties{
-		AutoUpgradeMinorVersion:       &input.AutoUpgradeMinorVersion,
+		AutoUpgradeMinorVersion:       &input.AutoUpgradeMinorVersionEnabled,
 		EnableAutomaticUpgrade:        &input.EnableAutomaticUpgrade,
 		ProtectedSettingsFromKeyVault: expandKeyVaultSecretReferenceModel(input.ProtectedSettingsFromKeyVault),
 		ProvisionAfterExtensions:      &input.ProvisionAfterExtensions,
@@ -3010,8 +1340,8 @@ func expandVMSizePropertiesModel(inputList []VMSizePropertiesModel) *fleets.VMSi
 	}
 	input := &inputList[0]
 	output := fleets.VMSizeProperties{
-		VCPUsAvailable: &input.VCPUsAvailable,
-		VCPUsPerCore:   &input.VCPUsPerCore,
+		VCPUsAvailable: &input.VCPUAvailableCount,
+		VCPUsPerCore:   &input.VCPUPerCoreCount,
 	}
 
 	return &output
@@ -3058,7 +1388,7 @@ func expandVirtualMachineScaleSetNetworkConfigurationModelArray(inputList []Netw
 	return &outputList
 }
 
-func expandVirtualMachineScaleSetNetworkConfigurationPropertiesModel(inputList []VirtualMachineScaleSetNetworkConfigurationPropertiesModel) *fleets.VirtualMachineScaleSetNetworkConfigurationProperties {
+func expandVirtualMachineScaleSetNetworkConfigurationPropertiesModel(inputList []NetworkConfigurationModel) *fleets.VirtualMachineScaleSetNetworkConfigurationProperties {
 	if len(inputList) == 0 {
 		return nil
 	}
@@ -3076,7 +1406,7 @@ func expandVirtualMachineScaleSetNetworkConfigurationPropertiesModel(inputList [
 		Primary:                     &input.Primary,
 	}
 
-	output.IPConfigurations = pointer.From(expandVirtualMachineScaleSetIPConfigurationModelArray(input.IPConfigurations))
+	output.IPConfigurations = pointer.From(expandVirtualMachineScaleSetIPConfigurationModelArray(input.IPConfiguration))
 
 	return &output
 }
@@ -3225,8 +1555,8 @@ func expandVirtualMachineScaleSetOSProfileModel(inputList []OSProfileModel) *fle
 		output.ComputerNamePrefix = &input.ComputerNamePrefix
 	}
 
-	if input.CustomData != "" {
-		output.CustomData = &input.CustomData
+	if input.CustomDataBase64 != "" {
+		output.CustomData = &input.CustomDataBase64
 	}
 
 	return &output
@@ -3731,11 +2061,11 @@ func expandComputeProfileModel(inputList []ComputeProfileModel) (*fleets.Compute
 	}
 	input := &inputList[0]
 	output := fleets.ComputeProfile{
-		AdditionalVirtualMachineCapabilities: expandAdditionalCapabilitiesModel(input.AdditionalVirtualMachineCapabilities),
+		AdditionalVirtualMachineCapabilities: expandAdditionalCapabilitiesModel(input.AdditionalCapabilities),
 		PlatformFaultDomainCount:             &input.PlatformFaultDomainCount,
 	}
 
-	baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(input.BaseVirtualMachineProfile)
+	baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(input.VirtualMachineProfile)
 	if err != nil {
 		return nil, err
 	}
@@ -4069,7 +2399,7 @@ func flattenVMGalleryApplicationModelArray(inputList *[]fleets.VMGalleryApplicat
 		}
 
 		if input.TreatFailureAsDeploymentFailure != nil {
-			output.TreatFailureAsDeploymentFailure = *input.TreatFailureAsDeploymentFailure
+			output.TreatFailureAsDeploymentFailureEnabled = *input.TreatFailureAsDeploymentFailure
 		}
 		outputList = append(outputList, output)
 	}
@@ -4190,7 +2520,7 @@ func flattenVirtualMachineScaleSetExtensionModel(input *fleets.VirtualMachineSca
 		ProtectedSettingsFromKeyVault: flattenKeyVaultSecretReferenceModel(input.ProtectedSettingsFromKeyVault),
 	}
 	if input.AutoUpgradeMinorVersion != nil {
-		output.AutoUpgradeMinorVersion = *input.AutoUpgradeMinorVersion
+		output.AutoUpgradeMinorVersionEnabled = *input.AutoUpgradeMinorVersion
 	}
 
 	if input.EnableAutomaticUpgrade != nil {
@@ -4280,11 +2610,11 @@ func flattenVMSizePropertiesModel(input *fleets.VMSizeProperties) []VMSizeProper
 	}
 	output := VMSizePropertiesModel{}
 	if input.VCPUsAvailable != nil {
-		output.VCPUsAvailable = *input.VCPUsAvailable
+		output.VCPUAvailableCount = *input.VCPUsAvailable
 	}
 
 	if input.VCPUsPerCore != nil {
-		output.VCPUsPerCore = *input.VCPUsPerCore
+		output.VCPUPerCoreCount = *input.VCPUsPerCore
 	}
 
 	return append(outputList, output)
@@ -4335,14 +2665,14 @@ func flattenVirtualMachineScaleSetNetworkConfigurationModelArray(inputList *[]fl
 	return outputList
 }
 
-func flattenVirtualMachineScaleSetNetworkConfigurationPropertiesModel(input *fleets.VirtualMachineScaleSetNetworkConfigurationProperties) []VirtualMachineScaleSetNetworkConfigurationPropertiesModel {
-	var outputList []VirtualMachineScaleSetNetworkConfigurationPropertiesModel
+func flattenVirtualMachineScaleSetNetworkConfigurationPropertiesModel(input *fleets.VirtualMachineScaleSetNetworkConfigurationProperties) []NetworkConfigurationModel {
+	var outputList []NetworkConfigurationModel
 	if input == nil {
 		return outputList
 	}
-	output := VirtualMachineScaleSetNetworkConfigurationPropertiesModel{
+	output := NetworkConfigurationModel{
 		DnsSettings:          flattenVirtualMachineScaleSetNetworkConfigurationDnsSettingsModel(input.DnsSettings),
-		IPConfigurations:     flattenVirtualMachineScaleSetIPConfigurationModelArray(&input.IPConfigurations),
+		IPConfiguration:      flattenVirtualMachineScaleSetIPConfigurationModelArray(&input.IPConfigurations),
 		NetworkSecurityGroup: flattenSubResourceModel(input.NetworkSecurityGroup),
 	}
 	if input.AuxiliaryMode != nil {
@@ -4550,8 +2880,8 @@ func flattenVirtualMachineScaleSetOSProfileModel(input *fleets.VirtualMachineSca
 		output.ComputerNamePrefix = *input.ComputerNamePrefix
 	}
 
-	if input.CustomData != nil {
-		output.CustomData = *input.CustomData
+	if input.CustomDataBase64 != nil {
+		output.CustomDataBase64 = *input.CustomDataBase64
 	}
 
 	if input.RequireGuestProvisionSignal != nil {
@@ -5195,14 +3525,14 @@ func flattenComputeProfileModel(input *fleets.ComputeProfile) ([]ComputeProfileM
 		return outputList, nil
 	}
 	output := ComputeProfileModel{
-		AdditionalVirtualMachineCapabilities: flattenAdditionalCapabilitiesModel(input.AdditionalVirtualMachineCapabilities),
+		AdditionalCapabilities: flattenAdditionalCapabilitiesModel(input.AdditionalVirtualMachineCapabilities),
 	}
 	baseVirtualMachineProfileValue, err := flattenBaseVirtualMachineProfileModel(&input.BaseVirtualMachineProfile)
 	if err != nil {
 		return nil, err
 	}
 
-	output.BaseVirtualMachineProfile = baseVirtualMachineProfileValue
+	output.VirtualMachineProfile = baseVirtualMachineProfileValue
 
 	if input.ComputeApiVersion != nil {
 		output.ComputeApiVersion = *input.ComputeApiVersion
@@ -5311,7 +3641,7 @@ func flattenVMGalleryApplicationModelArray(inputList *[]fleets.VMGalleryApplicat
 		}
 
 		if input.TreatFailureAsDeploymentFailure != nil {
-			output.TreatFailureAsDeploymentFailure = *input.TreatFailureAsDeploymentFailure
+			output.TreatFailureAsDeploymentFailureEnabled = *input.TreatFailureAsDeploymentFailure
 		}
 		outputList = append(outputList, output)
 	}
@@ -5432,7 +3762,7 @@ func flattenVirtualMachineScaleSetExtensionModel(input *fleets.VirtualMachineSca
 		ProtectedSettingsFromKeyVault: flattenKeyVaultSecretReferenceModel(input.ProtectedSettingsFromKeyVault),
 	}
 	if input.AutoUpgradeMinorVersion != nil {
-		output.AutoUpgradeMinorVersion = *input.AutoUpgradeMinorVersion
+		output.AutoUpgradeMinorVersionEnabled = *input.AutoUpgradeMinorVersion
 	}
 
 	if input.EnableAutomaticUpgrade != nil {
@@ -5522,11 +3852,11 @@ func flattenVMSizePropertiesModel(input *fleets.VMSizeProperties) []VMSizeProper
 	}
 	output := VMSizePropertiesModel{}
 	if input.VCPUsAvailable != nil {
-		output.VCPUsAvailable = *input.VCPUsAvailable
+		output.VCPUAvailableCount = *input.VCPUsAvailable
 	}
 
 	if input.VCPUsPerCore != nil {
-		output.VCPUsPerCore = *input.VCPUsPerCore
+		output.VCPUPerCoreCount = *input.VCPUsPerCore
 	}
 
 	return append(outputList, output)
@@ -5577,14 +3907,14 @@ func flattenVirtualMachineScaleSetNetworkConfigurationModelArray(inputList *[]fl
 	return outputList
 }
 
-func flattenVirtualMachineScaleSetNetworkConfigurationPropertiesModel(input *fleets.VirtualMachineScaleSetNetworkConfigurationProperties) []VirtualMachineScaleSetNetworkConfigurationPropertiesModel {
-	var outputList []VirtualMachineScaleSetNetworkConfigurationPropertiesModel
+func flattenVirtualMachineScaleSetNetworkConfigurationPropertiesModel(input *fleets.VirtualMachineScaleSetNetworkConfigurationProperties) []NetworkConfigurationModel {
+	var outputList []NetworkConfigurationModel
 	if input == nil {
 		return outputList
 	}
-	output := VirtualMachineScaleSetNetworkConfigurationPropertiesModel{
+	output := NetworkConfigurationModel{
 		DnsSettings:          flattenVirtualMachineScaleSetNetworkConfigurationDnsSettingsModel(input.DnsSettings),
-		IPConfigurations:     flattenVirtualMachineScaleSetIPConfigurationModelArray(&input.IPConfigurations),
+		IPConfiguration:      flattenVirtualMachineScaleSetIPConfigurationModelArray(&input.IPConfigurations),
 		NetworkSecurityGroup: flattenSubResourceModel(input.NetworkSecurityGroup),
 	}
 	if input.AuxiliaryMode != nil {
@@ -5792,8 +4122,8 @@ func flattenVirtualMachineScaleSetOSProfileModel(input *fleets.VirtualMachineSca
 		output.ComputerNamePrefix = *input.ComputerNamePrefix
 	}
 
-	if input.CustomData != nil {
-		output.CustomData = *input.CustomData
+	if input.CustomDataBase64 != nil {
+		output.CustomDataBase64 = *input.CustomDataBase64
 	}
 
 	if input.RequireGuestProvisionSignal != nil {

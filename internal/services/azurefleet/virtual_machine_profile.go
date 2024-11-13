@@ -4,18 +4,17 @@
 package azurefleet
 
 import (
-	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"bytes"
+	"fmt"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
 
 	"github.com/hashicorp/go-azure-sdk/resource-manager/azurefleet/2024-11-01/fleets"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/compute/2022-03-01/capacityreservationgroups"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/compute/2022-03-03/galleryapplicationversions"
-	"github.com/hashicorp/go-azure-sdk/resource-manager/compute/2024-07-01/virtualmachinescalesets"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2023-09-01/applicationsecuritygroups"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2023-11-01/networksecuritygroups"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2023-11-01/publicipprefixes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/azure"
 	azValidate "github.com/hashicorp/terraform-provider-azurerm/helpers/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/compute/validate"
@@ -28,42 +27,44 @@ import (
 func virtualMachineProfileSchema() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
-		Optional: true,
+		Required: true,
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
-				"gallery_applications": galleryApplicationsProfileSchema(),
+				"network_api_version": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForNetworkApiVersion(), false),
+				},
+
+				"network_interface": networkInterfaceSchema(),
+
+				"os_profile": osProfileSchema(),
+
+				"storage_profile_image_reference": storageProfileImageReferenceSchema(),
+
+				"storage_profile_os_disk": storageProfileOsDiskSchema(),
+
+				"boot_diagnostic_storage_account_endpoint": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
 
 				"capacity_reservation_group_id": {
-					Elem: &schema.Schema{
-						Type:         schema.TypeString,
-						Optional:     true,
-						ForceNew:     true,
-						ValidateFunc: capacityreservationgroups.ValidateCapacityReservationGroupID,
-					},
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: capacityreservationgroups.ValidateCapacityReservationGroupID,
 				},
 
-				"boot_diagnostics": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &pluginsdk.Resource{
-						Schema: map[string]*pluginsdk.Schema{
-							"enabled": {
-								Type:     pluginsdk.TypeBool,
-								Optional: true,
-							},
-
-							"storage_account_endpoint": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-						},
-					},
+				"disk_controller_type": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskControllerTypes(), false),
 				},
 
-				"extensions": extensionProfileSchema(),
+				"extensions": extensionSchema(),
 
 				"extensions_time_budget": {
 					Type:         pluginsdk.TypeString,
@@ -72,87 +73,33 @@ func virtualMachineProfileSchema() *pluginsdk.Schema {
 					ValidateFunc: azValidate.ISO8601DurationBetween("PT15M", "PT2H"),
 				},
 
-				"vm_size": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &pluginsdk.Resource{
-						Schema: map[string]*pluginsdk.Schema{
-							"vcp_us_available": {
-								Type:     pluginsdk.TypeInt,
-								Optional: true,
-							},
-
-							"vcp_us_per_core": {
-								Type:     pluginsdk.TypeInt,
-								Optional: true,
-							},
-						},
-					},
-				},
+				"gallery_application": galleryApplicationSchema(),
 
 				"license_type": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
+					// need to test the possible values
+					//ValidateFunc: validation.StringInSlice([]string{
+					//	"RHEL_BYOS",
+					//	"SLES_BYOS",
+					//}, false),
 				},
 
-				"network_interface": networkInterfaceSchema(),
-
-				"health_probe_id": {
+				"network_health_probe_id": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ValidateFunc: azure.ValidateResourceID,
 				},
 
-				"network_api_version": {
+				// if it is specified os_image_notification_profile enable is set to true.
+				"os_image_scheduled_event_timeout": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
+					Default:  "PT5M",
 					ValidateFunc: validation.StringInSlice([]string{
-						string(fleets.NetworkApiVersionTwoZeroTwoZeroNegativeOneOneNegativeZeroOne),
+						"PT5M",
 					}, false),
-				},
-
-				"os_profile": osProfileSchema(),
-
-				"os_image_notification_profile": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &pluginsdk.Resource{
-						Schema: map[string]*pluginsdk.Schema{
-							"enable": {
-								Type:     pluginsdk.TypeBool,
-								Required: true,
-							},
-
-							"not_before_timeout": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-						},
-					},
-				},
-
-				"termination_notification_profile": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &pluginsdk.Resource{
-						Schema: map[string]*pluginsdk.Schema{
-							"enable": {
-								Type:     pluginsdk.TypeBool,
-								Required: true,
-							},
-
-							"not_before_timeout": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-						},
-					},
 				},
 
 				"security_posture_reference": {
@@ -175,7 +122,7 @@ func virtualMachineProfileSchema() *pluginsdk.Schema {
 								ValidateFunc: validation.StringIsNotEmpty,
 							},
 
-							"is_overridable": {
+							"override_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
 							},
@@ -191,22 +138,52 @@ func virtualMachineProfileSchema() *pluginsdk.Schema {
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
-				"storage_profile": storageProfileSchema(),
+				"storage_profile_data_disk": storageProfileDataDiskSchema(),
 
-				"user_data": {
+				// if it is specified terminate_notification_profile enable is set to true.
+				"termination_scheduled_event_timeout": {
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+					Default:  "PT15M",
+					ValidateFunc: validation.StringInSlice([]string{
+						"PT15M",
+					}, false),
+				},
+
+				"user_data_base64": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsBase64,
+				},
+
+				"vm_size": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &pluginsdk.Resource{
+						Schema: map[string]*pluginsdk.Schema{
+							"vcpu_available_count": {
+								Type:     pluginsdk.TypeInt,
+								Optional: true,
+							},
+
+							"vcpu_per_core_count": {
+								Type:     pluginsdk.TypeInt,
+								Optional: true,
+							},
+						},
+					},
 				},
 			},
 		},
 	}
 }
 
-func galleryApplicationsProfileSchema() *pluginsdk.Schema {
+func galleryApplicationSchema() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
 		Optional: true,
+		MaxItems: 100,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"version_id": {
@@ -216,12 +193,14 @@ func galleryApplicationsProfileSchema() *pluginsdk.Schema {
 					ValidateFunc: galleryapplicationversions.ValidateApplicationVersionID,
 				},
 
+				// Example: https://mystorageaccount.blob.core.windows.net/configurations/settings.config
 				"configuration_blob_uri": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringIsNotEmpty,
+					ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 				},
+
 				"order": {
 					Type:         pluginsdk.TypeInt,
 					Optional:     true,
@@ -230,7 +209,8 @@ func galleryApplicationsProfileSchema() *pluginsdk.Schema {
 					ValidateFunc: validation.IntBetween(0, 2147483647),
 				},
 
-				"tags": {
+				// NOTE: Per the service team, "this is a pass through value that we just add to the model but don't depend on. It can be any string."
+				"tag": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ForceNew:     true,
@@ -242,7 +222,7 @@ func galleryApplicationsProfileSchema() *pluginsdk.Schema {
 					Optional: true,
 				},
 
-				"treat_failure_as_deployment_failure": {
+				"treat_failure_as_deployment_failure_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
 				},
@@ -251,7 +231,7 @@ func galleryApplicationsProfileSchema() *pluginsdk.Schema {
 	}
 }
 
-func extensionProfileSchema() *pluginsdk.Schema {
+func extensionSchema() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
 		Optional: true,
@@ -281,7 +261,7 @@ func extensionProfileSchema() *pluginsdk.Schema {
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
-				"auto_upgrade_minor_version": {
+				"auto_upgrade_minor_version_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
 					Default:  true,
@@ -337,9 +317,10 @@ func extensionProfileSchema() *pluginsdk.Schema {
 					DiffSuppressFunc: pluginsdk.SuppressJsonDiff,
 				},
 
-				"suppress_failures": {
+				"suppress_failures_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
+					Default:  false,
 				},
 			},
 		},
@@ -349,7 +330,7 @@ func extensionProfileSchema() *pluginsdk.Schema {
 func networkInterfaceSchema() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
-		Optional: true,
+		Required: true,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"name": {
@@ -358,183 +339,21 @@ func networkInterfaceSchema() *pluginsdk.Schema {
 					ForceNew:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
-
-				"ip_configurations": {
-					Type:     pluginsdk.TypeList,
+				"accelerated_networking_enabled": {
+					Type:     pluginsdk.TypeBool,
 					Required: true,
-					Elem: &pluginsdk.Resource{
-						Schema: map[string]*pluginsdk.Schema{
-							"name": {
-								Type:         pluginsdk.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
+				},
 
-							"application_gateway_backend_address_pool_ids": {
-								Type:     pluginsdk.TypeSet,
-								Optional: true,
-								Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
-								Set:      pluginsdk.HashString,
-							},
+				"ip_configuration": ipConfigurationSchema(),
 
-							"application_security_group_ids": {
-								Type:     pluginsdk.TypeSet,
-								Optional: true,
-								Elem: &pluginsdk.Schema{
-									Type:         pluginsdk.TypeString,
-									ValidateFunc: applicationsecuritygroups.ValidateApplicationSecurityGroupID,
-								},
-								Set: pluginsdk.HashString,
-							},
+				"ip_forwarding_enabled": {
+					Type:     pluginsdk.TypeBool,
+					Required: true,
+				},
 
-							"load_balancer_backend_address_pool_ids": {
-								Type:     pluginsdk.TypeSet,
-								Optional: true,
-								Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
-								Set:      pluginsdk.HashString,
-							},
-
-							"load_balancer_inbound_nat_rules_ids": {
-								Type:     pluginsdk.TypeSet,
-								Optional: true,
-								Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
-								Set:      pluginsdk.HashString,
-							},
-
-							"primary": {
-								Type:     pluginsdk.TypeBool,
-								Optional: true,
-								Default:  false,
-							},
-
-							"public_ip_address": {
-								Type:     pluginsdk.TypeList,
-								Optional: true,
-								Elem: &pluginsdk.Resource{
-									Schema: map[string]*pluginsdk.Schema{
-										"name": {
-											Type:         pluginsdk.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringIsNotEmpty,
-										},
-
-										"delete_option": {
-											Type:     pluginsdk.TypeString,
-											Optional: true,
-											ValidateFunc: validation.StringInSlice([]string{
-												string(fleets.DeleteOptionsDelete),
-												string(fleets.DeleteOptionsDetach),
-											}, false),
-										},
-
-										"domain_name_label": {
-											Type:         pluginsdk.TypeString,
-											Optional:     true,
-											ValidateFunc: validation.StringIsNotEmpty,
-										},
-
-										"domain_name_label_scope": {
-											Type:     pluginsdk.TypeString,
-											Optional: true,
-											ValidateFunc: validation.StringInSlice([]string{
-												string(fleets.DomainNameLabelScopeTypesSubscriptionReuse),
-												string(fleets.DomainNameLabelScopeTypesResourceGroupReuse),
-												string(fleets.DomainNameLabelScopeTypesNoReuse),
-												string(fleets.DomainNameLabelScopeTypesTenantReuse),
-											}, false),
-										},
-
-										"ip_tags": {
-											Type:     pluginsdk.TypeList,
-											Optional: true,
-											ForceNew: true,
-											Elem: &pluginsdk.Resource{
-												Schema: map[string]*pluginsdk.Schema{
-													"tag": {
-														Type:         pluginsdk.TypeString,
-														Required:     true,
-														ForceNew:     true,
-														ValidateFunc: validation.StringIsNotEmpty,
-													},
-													"type": {
-														Type:         pluginsdk.TypeString,
-														Required:     true,
-														ForceNew:     true,
-														ValidateFunc: validation.StringIsNotEmpty,
-													},
-												},
-											},
-										},
-
-										"idle_timeout_in_minutes": {
-											Type:     pluginsdk.TypeInt,
-											Optional: true,
-										},
-
-										"version": {
-											Type:     pluginsdk.TypeString,
-											Optional: true,
-											ForceNew: true,
-											Default:  string(virtualmachinescalesets.IPVersionIPvFour),
-											ValidateFunc: validation.StringInSlice([]string{
-												string(fleets.IPVersionIPvFour),
-												string(fleets.IPVersionIPvSix),
-											}, false),
-										},
-
-										"public_ip_prefix_id": {
-											Type:         pluginsdk.TypeList,
-											Optional:     true,
-											ForceNew:     true,
-											ValidateFunc: publicipprefixes.ValidatePublicIPPrefixID,
-										},
-
-										"sku": {
-											Type:     pluginsdk.TypeList,
-											Optional: true,
-											MaxItems: 1,
-											Elem: &pluginsdk.Resource{
-												Schema: map[string]*pluginsdk.Schema{
-													"name": {
-														Type:     pluginsdk.TypeString,
-														Optional: true,
-														ValidateFunc: validation.StringInSlice([]string{
-															string(fleets.PublicIPAddressSkuNameBasic),
-															string(fleets.PublicIPAddressSkuNameStandard),
-														}, false),
-													},
-
-													"tier": {
-														Type:     pluginsdk.TypeString,
-														Optional: true,
-														ValidateFunc: validation.StringInSlice([]string{
-															string(fleets.PublicIPAddressSkuTierRegional),
-															string(fleets.PublicIPAddressSkuTierGlobal),
-														}, false),
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-
-							"subnet_id": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: commonids.ValidateSubnetID,
-							},
-
-							"version": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.IPVersionIPvFour),
-									string(fleets.IPVersionIPvSix),
-								}, false),
-							},
-						},
-					},
+				"primary": {
+					Type:     pluginsdk.TypeBool,
+					Required: true,
 				},
 
 				"dns_servers": {
@@ -546,35 +365,18 @@ func networkInterfaceSchema() *pluginsdk.Schema {
 					},
 				},
 
-				"accelerated_networking_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-
-				"ip_forwarding_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-
 				"network_security_group_id": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ValidateFunc: networksecuritygroups.ValidateNetworkSecurityGroupID,
 				},
 
-				"primary": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-
 				"auxiliary_mode": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
 					ValidateFunc: validation.StringInSlice([]string{
-						string(fleets.NetworkInterfaceAuxiliaryModeNone),
+						// NOTE: Whilst the `None` value exists it's handled in the Create/Update and Read functions.
+						// string(fleets.NetworkInterfaceAuxiliaryModeNone),
 						string(fleets.NetworkInterfaceAuxiliaryModeAcceleratedConnections),
 						string(fleets.NetworkInterfaceAuxiliaryModeFloating),
 					}, false),
@@ -584,32 +386,199 @@ func networkInterfaceSchema() *pluginsdk.Schema {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
 					ValidateFunc: validation.StringInSlice([]string{
+						// NOTE: Whilst the `None` value exists it's handled in the Create/Update and Read functions.
+						// string(fleets.NetworkInterfaceAuxiliarySkuNone),
 						string(fleets.NetworkInterfaceAuxiliarySkuATwo),
 						string(fleets.NetworkInterfaceAuxiliarySkuAFour),
 						string(fleets.NetworkInterfaceAuxiliarySkuAEight),
-						string(fleets.NetworkInterfaceAuxiliarySkuNone),
 						string(fleets.NetworkInterfaceAuxiliarySkuAOne),
 					}, false),
 				},
 
 				"delete_option": {
-					Type:     pluginsdk.TypeString,
-					Optional: true,
-					ValidateFunc: validation.StringInSlice([]string{
-						string(fleets.DeleteOptionsDelete),
-						string(fleets.DeleteOptionsDetach),
-					}, false),
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskDeleteOptionTypes(), false),
 				},
 
 				"tcp_state_tracking_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
+					Default:  true,
 				},
 
 				"fpga_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
-					Default:  false,
+				},
+			},
+		},
+	}
+}
+
+func ipConfigurationSchema() *pluginsdk.Schema {
+	return &pluginsdk.Schema{
+		Type:     pluginsdk.TypeList,
+		Required: true,
+		Elem: &pluginsdk.Resource{
+			Schema: map[string]*pluginsdk.Schema{
+				"name": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+
+				"load_balancer_backend_address_pool_ids": {
+					Type:     pluginsdk.TypeSet,
+					Required: true,
+					Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
+					Set:      pluginsdk.HashString,
+				},
+
+				"primary": {
+					Type:     pluginsdk.TypeBool,
+					Required: true,
+				},
+
+				"subnet_id": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ValidateFunc: commonids.ValidateSubnetID,
+				},
+
+				"application_gateway_backend_address_pool_ids": {
+					Type:     pluginsdk.TypeSet,
+					Optional: true,
+					Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
+					Set:      pluginsdk.HashString,
+				},
+
+				"application_security_group_ids": {
+					Type:     pluginsdk.TypeSet,
+					Optional: true,
+					Elem: &pluginsdk.Schema{
+						Type:         pluginsdk.TypeString,
+						ValidateFunc: applicationsecuritygroups.ValidateApplicationSecurityGroupID,
+					},
+					Set:      pluginsdk.HashString,
+					MaxItems: 20,
+				},
+
+				"load_balancer_inbound_nat_rules_ids": {
+					Type:     pluginsdk.TypeSet,
+					Optional: true,
+					Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
+					Set:      pluginsdk.HashString,
+				},
+
+				"public_ip_address": publicIPAddressSchema(),
+
+				"version": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      string(fleets.IPVersionIPvFour),
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForIPVersion(), false),
+				},
+			},
+		},
+	}
+}
+
+func publicIPAddressSchema() *pluginsdk.Schema {
+	return &pluginsdk.Schema{
+		Type:     pluginsdk.TypeList,
+		Optional: true,
+		Elem: &pluginsdk.Resource{
+			Schema: map[string]*pluginsdk.Schema{
+				"name": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+
+				"delete_option": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDeleteOptions(), false),
+				},
+
+				"domain_name_label": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+
+				"domain_name_label_scope": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDomainNameLabelScopeTypes(), false),
+				},
+
+				"idle_timeout_in_minutes": {
+					Type:         pluginsdk.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(4, 32),
+				},
+				"ip_tag": {
+					// TODO: does this want to be a Set?
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &pluginsdk.Resource{
+						Schema: map[string]*pluginsdk.Schema{
+							"tag": {
+								Type:         pluginsdk.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+							"type": {
+								Type:         pluginsdk.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+						},
+					},
+				},
+				"version": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      string(fleets.IPVersionIPvFour),
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForIPVersion(), false),
+				},
+				// TODO: preview feature
+				// $ az feature register --namespace Microsoft.Network --name AllowBringYourOwnPublicIpAddress
+				// $ az provider register -n Microsoft.Network
+				"public_ip_prefix_id": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: publicipprefixes.ValidatePublicIPPrefixID,
+				},
+
+				"sku": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &pluginsdk.Resource{
+						Schema: map[string]*pluginsdk.Schema{
+							"name": {
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForPublicIPAddressSkuName(), false),
+							},
+
+							"tier": {
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForPublicIPAddressSkuTier(), false),
+							},
+						},
+					},
 				},
 			},
 		},
@@ -619,21 +588,25 @@ func networkInterfaceSchema() *pluginsdk.Schema {
 func osProfileSchema() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
-		Optional: true,
+		Required: true,
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
-				"admin_username": {
+				"computer_name_prefix": {
 					Type:         pluginsdk.TypeString,
 					Required:     true,
 					ForceNew:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+				"admin_username": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
 				"admin_password": {
 					Type:         pluginsdk.TypeString,
 					Required:     true,
-					ForceNew:     true,
 					Sensitive:    true,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
@@ -645,19 +618,14 @@ func osProfileSchema() *pluginsdk.Schema {
 					ForceNew: true,
 				},
 
-				"computer_name_prefix": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringIsNotEmpty,
-				},
-
-				"custom_data": {
+				"custom_data_base64": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					Sensitive:    true,
 					ValidateFunc: validation.StringIsBase64,
 				},
 
+				// need to check if this is split to two resource. if yes, this should be a required property.
 				"linux_configuration": {
 					Type:     pluginsdk.TypeList,
 					Optional: true,
@@ -665,8 +633,8 @@ func osProfileSchema() *pluginsdk.Schema {
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
 							"password_authentication_enabled": {
-								Type:     pluginsdk.TypeBool,
-								Optional: true,
+								Required: true,
+								ForceNew: true,
 							},
 
 							"vm_agent_platform_updates_enabled": {
@@ -674,38 +642,27 @@ func osProfileSchema() *pluginsdk.Schema {
 								Optional: true,
 							},
 
-							"assessment_mode": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.LinuxPatchAssessmentModeAutomaticByPlatform),
-									string(fleets.LinuxPatchAssessmentModeImageDefault),
-								}, false),
+							"patch_assessment_mode": {
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxPatchAssessmentMode(), false),
 							},
 
-							"bypass_platform_safety_checks_on_user_schedule": {
+							"patch_bypass_platform_safety_checks_on_user_schedule_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
 							},
 
-							"reboot_setting": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.LinuxVMGuestPatchAutomaticByPlatformRebootSettingIfRequired),
-									string(fleets.LinuxVMGuestPatchAutomaticByPlatformRebootSettingNever),
-									string(fleets.LinuxVMGuestPatchAutomaticByPlatformRebootSettingAlways),
-									string(fleets.LinuxVMGuestPatchAutomaticByPlatformRebootSettingUnknown),
-								}, false),
+							"patch_reboot_setting": {
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchAutomaticByPlatformRebootSetting(), false),
 							},
 
 							"patch_mode": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.LinuxVMGuestPatchModeImageDefault),
-									string(fleets.LinuxVMGuestPatchModeAutomaticByPlatform),
-								}, false),
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchMode(), false),
 							},
 
 							"provision_vm_agent": {
@@ -715,21 +672,18 @@ func osProfileSchema() *pluginsdk.Schema {
 								ForceNew: true,
 							},
 
-							"ssh_public_keys": {
+							"ssh_keys": {
 								Type:     pluginsdk.TypeList,
 								Optional: true,
 								Elem: &pluginsdk.Resource{
 									Schema: map[string]*pluginsdk.Schema{
-										"key_data": {
-											Type:         pluginsdk.TypeString,
-											Optional:     true,
-											ValidateFunc: validation.StringIsNotEmpty,
-										},
-
 										"path": {
-											Type:         pluginsdk.TypeString,
-											Optional:     true,
-											ValidateFunc: validation.StringIsNotEmpty,
+											Type:     pluginsdk.TypeString,
+											Required: true,
+										},
+										"key_data": {
+											Type:     pluginsdk.TypeString,
+											Optional: true,
 										},
 									},
 								},
@@ -743,34 +697,29 @@ func osProfileSchema() *pluginsdk.Schema {
 					Optional: true,
 				},
 
-				"secrets": {
+				"os_profile_secrets": {
 					Type:     pluginsdk.TypeList,
 					Optional: true,
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
-							"source_vault_ids": {
-								Type:     pluginsdk.TypeList,
-								Optional: true,
-								Elem: &pluginsdk.Schema{
-									Type:         pluginsdk.TypeString,
-									ValidateFunc: validation.StringIsNotEmpty,
-								},
+							"source_vault_id": {
+								Type:         pluginsdk.TypeString,
+								Required:     true,
+								ValidateFunc: azure.ValidateResourceID,
 							},
 
-							"certificates": {
+							"vault_certificates": {
 								Type:     pluginsdk.TypeList,
 								Optional: true,
 								Elem: &pluginsdk.Resource{
 									Schema: map[string]*pluginsdk.Schema{
-										"store": {
+										"certificate_url": {
+											Type:     pluginsdk.TypeString,
+											Required: true,
+										},
+										"certificate_store": {
 											Type:     pluginsdk.TypeString,
 											Optional: true,
-										},
-
-										"url": {
-											Type:         pluginsdk.TypeString,
-											Required:     true,
-											ValidateFunc: keyVaultValidate.NestedItemId,
 										},
 									},
 								},
@@ -790,35 +739,26 @@ func osProfileSchema() *pluginsdk.Schema {
 								Optional: true,
 								Elem: &pluginsdk.Resource{
 									Schema: map[string]*pluginsdk.Schema{
-										"component_name": {
-											Type:     pluginsdk.TypeString,
-											Optional: true,
-											ValidateFunc: validation.StringInSlice([]string{
-												string(fleets.ComponentNameMicrosoftNegativeWindowsNegativeShellNegativeSetup),
-											}, false),
+										"pass_name": {
+											Type:         pluginsdk.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForPassName(), false),
 										},
-
+										"component_name": {
+											Type:         pluginsdk.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForComponentName(), false),
+										},
+										"setting_name": {
+											Type:         pluginsdk.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForSettingNames(), false),
+										},
 										"content": {
 											Type:         pluginsdk.TypeString,
-											Optional:     true,
+											Required:     true,
+											Sensitive:    true,
 											ValidateFunc: validation.StringIsNotEmpty,
-										},
-
-										"pass_name": {
-											Type:     pluginsdk.TypeString,
-											Optional: true,
-											ValidateFunc: validation.StringInSlice([]string{
-												string(fleets.PassNameOobeSystem),
-											}, false),
-										},
-
-										"setting_name": {
-											Type:     pluginsdk.TypeString,
-											Optional: true,
-											ValidateFunc: validation.StringInSlice([]string{
-												string(fleets.SettingNamesAutoLogon),
-												string(fleets.SettingNamesFirstLogonCommands),
-											}, false),
 										},
 									},
 								},
@@ -834,29 +774,21 @@ func osProfileSchema() *pluginsdk.Schema {
 								Optional: true,
 							},
 
-							"assessment_mode": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.WindowsPatchAssessmentModeImageDefault),
-									string(fleets.WindowsPatchAssessmentModeAutomaticByPlatform),
-								}, false),
+							"patch_assessment_mode": {
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForWindowsPatchAssessmentMode(), false),
 							},
 
-							"bypass_platform_safety_checks_on_user_schedule": {
+							"patch_bypass_platform_safety_checks_on_user_schedule_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
 							},
 
-							"reboot_setting": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.WindowsVMGuestPatchAutomaticByPlatformRebootSettingUnknown),
-									string(fleets.WindowsVMGuestPatchAutomaticByPlatformRebootSettingIfRequired),
-									string(fleets.WindowsVMGuestPatchAutomaticByPlatformRebootSettingNever),
-									string(fleets.WindowsVMGuestPatchAutomaticByPlatformRebootSettingAlways),
-								}, false),
+							"patch_reboot_setting": {
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForWindowsVMGuestPatchAutomaticByPlatformRebootSetting(), false),
 							},
 
 							"hot_patching_enabled": {
@@ -865,13 +797,9 @@ func osProfileSchema() *pluginsdk.Schema {
 							},
 
 							"patch_mode": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.WindowsVMGuestPatchModeManual),
-									string(fleets.WindowsVMGuestPatchModeAutomaticByOS),
-									string(fleets.WindowsVMGuestPatchModeAutomaticByPlatform),
-								}, false),
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForWindowsVMGuestPatchMode(), false),
 							},
 
 							"provision_vm_agent": {
@@ -885,19 +813,16 @@ func osProfileSchema() *pluginsdk.Schema {
 								ValidateFunc: validation.StringIsNotEmpty,
 							},
 
-							"win_rm_listeners": {
+							"winrm": {
 								Type:     pluginsdk.TypeList,
 								Optional: true,
 								Elem: &pluginsdk.Resource{
 									Schema: map[string]*pluginsdk.Schema{
 										"protocol": {
-											Type:     pluginsdk.TypeString,
-											Required: true,
-											ForceNew: true,
-											ValidateFunc: validation.StringInSlice([]string{
-												string(fleets.ProtocolTypesHTTP),
-												string(fleets.ProtocolTypesHTTPS),
-											}, false),
+											Type:         pluginsdk.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForProtocolTypes(), false),
 										},
 										"certificate_url": {
 											Type:         pluginsdk.TypeString,
@@ -923,61 +848,44 @@ func securityProfileSchema() *pluginsdk.Schema {
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
-				"encryption_at_host": {
+				"encryption_at_host_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
 				},
 
-				"user_assigned_identity_resource_id": {
+				"user_assigned_identity_id": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
-				"proxy_agent_settings": {
-					Type:     pluginsdk.TypeList,
+				// if this is specified the proxy_agent_settings enabled is set to true
+				"proxy_agent_key_incarnation_value": {
+					Type:     pluginsdk.TypeInt,
 					Optional: true,
-					MaxItems: 1,
-					Elem: &pluginsdk.Resource{
-						Schema: map[string]*pluginsdk.Schema{
-							"enabled": {
-								Type:     pluginsdk.TypeBool,
-								Optional: true,
-							},
+				},
 
-							"key_incarnation_id": {
-								Type:     pluginsdk.TypeInt,
-								Optional: true,
-							},
-
-							"mode": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.ModeAudit),
-									string(fleets.ModeEnforce),
-								}, false),
-							},
-						},
-					},
+				// if this is specified the proxy_agent_settings enabled is set to true
+				"proxy_agent_mode": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					Default:      string(fleets.ModeEnforce),
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForMode(), false),
 				},
 
 				"security_type": {
-					Type:     pluginsdk.TypeString,
-					Optional: true,
-					ValidateFunc: validation.StringInSlice([]string{
-						string(fleets.SecurityTypesTrustedLaunch),
-						string(fleets.SecurityTypesConfidentialVM),
-					}, false),
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForSecurityTypes(), false),
 				},
 
-				"secure_boot_enabled": {
+				"uefi_secure_boot_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
 					ForceNew: true,
 				},
 
-				"vtpm_enabled": {
+				"uefi_vtpm_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
 					ForceNew: true,
@@ -990,355 +898,266 @@ func securityProfileSchema() *pluginsdk.Schema {
 func managedDiskSchema() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
-		Optional: true,
+		Required: true,
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
+				"storage_account_type": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForStorageAccountTypes(), false),
+				},
+
 				"disk_encryption_set_id": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ValidateFunc: validate.DiskEncryptionSetID,
 				},
 
-				"security_profile": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &pluginsdk.Resource{
-						Schema: map[string]*pluginsdk.Schema{
-							"disk_encryption_set_id": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: validate.DiskEncryptionSetID,
-							},
-
-							"security_encryption_type": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.SecurityEncryptionTypesVMGuestStateOnly),
-									string(fleets.SecurityEncryptionTypesDiskWithVMGuestState),
-									string(fleets.SecurityEncryptionTypesNonPersistedTPM),
-								}, false),
-							},
-						},
-					},
+				"security_disk_encryption_set_id": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validate.DiskEncryptionSetID,
 				},
 
-				"storage_account_type": {
-					Type:     pluginsdk.TypeString,
-					Optional: true,
-					ValidateFunc: validation.StringInSlice([]string{
-						string(fleets.StorageAccountTypesPremiumVTwoLRS),
-						string(fleets.StorageAccountTypesStandardLRS),
-						string(fleets.StorageAccountTypesPremiumLRS),
-						string(fleets.StorageAccountTypesStandardSSDLRS),
-						string(fleets.StorageAccountTypesUltraSSDLRS),
-						string(fleets.StorageAccountTypesPremiumZRS),
-						string(fleets.StorageAccountTypesStandardSSDZRS),
-					}, false),
+				"security_encryption_type": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForSecurityTypes(), false),
 				},
 			},
 		},
 	}
 }
 
-func storageProfileSchema() *pluginsdk.Schema {
+func storageProfileDataDiskSchema() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
 		Optional: true,
-		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
-				"data_disks": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					Elem: &pluginsdk.Resource{
-						Schema: map[string]*pluginsdk.Schema{
-							"caching": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.CachingTypesNone),
-									string(fleets.CachingTypesReadOnly),
-									string(fleets.CachingTypesReadWrite),
-								}, false),
-							},
-
-							"create_option": {
-								Type:     pluginsdk.TypeString,
-								Required: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.DiskCreateOptionTypesRestore),
-									string(fleets.DiskCreateOptionTypesFromImage),
-									string(fleets.DiskCreateOptionTypesEmpty),
-									string(fleets.DiskCreateOptionTypesAttach),
-									string(fleets.DiskCreateOptionTypesCopy),
-								}, false),
-							},
-
-							"delete_option": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.DiskDeleteOptionTypesDetach),
-									string(fleets.DiskDeleteOptionTypesDelete),
-								}, false),
-							},
-
-							"disk_iops_read_write": {
-								Type:     pluginsdk.TypeInt,
-								Optional: true,
-							},
-
-							"disk_m_bps_read_write": {
-								Type:     pluginsdk.TypeInt,
-								Optional: true,
-							},
-
-							"disk_size_in_gb": {
-								Type:     pluginsdk.TypeInt,
-								Optional: true,
-							},
-
-							"lun": {
-								Type:     pluginsdk.TypeInt,
-								Required: true,
-							},
-
-							"managed_disk": managedDiskSchema(),
-
-							"name": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-
-							"write_accelerator_enabled": {
-								Type:     pluginsdk.TypeBool,
-								Optional: true,
-							},
-						},
-					},
+				"lun": {
+					Type:     pluginsdk.TypeInt,
+					Required: true,
 				},
 
-				"disk_controller_type": {
+				"create_option": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskCreateOptionTypes(), false),
+				},
+
+				"caching": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
 					ValidateFunc: validation.StringInSlice([]string{
-						string(fleets.DiskControllerTypesNVMe),
-						string(fleets.DiskControllerTypesSCSI),
+						// NOTE: Whilst the `None` value exists it's handled in the Create/Update and Read functions.
+						//string(fleets.CachingTypesNone),
+						string(fleets.CachingTypesReadOnly),
+						string(fleets.CachingTypesReadWrite),
 					}, false),
 				},
 
-				"image_reference": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &pluginsdk.Resource{
-						Schema: map[string]*pluginsdk.Schema{
-							"publisher": {
-								Type:         pluginsdk.TypeString,
-								Required:     true,
-								ForceNew:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-							"offer": {
-								Type:         pluginsdk.TypeString,
-								Required:     true,
-								ForceNew:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-							"sku": {
-								Type:         pluginsdk.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-							"version": {
-								Type:         pluginsdk.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-							"community_gallery_image_id": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-
-							"exact_version": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-
-							"id": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-
-							"shared_gallery_image_id": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-						},
-					},
+				"delete_option": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskDeleteOptionTypes(), false),
 				},
 
-				"os_disk": {
-					Type:     pluginsdk.TypeList,
+				"disk_iops_read_write": {
+					Type:     pluginsdk.TypeInt,
 					Optional: true,
-					MaxItems: 1,
-					Elem: &pluginsdk.Resource{
-						Schema: map[string]*pluginsdk.Schema{
-							"caching": {
-								Type:     pluginsdk.TypeString,
-								Required: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.CachingTypesReadOnly),
-									string(fleets.CachingTypesReadWrite),
-									string(fleets.CachingTypesNone),
-								}, false),
-							},
+				},
 
-							"create_option": {
-								Type:     pluginsdk.TypeString,
-								Required: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.DiskCreateOptionTypesCopy),
-									string(fleets.DiskCreateOptionTypesRestore),
-									string(fleets.DiskCreateOptionTypesFromImage),
-									string(fleets.DiskCreateOptionTypesEmpty),
-									string(fleets.DiskCreateOptionTypesAttach),
-								}, false),
-							},
+				"disk_m_bps_read_write": {
+					Type:     pluginsdk.TypeInt,
+					Optional: true,
+				},
 
-							"delete_option": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.DiskDeleteOptionTypesDelete),
-									string(fleets.DiskDeleteOptionTypesDetach),
-								}, false),
-							},
+				"disk_size_in_gb": {
+					Type:     pluginsdk.TypeInt,
+					Optional: true,
+				},
 
-							"diff_disk_settings": {
-								Type:     pluginsdk.TypeList,
-								Optional: true,
-								ForceNew: true,
-								MaxItems: 1,
-								Elem: &pluginsdk.Resource{
-									Schema: map[string]*pluginsdk.Schema{
-										"option": {
-											Type:     pluginsdk.TypeString,
-											Required: true,
-											ForceNew: true,
-											ValidateFunc: validation.StringInSlice([]string{
-												string(fleets.DiffDiskOptionsLocal),
-											}, false),
-										},
+				"managed_disk": managedDiskSchema(),
 
-										"placement": {
-											Type:     pluginsdk.TypeString,
-											Optional: true,
-											ForceNew: true,
-											ValidateFunc: validation.StringInSlice([]string{
-												string(fleets.DiffDiskPlacementNVMeDisk),
-												string(fleets.DiffDiskPlacementCacheDisk),
-												string(fleets.DiffDiskPlacementResourceDisk),
-											}, false),
-										},
-									},
-								},
-							},
+				"name": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
 
-							"disk_size_in_gb": {
-								Type:     pluginsdk.TypeInt,
-								Optional: true,
-							},
-
-							"image_uri": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-
-							"managed_disk": managedDiskSchema(),
-
-							"name": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-
-							"os_type": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									string(fleets.OperatingSystemTypesWindows),
-									string(fleets.OperatingSystemTypesLinux),
-								}, false),
-							},
-
-							"vhd_containers": {
-								Type:     pluginsdk.TypeList,
-								Optional: true,
-								Elem: &pluginsdk.Schema{
-									Type: pluginsdk.TypeString,
-								},
-							},
-
-							"write_accelerator_enabled": {
-								Type:     pluginsdk.TypeBool,
-								Optional: true,
-								Default:  false,
-							},
-						},
-					},
+				"write_accelerator_enabled": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
 				},
 			},
 		},
 	}
 }
 
-func applicationProfileSchema4() *pluginsdk.Schema {
-	return &pluginsdk.Schema{}
-}
+func storageProfileOsDiskSchema() *pluginsdk.Schema {
+	return &pluginsdk.Schema{
+		Type:     pluginsdk.TypeSet,
+		Required: true,
+		MaxItems: 1,
+		Elem: &pluginsdk.Resource{
+			Schema: map[string]*pluginsdk.Schema{
+				"create_option": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskCreateOptionTypes(), false),
+				},
 
-func applicationProfileSchema5() *pluginsdk.Schema {
-	return &pluginsdk.Schema{}
-}
+				"caching": {
+					Type:     pluginsdk.TypeString,
+					Required: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						// NOTE: Whilst the `None` value exists it's handled in the Create/Update and Read functions.
+						//string(fleets.CachingTypesNone),
+						string(fleets.CachingTypesReadOnly),
+						string(fleets.CachingTypesReadWrite),
+					}, false),
+				},
 
-func expandProtectedSettingsFromKeyVault(input []interface{}) *fleets.KeyVaultSecretReference {
-	if len(input) == 0 {
-		return nil
-	}
+				"os_type": {
+					Type:     pluginsdk.TypeString,
+					Required: true,
+				},
 
-	v := input[0].(map[string]interface{})
+				"managed_disk": managedDiskSchema(),
 
-	return &fleets.KeyVaultSecretReference{
-		SecretURL: v["secret_url"].(string),
-		SourceVault: fleets.SubResource{
-			Id: pointer.To(v["source_vault_id"].(string)),
+				"delete_option": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskDeleteOptionTypes(), false),
+				},
+
+				"diff_disk_option": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiffDiskOptions(), false),
+				},
+				"diff_disk_placement": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiffDiskPlacement(), false),
+				},
+
+				"disk_size_in_gb": {
+					Type:     pluginsdk.TypeInt,
+					Optional: true,
+				},
+
+				"image_uri": {
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+				},
+
+				"name": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+
+				"vhd_containers": {
+					Type:     pluginsdk.TypeSet,
+					Optional: true,
+					Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
+					Set:      pluginsdk.HashString,
+				},
+
+				"write_accelerator_enabled": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
+				},
+			},
 		},
 	}
 }
 
-func flattenProtectedSettingsFromKeyVault(input *fleets.KeyVaultSecretReference) []interface{} {
-	if input == nil {
-		return []interface{}{}
-	}
+func storageProfileImageReferenceSchema() *pluginsdk.Schema {
+	return &pluginsdk.Schema{
+		Type:     pluginsdk.TypeSet,
+		Required: true,
+		MaxItems: 1,
+		Elem: &pluginsdk.Resource{
+			Schema: map[string]*pluginsdk.Schema{
+				"id": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
 
-	sourceVaultId := ""
-	if input.SourceVault.Id != nil {
-		sourceVaultId = *input.SourceVault.Id
-	}
+				"publisher": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
 
-	return []interface{}{
-		map[string]interface{}{
-			"secret_url":      input.SecretURL,
-			"source_vault_id": sourceVaultId,
+				"offer": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+
+				"sku": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+
+				"version": {
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+
+				"community_gallery_image_id": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+
+				"shared_gallery_image_id": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+			},
 		},
+		Set: resourceStorageProfileImageReferenceHash,
 	}
+}
+
+func resourceStorageProfileImageReferenceHash(v interface{}) int {
+	var buf bytes.Buffer
+
+	if m, ok := v.(map[string]interface{}); ok {
+		if v, ok := m["publisher"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
+		if v, ok := m["offer"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
+		if v, ok := m["sku"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
+		if v, ok := m["version"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
+		if v, ok := m["id"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
+		if v, ok := m["community_gallery_image_id"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
+		if v, ok := m["shared_gallery_image_id"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
+	}
+
+	return pluginsdk.HashString(buf.String())
 }
