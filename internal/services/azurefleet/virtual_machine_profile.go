@@ -45,6 +45,11 @@ func virtualMachineProfileSchema() *pluginsdk.Schema {
 
 				"storage_profile_os_disk": storageProfileOsDiskSchema(),
 
+				"boot_diagnostic_enabled": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
+				},
+
 				"boot_diagnostic_storage_account_endpoint": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
@@ -306,7 +311,8 @@ func extensionSchema() *pluginsdk.Schema {
 					Type:     pluginsdk.TypeList,
 					Optional: true,
 					Elem: &pluginsdk.Schema{
-						Type: pluginsdk.TypeString,
+						Type:         pluginsdk.TypeString,
+						ValidateFunc: validation.StringIsNotEmpty,
 					},
 				},
 
@@ -404,7 +410,8 @@ func networkInterfaceSchema() *pluginsdk.Schema {
 				"tcp_state_tracking_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
-					Default:  true,
+					// need to confirm if DisableTcpStateTracking default value is false?
+					Default: true,
 				},
 
 				"fpga_enabled": {
@@ -633,6 +640,7 @@ func osProfileSchema() *pluginsdk.Schema {
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
 							"password_authentication_enabled": {
+								Type:     pluginsdk.TypeBool,
 								Required: true,
 								ForceNew: true,
 							},
@@ -648,7 +656,7 @@ func osProfileSchema() *pluginsdk.Schema {
 								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxPatchAssessmentMode(), false),
 							},
 
-							"patch_bypass_platform_safety_checks_on_user_schedule_enabled": {
+							"patch_bypass_platform_safety_checks_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
 							},
@@ -678,12 +686,14 @@ func osProfileSchema() *pluginsdk.Schema {
 								Elem: &pluginsdk.Resource{
 									Schema: map[string]*pluginsdk.Schema{
 										"path": {
-											Type:     pluginsdk.TypeString,
-											Required: true,
+											Type:         pluginsdk.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 										"key_data": {
-											Type:     pluginsdk.TypeString,
-											Optional: true,
+											Type:         pluginsdk.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 								},
@@ -714,12 +724,14 @@ func osProfileSchema() *pluginsdk.Schema {
 								Elem: &pluginsdk.Resource{
 									Schema: map[string]*pluginsdk.Schema{
 										"certificate_url": {
-											Type:     pluginsdk.TypeString,
-											Required: true,
+											Type:         pluginsdk.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 										"certificate_store": {
-											Type:     pluginsdk.TypeString,
-											Optional: true,
+											Type:         pluginsdk.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 								},
@@ -780,7 +792,7 @@ func osProfileSchema() *pluginsdk.Schema {
 								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForWindowsPatchAssessmentMode(), false),
 							},
 
-							"patch_bypass_platform_safety_checks_on_user_schedule_enabled": {
+							"patch_bypass_platform_safety_checks_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
 							},
@@ -1021,8 +1033,9 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 				},
 
 				"os_type": {
-					Type:     pluginsdk.TypeString,
-					Required: true,
+					Type:         pluginsdk.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
 				"managed_disk": managedDiskSchema(),
@@ -1050,8 +1063,9 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 				},
 
 				"image_uri": {
-					Type:     pluginsdk.TypeString,
-					Optional: true,
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
 				"name": {
