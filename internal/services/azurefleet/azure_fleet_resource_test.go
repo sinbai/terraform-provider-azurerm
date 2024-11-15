@@ -306,10 +306,10 @@ resource "azurerm_azure_fleet" "import" {
                 id = ""
               }
             }
-            protected_settings = jsonencode({
+            protected_settings_json = jsonencode({
               "key" : "value"
             })
-            settings = jsonencode({
+            settings_json = jsonencode({
               "key" : "value"
             })
           }
@@ -401,7 +401,7 @@ resource "azurerm_azure_fleet" "import" {
         linux_configuration {
           disable_password_authentication  = false
           enable_vm_agent_platform_updates = false
-          provision_vm_agent               = false
+          provision_vm_agent_enabled               = false
           patch_settings {
             assessment_mode = ""
             patch_mode      = ""
@@ -429,7 +429,7 @@ resource "azurerm_azure_fleet" "import" {
         windows_configuration {
           enable_automatic_updates         = false
           enable_vm_agent_platform_updates = false
-          provision_vm_agent               = false
+          provision_vm_agent_enabled               = false
           time_zone                        = ""
           additional_unattend_content {
             component_name = ""
@@ -454,16 +454,11 @@ resource "azurerm_azure_fleet" "import" {
           }
         }
       }
-      scheduled_events_profile {
-        os_image_notification_profile {
-          enable             = false
-          not_before_timeout = ""
-        }
-        terminate_notification_profile {
-          enable             = false
-          not_before_timeout = ""
-        }
-      }
+      scheduled_event_os_image_enabled = true
+        scheduled_event_os_image_timeout = "PT5M"
+        scheduled_event_termination_enabled = true
+        scheduled_event_termination_timeout = "PT15M"
+
       security_posture_reference {
         id                 = ""
         is_overridable     = false
@@ -621,10 +616,10 @@ resource "azurerm_azure_fleet" "test" {
                   id = ""
                 }
               }
-              protected_settings = jsonencode({
+              protected_settings_json = jsonencode({
                 "key" : "value"
               })
-              settings = jsonencode({
+              settings_json = jsonencode({
                 "key" : "value"
               })
             }
@@ -716,7 +711,7 @@ resource "azurerm_azure_fleet" "test" {
           linux_configuration {
             disable_password_authentication  = false
             enable_vm_agent_platform_updates = false
-            provision_vm_agent               = false
+            provision_vm_agent_enabled               = false
             patch_settings {
               assessment_mode = ""
               patch_mode      = ""
@@ -744,7 +739,7 @@ resource "azurerm_azure_fleet" "test" {
           windows_configuration {
             enable_automatic_updates         = false
             enable_vm_agent_platform_updates = false
-            provision_vm_agent               = false
+            provision_vm_agent_enabled               = false
             time_zone                        = ""
             additional_unattend_content {
               component_name = ""
@@ -769,16 +764,11 @@ resource "azurerm_azure_fleet" "test" {
             }
           }
         }
-        scheduled_events_profile {
-          os_image_notification_profile {
-            enable             = false
-            not_before_timeout = ""
-          }
-          terminate_notification_profile {
-            enable             = false
-            not_before_timeout = ""
-          }
-        }
+        scheduled_event_os_image_enabled = true
+        scheduled_event_os_image_timeout = "PT5M"
+        scheduled_event_termination_enabled = true
+        scheduled_event_termination_timeout = "PT15M"
+
         security_posture_reference {
           id                 = ""
           is_overridable     = false
@@ -920,10 +910,10 @@ resource "azurerm_azure_fleet" "test" {
                 id = ""
               }
             }
-            protected_settings = jsonencode({
+            protected_settings_json = jsonencode({
               "key" : "value"
             })
-            settings = jsonencode({
+            settings_json = jsonencode({
               "key" : "value"
             })
           }
@@ -1015,7 +1005,7 @@ resource "azurerm_azure_fleet" "test" {
         linux_configuration {
           disable_password_authentication  = false
           enable_vm_agent_platform_updates = false
-          provision_vm_agent               = false
+          provision_vm_agent_enabled               = false
           patch_settings {
             assessment_mode = ""
             patch_mode      = ""
@@ -1043,7 +1033,7 @@ resource "azurerm_azure_fleet" "test" {
         windows_configuration {
           enable_automatic_updates         = false
           enable_vm_agent_platform_updates = false
-          provision_vm_agent               = false
+          provision_vm_agent_enabled               = false
           time_zone                        = ""
           additional_unattend_content {
             component_name = ""
@@ -1068,16 +1058,12 @@ resource "azurerm_azure_fleet" "test" {
           }
         }
       }
-      scheduled_events_profile {
-        os_image_notification_profile {
-          enable             = false
-          not_before_timeout = ""
-        }
-        terminate_notification_profile {
-          enable             = false
-          not_before_timeout = ""
-        }
-      }
+
+      scheduled_event_os_image_enabled = true
+        scheduled_event_os_image_timeout = "PT5M"
+        scheduled_event_termination_enabled = true
+        scheduled_event_termination_timeout = "PT15M"
+
       security_posture_reference {
         id                 = ""
         is_overridable     = false
@@ -1321,10 +1307,10 @@ resource "azurerm_azure_fleet" "test" {
                   id = ""
                 }
               }
-              protected_settings = jsonencode({
+              protected_settings_json = jsonencode({
                 "key" : "value"
               })
-              settings = jsonencode({
+              settings_json = jsonencode({
                 "key" : "value"
               })
             }
@@ -1416,7 +1402,7 @@ resource "azurerm_azure_fleet" "test" {
           linux_configuration {
             disable_password_authentication  = false
             enable_vm_agent_platform_updates = false
-            provision_vm_agent               = false
+            provision_vm_agent_enabled               = false
             patch_settings {
               assessment_mode = ""
               patch_mode      = ""
@@ -1444,7 +1430,7 @@ resource "azurerm_azure_fleet" "test" {
           windows_configuration {
             enable_automatic_updates         = false
             enable_vm_agent_platform_updates = false
-            provision_vm_agent               = false
+            provision_vm_agent_enabled               = false
             time_zone                        = ""
             additional_unattend_content {
               component_name = ""
@@ -1469,16 +1455,12 @@ resource "azurerm_azure_fleet" "test" {
             }
           }
         }
-        scheduled_events_profile {
-          os_image_notification_profile {
-            enable             = false
-            not_before_timeout = ""
-          }
-          terminate_notification_profile {
-            enable             = false
-            not_before_timeout = ""
-          }
-        }
+
+        scheduled_event_os_image_enabled = true
+        scheduled_event_os_image_timeout = "PT5M"
+        scheduled_event_termination_enabled = true
+        scheduled_event_termination_timeout = "PT15M"
+
         security_posture_reference {
           id                 = ""
           is_overridable     = false
@@ -1620,10 +1602,10 @@ resource "azurerm_azure_fleet" "test" {
                 id = ""
               }
             }
-            protected_settings = jsonencode({
+            protected_settings_json = jsonencode({
               "key" : "value"
             })
-            settings = jsonencode({
+            settings_json = jsonencode({
               "key" : "value"
             })
           }
@@ -1715,7 +1697,7 @@ resource "azurerm_azure_fleet" "test" {
         linux_configuration {
           disable_password_authentication  = false
           enable_vm_agent_platform_updates = false
-          provision_vm_agent               = false
+          provision_vm_agent_enabled               = false
           patch_settings {
             assessment_mode = ""
             patch_mode      = ""
@@ -1743,7 +1725,7 @@ resource "azurerm_azure_fleet" "test" {
         windows_configuration {
           enable_automatic_updates         = false
           enable_vm_agent_platform_updates = false
-          provision_vm_agent               = false
+          provision_vm_agent_enabled               = false
           time_zone                        = ""
           additional_unattend_content {
             component_name = ""
@@ -1768,16 +1750,12 @@ resource "azurerm_azure_fleet" "test" {
           }
         }
       }
-      scheduled_events_profile {
-        os_image_notification_profile {
-          enable             = false
-          not_before_timeout = ""
-        }
-        terminate_notification_profile {
-          enable             = false
-          not_before_timeout = ""
-        }
-      }
+
+      scheduled_event_os_image_enabled = true
+        scheduled_event_os_image_timeout = "PT5M"
+        scheduled_event_termination_enabled = true
+        scheduled_event_termination_timeout = "PT15M"
+
       security_posture_reference {
         id                 = ""
         is_overridable     = false

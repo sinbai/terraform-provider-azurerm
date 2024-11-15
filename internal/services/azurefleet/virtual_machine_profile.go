@@ -98,7 +98,12 @@ func virtualMachineProfileSchema() *pluginsdk.Schema {
 				},
 
 				// if it is specified os_image_notification_profile enable is set to true.
-				"os_image_scheduled_event_timeout": {
+				"scheduled_event_os_image_enabled": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
+				},
+
+				"scheduled_event_os_image_timeout": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
 					Default:  "PT5M",
@@ -107,6 +112,20 @@ func virtualMachineProfileSchema() *pluginsdk.Schema {
 					}, false),
 				},
 
+				"scheduled_event_termination_enabled": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
+				},
+
+				// if it is specified terminate_notification_profile enable is set to true.
+				"scheduled_event_termination_timeout": {
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+					Default:  "PT15M",
+					ValidateFunc: validation.StringInSlice([]string{
+						"PT15M",
+					}, false),
+				},
 				"security_posture_reference": {
 					Type:     pluginsdk.TypeList,
 					Optional: true,
@@ -144,16 +163,6 @@ func virtualMachineProfileSchema() *pluginsdk.Schema {
 				},
 
 				"storage_profile_data_disk": storageProfileDataDiskSchema(),
-
-				// if it is specified terminate_notification_profile enable is set to true.
-				"termination_scheduled_event_timeout": {
-					Type:     pluginsdk.TypeString,
-					Optional: true,
-					Default:  "PT15M",
-					ValidateFunc: validation.StringInSlice([]string{
-						"PT15M",
-					}, false),
-				},
 
 				"user_data_base64": {
 					Type:         pluginsdk.TypeString,
@@ -198,7 +207,7 @@ func galleryApplicationSchema() *pluginsdk.Schema {
 					ValidateFunc: galleryapplicationversions.ValidateApplicationVersionID,
 				},
 
-				// Example: https://mystorageaccount.blob.core.windows.net/configurations/settings.config
+				// Example: https://mystorageaccount.blob.core.windows.net/configurations/settings_json.config
 				"configuration_blob_uri": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
@@ -283,7 +292,7 @@ func extensionSchema() *pluginsdk.Schema {
 					Optional: true,
 				},
 
-				"protected_settings": {
+				"protected_settings_json": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					Sensitive:    true,
@@ -316,7 +325,7 @@ func extensionSchema() *pluginsdk.Schema {
 					},
 				},
 
-				"settings": {
+				"settings_json": {
 					Type:             pluginsdk.TypeString,
 					Optional:         true,
 					ValidateFunc:     validation.StringIsJSON,
@@ -673,7 +682,7 @@ func osProfileSchema() *pluginsdk.Schema {
 								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchMode(), false),
 							},
 
-							"provision_vm_agent": {
+							"provision_vm_agent_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
 								Default:  true,
@@ -814,9 +823,11 @@ func osProfileSchema() *pluginsdk.Schema {
 								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForWindowsVMGuestPatchMode(), false),
 							},
 
-							"provision_vm_agent": {
+							"provision_vm_agent_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
+								Default:  true,
+								ForceNew: true,
 							},
 
 							"time_zone": {
@@ -871,18 +882,27 @@ func securityProfileSchema() *pluginsdk.Schema {
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
-				// if this is specified the proxy_agent_settings enabled is set to true
-				"proxy_agent_key_incarnation_value": {
-					Type:     pluginsdk.TypeInt,
+				"proxy_agent": {
+					Type:     pluginsdk.TypeList,
 					Optional: true,
-				},
-
-				// if this is specified the proxy_agent_settings enabled is set to true
-				"proxy_agent_mode": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					Default:      string(fleets.ModeEnforce),
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForMode(), false),
+					MaxItems: 1,
+					Elem: &pluginsdk.Resource{
+						Schema: map[string]*pluginsdk.Schema{
+							// there is another property enable exists
+							// need to confirm whether the following properties should be set when this feature is enable?
+							// key_incarnation_value is required?
+							"key_incarnation_value": {
+								Type:     pluginsdk.TypeInt,
+								Required: true,
+							},
+							"mode": {
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								Default:      string(fleets.ModeEnforce),
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForMode(), false),
+							},
+						},
+					},
 				},
 
 				"security_type": {
@@ -1097,12 +1117,6 @@ func storageProfileImageReferenceSchema() *pluginsdk.Schema {
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
-				"id": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringIsNotEmpty,
-				},
-
 				"publisher": {
 					Type:         pluginsdk.TypeString,
 					Required:     true,
@@ -1126,6 +1140,12 @@ func storageProfileImageReferenceSchema() *pluginsdk.Schema {
 				"version": {
 					Type:         pluginsdk.TypeString,
 					Required:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+
+				"id": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
