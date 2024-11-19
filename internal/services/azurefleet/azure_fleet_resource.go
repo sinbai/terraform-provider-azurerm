@@ -4,8 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-provider-azurerm/utils"
-	"log"
+	"regexp"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -372,10 +371,16 @@ func (r AzureFleetResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"name": {
-			Type:         pluginsdk.TypeString,
-			Required:     true,
-			ForceNew:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
+			Type:     pluginsdk.TypeString,
+			Required: true,
+			ForceNew: true,
+			ValidateFunc: validation.StringMatch(
+				regexp.MustCompile("^[^_\\W][\\w\\-._]{0,63}(?<![-.])$"),
+				"Azure resource names cannot contain special characters /\"\"[]:|<>+=;,?*@&, whitespace, or begin with '_', '-' or end with '.','_' or '-'",
+				//The name cannot begin or end with the hyphen '-' character.
+				// This field must be between 1 and 64 characters.
+				//Linux VM names may only contain letters, numbers, '.', and '-'.
+			),
 		},
 
 		"location": commonschema.Location(),
@@ -842,7 +847,7 @@ func (r AzureFleetResource) Create() sdk.ResourceFunc {
 			}
 			properties.Properties.ComputeProfile = pointer.From(computeProfileValue)
 
-			properties.Properties.VMSizesProfile = pointer.From(expandVMSizeProfileModelArray(model.VMSizesProfile))
+			properties.Properties.VMSizesProfile = pointer.From(expandVMSizeProfileModel(model.VMSizesProfile))
 
 			if err := client.CreateOrUpdateThenPoll(ctx, id, properties); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
@@ -925,7 +930,7 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 			}
 
 			if metadata.ResourceData.HasChange("vm_sizes_profile") {
-				properties.Properties.VMSizesProfile = pointer.From(expandVMSizeProfileModelArray(model.VMSizesProfile))
+				properties.Properties.VMSizesProfile = pointer.From(expandVMSizeProfileModel(model.VMSizesProfile))
 			}
 
 			//properties.SystemData = nil
@@ -984,22 +989,22 @@ func (r AzureFleetResource) Read() sdk.ResourceFunc {
 				state.Plan = flattenPlanModel(model.Plan)
 
 				if props := model.Properties; props != nil {
-					additionalLocationsProfileValue, err := flattenAdditionalLocationProfileModel(props.AdditionalLocationsProfile)
+					additionalLocationsProfileValue, err := flattenAdditionalLocationProfileModel(props.AdditionalLocationsProfile, metadata)
 					if err != nil {
 						return err
 					}
 					state.AdditionalLocationProfile = additionalLocationsProfileValue
 
-					computeProfileValue, err := flattenComputeProfileModel(&props.ComputeProfile)
+					computeProfileValue, err := flattenComputeProfileModel(&props.ComputeProfile, metadata)
 					if err != nil {
 						return err
 					}
 					state.ComputeProfile = computeProfileValue
 					state.RegularPriorityProfile = flattenRegularPriorityProfileModel(props.RegularPriorityProfile)
 					state.SpotPriorityProfile = flattenSpotPriorityProfileModel(props.SpotPriorityProfile)
-					state.UniqueId =  pointer.From(props.UniqueId)
+					state.UniqueId = pointer.From(props.UniqueId)
 					state.VMAttributes = flattenVMAttributesModel(props.VMAttributes)
-					state.VMSizesProfile = flattenVMSizeProfileModelArray(&props.VMSizesProfile)
+					state.VMSizesProfile = flattenVMSizeProfileModel(&props.VMSizesProfile)
 				}
 				state.Tags = pointer.From(model.Tags)
 				state.Zones = pointer.From(model.Zones)
@@ -1153,7 +1158,7 @@ func expandSubResource(input string) *fleets.SubResource {
 	}
 }
 
-func expandSubResourceArray(inputList []string) *[]fleets.SubResource {
+func expandSubResources(inputList []string) *[]fleets.SubResource {
 	if len(inputList) == 0 {
 		return nil
 	}
@@ -1380,10 +1385,10 @@ func expandIPConfigurationModelArray(inputList []IPConfigurationModel) *[]fleets
 		output := fleets.VirtualMachineScaleSetIPConfiguration{
 			Name: input.Name,
 			Properties: &fleets.VirtualMachineScaleSetIPConfigurationProperties{
-				ApplicationGatewayBackendAddressPools: expandSubResourceArray(input.ApplicationGatewayBackendAddressPoolIds),
-				ApplicationSecurityGroups:             expandSubResourceArray(input.ApplicationSecurityGroupIds),
-				LoadBalancerBackendAddressPools:       expandSubResourceArray(input.LoadBalancerBackendAddressPoolIds),
-				LoadBalancerInboundNatPools:           expandSubResourceArray(input.LoadBalancerInboundNatPoolIds),
+				ApplicationGatewayBackendAddressPools: expandSubResources(input.ApplicationGatewayBackendAddressPoolIds),
+				ApplicationSecurityGroups:             expandSubResources(input.ApplicationSecurityGroupIds),
+				LoadBalancerBackendAddressPools:       expandSubResources(input.LoadBalancerBackendAddressPoolIds),
+				LoadBalancerInboundNatPools:           expandSubResources(input.LoadBalancerInboundNatPoolIds),
 				Primary:                               pointer.To(input.Primary),
 				PrivateIPAddressVersion:               pointer.To(fleets.IPVersion(input.Version)),
 				PublicIPAddressConfiguration:          expandPublicIPAddressModel(input.PublicIPAddress),
@@ -1643,7 +1648,7 @@ func expandAdditionalUnattendContentModel(inputList []AdditionalUnattendContentM
 			ComponentName: pointer.To(fleets.ComponentName(input.ComponentName)),
 			PassName:      pointer.To(fleets.PassName(input.PassName)),
 			SettingName:   pointer.To(fleets.SettingNames(input.SettingName)),
-			Content: pointer.To(input.Content),
+			Content:       pointer.To(input.Content),
 		}
 		outputList = append(outputList, output)
 	}
@@ -2020,15 +2025,15 @@ func expandVMAttributesModel(inputList []VMAttributesModel) *fleets.VMAttributes
 	input := &inputList[0]
 	output := fleets.VMAttributes{
 		AcceleratorCount:          expandVMAttributeMinMaxIntegerModel(input.AcceleratorCount),
-		AcceleratorManufacturers:  expandAcceleratorManufacturerModelArray(input.AcceleratorManufacturers),
+		AcceleratorManufacturers:  expandAcceleratorManufacturers(input.AcceleratorManufacturers),
 		AcceleratorSupport:        pointer.To(fleets.VMAttributeSupport(input.AcceleratorSupport)),
-		AcceleratorTypes:          expandAcceleratorTypeModelArray(input.AcceleratorTypes),
-		ArchitectureTypes:         expandArchitectureTypeModelArray(input.ArchitectureTypes),
+		AcceleratorTypes:          expandAcceleratorTypes(input.AcceleratorTypes),
+		ArchitectureTypes:         expandArchitectureTypes(input.ArchitectureTypes),
 		BurstableSupport:          pointer.To(fleets.VMAttributeSupport(input.BurstableSupport)),
-		CpuManufacturers:          expandCPUManufacturerModelArray(input.CpuManufacturers),
+		CpuManufacturers:          expandCPUManufacturers(input.CpuManufacturers),
 		DataDiskCount:             expandVMAttributeMinMaxIntegerModel(input.DataDiskCount),
 		ExcludedVMSizes:           pointer.To(input.ExcludedVMSizes),
-		LocalStorageDiskTypes:     expandLocalStorageDiskTypeModelArray(input.LocalStorageDiskTypes),
+		LocalStorageDiskTypes:     expandLocalStorageDiskTypes(input.LocalStorageDiskTypes),
 		LocalStorageInGiB:         expandVMAttributeMinMaxDoubleModel(input.LocalStorageInGib),
 		LocalStorageSupport:       pointer.To(fleets.VMAttributeSupport(input.LocalStorageSupport)),
 		MemoryInGiBPerVCPU:        expandVMAttributeMinMaxDoubleModel(input.MemoryInGibPerVCPU),
@@ -2036,7 +2041,7 @@ func expandVMAttributesModel(inputList []VMAttributesModel) *fleets.VMAttributes
 		NetworkInterfaceCount:     expandVMAttributeMinMaxIntegerModel(input.NetworkInterfaceCount),
 		RdmaNetworkInterfaceCount: expandVMAttributeMinMaxIntegerModel(input.RdmaNetworkInterfaceCount),
 		RdmaSupport:               pointer.To(fleets.VMAttributeSupport(input.RdmaSupport)),
-		VMCategories:              expandVMCategoryModelArray(input.VMCategories),
+		VMCategories:              expandVMCategorys(input.VMCategories),
 	}
 
 	output.MemoryInGiB = pointer.From(expandVMAttributeMinMaxDoubleModel(input.MemoryInGib))
@@ -2059,7 +2064,7 @@ func expandVMAttributeMinMaxIntegerModel(inputList []VMAttributeMinMaxIntegerMod
 	return &output
 }
 
-func expandAcceleratorManufacturerModelArray(inputList []string) *[]fleets.AcceleratorManufacturer {
+func expandAcceleratorManufacturers(inputList []string) *[]fleets.AcceleratorManufacturer {
 	if len(inputList) == 0 {
 		return nil
 	}
@@ -2075,46 +2080,58 @@ func expandAcceleratorManufacturerModelArray(inputList []string) *[]fleets.Accel
 	return &result
 }
 
-func expandAcceleratorTypeModelArray(inputList []AcceleratorTypeModel) *[]fleets.AcceleratorType {
+func expandAcceleratorTypes(inputList []string) *[]fleets.AcceleratorType {
+	if len(inputList) == 0 {
+		return nil
+	}
+
 	var outputList []fleets.AcceleratorType
 	for _, v := range inputList {
-		input := v
-		output := fleets.AcceleratorType{}
-
-		outputList = append(outputList, output)
+		if v != "" {
+			outputList = append(outputList, fleets.AcceleratorType(v))
+		}
 	}
 	return &outputList
 }
 
-func expandArchitectureTypeModelArray(inputList []ArchitectureTypeModel) *[]fleets.ArchitectureType {
+func expandArchitectureTypes(inputList []string) *[]fleets.ArchitectureType {
+	if len(inputList) == 0 {
+		return nil
+	}
+
 	var outputList []fleets.ArchitectureType
 	for _, v := range inputList {
-		input := v
-		output := fleets.ArchitectureType{}
-
-		outputList = append(outputList, output)
+		if v != "" {
+			outputList = append(outputList, fleets.ArchitectureType(v))
+		}
 	}
 	return &outputList
 }
 
-func expandCPUManufacturerModelArray(inputList []CPUManufacturerModel) *[]fleets.CPUManufacturer {
+func expandCPUManufacturers(inputList []string) *[]fleets.CPUManufacturer {
+	if len(inputList) == 0 {
+		return nil
+	}
+
 	var outputList []fleets.CPUManufacturer
 	for _, v := range inputList {
-		input := v
-		output := fleets.CPUManufacturer{}
-
-		outputList = append(outputList, output)
+		if v != "" {
+			outputList = append(outputList, fleets.CPUManufacturer(v))
+		}
 	}
 	return &outputList
 }
 
-func expandLocalStorageDiskTypeModelArray(inputList []LocalStorageDiskTypeModel) *[]fleets.LocalStorageDiskType {
+func expandLocalStorageDiskTypes(inputList []string) *[]fleets.LocalStorageDiskType {
+	if len(inputList) == 0 {
+		return nil
+	}
+
 	var outputList []fleets.LocalStorageDiskType
 	for _, v := range inputList {
-		input := v
-		output := fleets.LocalStorageDiskType{}
-
-		outputList = append(outputList, output)
+		if v != "" {
+			outputList = append(outputList, fleets.LocalStorageDiskType(v))
+		}
 	}
 	return &outputList
 }
@@ -2123,6 +2140,7 @@ func expandVMAttributeMinMaxDoubleModel(inputList []VMAttributeMinMaxDoubleModel
 	if len(inputList) == 0 {
 		return nil
 	}
+
 	input := &inputList[0]
 	output := fleets.VMAttributeMinMaxDouble{
 		Max: &input.Max,
@@ -2132,18 +2150,21 @@ func expandVMAttributeMinMaxDoubleModel(inputList []VMAttributeMinMaxDoubleModel
 	return &output
 }
 
-func expandVMCategoryModelArray(inputList []VMCategoryModel) *[]fleets.VMCategory {
+func expandVMCategorys(inputList []string) *[]fleets.VMCategory {
+	if len(inputList) == 0 {
+		return nil
+	}
+
 	var outputList []fleets.VMCategory
 	for _, v := range inputList {
-		input := v
-		output := fleets.VMCategory{}
-
-		outputList = append(outputList, output)
+		if v != "" {
+			outputList = append(outputList, fleets.VMCategory(v))
+		}
 	}
 	return &outputList
 }
 
-func expandVMSizeProfileModelArray(inputList []VMSizeProfileModel) *[]fleets.VMSizeProfile {
+func expandVMSizeProfileModel(inputList []VMSizeProfileModel) *[]fleets.VMSizeProfile {
 	if len(inputList) == 0 {
 		return nil
 	}
@@ -2161,7 +2182,7 @@ func expandVMSizeProfileModelArray(inputList []VMSizeProfileModel) *[]fleets.VMS
 	return &outputList
 }
 
-func flattenAdditionalLocationProfileModel(input *fleets.AdditionalLocationsProfile) ([]AdditionalLocationProfileModel, error) {
+func flattenAdditionalLocationProfileModel(input *fleets.AdditionalLocationsProfile, metadata sdk.ResourceMetaData) ([]AdditionalLocationProfileModel, error) {
 	var outputList []AdditionalLocationProfileModel
 	if input == nil {
 		return outputList, nil
@@ -2171,7 +2192,7 @@ func flattenAdditionalLocationProfileModel(input *fleets.AdditionalLocationsProf
 		output := AdditionalLocationProfileModel{
 			Location: input.Location,
 		}
-		virtualMachineProfileOverrideValue, err := flattenVirtualMachineProfileModel(input.VirtualMachineProfileOverride)
+		virtualMachineProfileOverrideValue, err := flattenVirtualMachineProfileModel(input.VirtualMachineProfileOverride, metadata)
 		if err != nil {
 			return nil, err
 		}
@@ -2185,14 +2206,14 @@ func flattenAdditionalLocationProfileModel(input *fleets.AdditionalLocationsProf
 	return append(outputList, output), nil
 }
 
-func flattenVirtualMachineProfileModel(input *fleets.BaseVirtualMachineProfile) ([]VirtualMachineProfileModel, error) {
+func flattenVirtualMachineProfileModel(input *fleets.BaseVirtualMachineProfile, metadata sdk.ResourceMetaData) ([]VirtualMachineProfileModel, error) {
 	var outputList []VirtualMachineProfileModel
 	if input == nil {
 		return outputList, nil
 	}
 	output := VirtualMachineProfileModel{
 		GalleryApplicationProfile: flattenApplicationProfileModel(input.ApplicationProfile),
-		VMSize:                    flattenVirtualMachineScaleSetHardwareProfileModel(input.HardwareProfile),
+		VMSize:                    flattenVMSizeModel(input.HardwareProfile),
 		NetworkInterface:          flattenNetworkInterfaceModel(input.NetworkProfile),
 		OsProfile:                 flattenOSProfileModel(input.OsProfile),
 		SecurityPostureReference:  flattenSecurityPostureReferenceModel(input.SecurityPostureReference),
@@ -2235,11 +2256,10 @@ func flattenVirtualMachineProfileModel(input *fleets.BaseVirtualMachineProfile) 
 		output.NetworkApiVersion = string(pointer.From(np.NetworkApiVersion))
 	}
 
-	extensionProfileValue, err := flattenExtensionModel(input.ExtensionProfile)
+	extensionProfileValue, err := flattenExtensionModel(input.ExtensionProfile, metadata)
 	if err != nil {
 		return nil, err
 	}
-
 	output.Extensions = extensionProfileValue
 
 	if input.LicenseType != nil {
@@ -2274,322 +2294,78 @@ func flattenApplicationProfileModel(input *fleets.ApplicationProfile) []GalleryA
 	return outputList
 }
 
-
-func flattenExtensionModel(input *fleets.VirtualMachineScaleSetExtensionProfile, d *pluginsdk.ResourceData) ([]ExtensionsModel, error) {
+func flattenExtensionModel(input *fleets.VirtualMachineScaleSetExtensionProfile, metadata sdk.ResourceMetaData) ([]ExtensionsModel, error) {
 	var outputList []ExtensionsModel
-	if input == nil || input.Extensions == nil{
+	if input == nil || input.Extensions == nil {
 		return outputList, nil
 	}
+
 	output := ExtensionsModel{}
-	//extensionsValue, err := flattenVirtualMachineScaleSetExtensionModelArray(input.Extensions)
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	// extensionsFromState holds the "extension" block, which is used to retrieve the "protected_settings" to fill it back the state,
-	// since it is not returned from the API.
-	//extensionsFromState := map[string]map[string]interface{}{}
-	//if extSet, ok := d.GetOk("extension"); ok && extSet != nil {
-	//	extensions := extSet.(*pluginsdk.Set).List()
-	//	for _, ext := range extensions {
-	//		if ext == nil {
-	//			continue
-	//		}
-	//		ext := ext.(map[string]interface{})
-	//		extensionsFromState[ext["name"].(string)] = ext
-	//	}
-	//}
-
 	for _, input := range *input.Extensions {
 		output := ExtensionsModel{}
 		if input.Name != nil {
 			output.Name = pointer.From(input.Name)
 		}
 
-		if props := input.Properties; props != nil{
+		if props := input.Properties; props != nil {
 			output.Publisher = pointer.From(props.Publisher)
 			output.Type = pointer.From(props.Type)
 			output.TypeHandlerVersion = pointer.From(props.TypeHandlerVersion)
 			output.AutoUpgradeMinorVersionEnabled = pointer.From(props.EnableAutomaticUpgrade)
 			output.AutomaticUpgradeEnabled = pointer.From(props.EnableAutomaticUpgrade)
 			output.ForceUpdateTag = pointer.From(props.ForceUpdateTag)
-			// protected_settings isn't returned, so we attempt to get it from state otherwise set to empty string
-			//if ext, ok := extensionsFromState[name]; ok {
-			//	if protectedSettingsFromState, ok := ext["protected_settings"]; ok {
-			//		if protectedSettingsFromState.(string) != "" && protectedSettingsFromState.(string) != "{}" {
-			//			output.ProtectedSettingsJson = protectedSettingsFromState.(string)
-			//		}
-			//	}
-			//}
-			output.ProtectedSettingsJson = pointer.From(props.ProtectedSettings)
-			output.AutomaticUpgradeEnabled = pointer.From(props.EnableAutomaticUpgrade)
-			output.AutomaticUpgradeEnabled = pointer.From(props.EnableAutomaticUpgrade)
-			output.AutomaticUpgradeEnabled = pointer.From(props.EnableAutomaticUpgrade)
-			output.AutomaticUpgradeEnabled = pointer.From(props.EnableAutomaticUpgrade)
-
-
-		}
-		//propertiesValue, err := flattenVirtualMachineScaleSetExtensionModel(input.Properties)
-		//if err != nil {
-		//	return nil, err
-		//}
-
-		//output.Properties = propertiesValue
-		if input.AutoUpgradeMinorVersion != nil {
-			output.AutoUpgradeMinorVersionEnabled = *input.AutoUpgradeMinorVersion
-		}
-
-		if input.EnableAutomaticUpgrade != nil {
-			output.EnableAutomaticUpgrade = *input.EnableAutomaticUpgrade
-		}
-
-		if input.ForceUpdateTag != nil {
-			output.ForceUpdateTag = *input.ForceUpdateTag
-		}
-
-		if input.ProtectedSettingsJson != nil && *input.ProtectedSettingsJson != nil {
-
-			protectedSettingsValue, err := json.Marshal(*input.ProtectedSettingsJson)
+			// protected_settings_json isn't returned, so we attempt to get it from state otherwise set to empty string
+			var model ExtensionsModel
+			err := metadata.Decode(&model)
 			if err != nil {
-				return outputList, err
+				return nil, err
 			}
-
-			output.ProtectedSettingsJson = string(protectedSettingsValue)
-		}
-
-		if input.ProvisionAfterExtensions != nil {
-			output.ProvisionAfterExtensions = *input.ProvisionAfterExtensions
-		}
-
-		if input.ProvisioningState != nil {
-			output.ProvisioningState = *input.ProvisioningState
-		}
-
-		if input.Publisher != nil {
-			output.Publisher = *input.Publisher
-		}
-
-		if input.SettingsJson != nil && *input.SettingsJson != nil {
-
-			settingsValue, err := json.Marshal(*input.SettingsJson)
-			if err != nil {
-				return outputList, err
+			if model.ProtectedSettingsJson != "" {
+				output.ProtectedSettingsJson = model.ProtectedSettingsJson
 			}
-
-			output.SettingsJson = string(settingsValue)
+			output.ProtectedSettingsFromKeyVault = flattenProtectedSettingsFromKeyVaultModel(props.ProtectedSettingsFromKeyVault)
+			output.ProvisionAfterExtensions = pointer.From(props.ProvisionAfterExtensions)
+			var setting string
+			if props.Settings != nil {
+				setting, err = pluginsdk.FlattenJsonToString(*props.Settings)
+				if err != nil {
+					return nil, fmt.Errorf("flatenning `settings`: %+v", err)
+				}
+			}
+			output.SettingsJson = setting
+			output.SuppressFailuresEnabled = pointer.From(props.SuppressFailures)
 		}
 
-		if input.SuppressFailures != nil {
-			output.SuppressFailures = *input.SuppressFailures
-		}
-
-		if input.Type != nil {
-			output.Type = *input.Type
-		}
-
-		if input.TypeHandlerVersion != nil {
-			output.TypeHandlerVersion = *input.TypeHandlerVersion
-		}
-
-
-		if input.Type != nil {
-			output.Type = *input.Type
-		}
 		outputList = append(outputList, output)
-	}
-
-	if input.ExtensionsTimeBudget != nil {
-		output.ExtensionsTimeBudget = *input.ExtensionsTimeBudget
 	}
 
 	return append(outputList, output), nil
 }
 
-func flattenVirtualMachineScaleSetExtensionModelArray(inputList *[]fleets.VirtualMachineScaleSetExtension) ([]VirtualMachineScaleSetExtensionModel, error) {
-	var outputList []VirtualMachineScaleSetExtensionModel
-	if inputList == nil {
-		return outputList, nil
-	}
-	for _, input := range *inputList {
-		output := VirtualMachineScaleSetExtensionModel{}
-
-		if input.Id != nil {
-			output.Id = *input.Id
-		}
-
-		if input.Name != nil {
-			output.Name = *input.Name
-		}
-
-		if input.AutoUpgradeMinorVersion != nil {
-			output.AutoUpgradeMinorVersionEnabled = *input.AutoUpgradeMinorVersion
-		}
-
-		if input.EnableAutomaticUpgrade != nil {
-			output.EnableAutomaticUpgrade = *input.EnableAutomaticUpgrade
-		}
-
-		if input.ForceUpdateTag != nil {
-			output.ForceUpdateTag = *input.ForceUpdateTag
-		}
-
-		if input.ProtectedSettingsJson != nil && *input.ProtectedSettingsJson != nil {
-
-			protectedSettingsValue, err := json.Marshal(*input.ProtectedSettingsJson)
-			if err != nil {
-				return outputList, err
-			}
-
-			output.ProtectedSettingsJson = string(protectedSettingsValue)
-		}
-
-		if input.ProvisionAfterExtensions != nil {
-			output.ProvisionAfterExtensions = *input.ProvisionAfterExtensions
-		}
-
-		if input.ProvisioningState != nil {
-			output.ProvisioningState = *input.ProvisioningState
-		}
-
-		if input.Publisher != nil {
-			output.Publisher = *input.Publisher
-		}
-
-		if input.SettingsJson != nil && *input.SettingsJson != nil {
-
-			settingsValue, err := json.Marshal(*input.SettingsJson)
-			if err != nil {
-				return outputList, err
-			}
-
-			output.SettingsJson = string(settingsValue)
-		}
-
-		if input.SuppressFailures != nil {
-			output.SuppressFailures = *input.SuppressFailures
-		}
-
-		if input.Type != nil {
-			output.Type = *input.Type
-		}
-
-		if input.TypeHandlerVersion != nil {
-			output.TypeHandlerVersion = *input.TypeHandlerVersion
-		}
-
-
-		if input.Type != nil {
-			output.Type = *input.Type
-		}
-		outputList = append(outputList, output)
-	}
-	return outputList, nil
-}
-
-func flattenVirtualMachineScaleSetExtensionModel(input *fleets.VirtualMachineScaleSetExtensionProperties) ([]VirtualMachineScaleSetExtensionModel, error) {
-	var outputList []VirtualMachineScaleSetExtensionModel
-	if input == nil {
-		return outputList, nil
-	}
-	output := VirtualMachineScaleSetExtensionModel{
-		ProtectedSettingsFromKeyVault: flattenKeyVaultSecretReferenceModel(input.ProtectedSettingsFromKeyVault),
-	}
-	if input.AutoUpgradeMinorVersion != nil {
-		output.AutoUpgradeMinorVersionEnabled = *input.AutoUpgradeMinorVersion
-	}
-
-	if input.EnableAutomaticUpgrade != nil {
-		output.EnableAutomaticUpgrade = *input.EnableAutomaticUpgrade
-	}
-
-	if input.ForceUpdateTag != nil {
-		output.ForceUpdateTag = *input.ForceUpdateTag
-	}
-
-	if input.ProtectedSettingsJson != nil && *input.ProtectedSettingsJson != nil {
-
-		protectedSettingsValue, err := json.Marshal(*input.ProtectedSettingsJson)
-		if err != nil {
-			return outputList, err
-		}
-
-		output.ProtectedSettingsJson = string(protectedSettingsValue)
-	}
-
-	if input.ProvisionAfterExtensions != nil {
-		output.ProvisionAfterExtensions = *input.ProvisionAfterExtensions
-	}
-
-	if input.ProvisioningState != nil {
-		output.ProvisioningState = *input.ProvisioningState
-	}
-
-	if input.Publisher != nil {
-		output.Publisher = *input.Publisher
-	}
-
-	if input.SettingsJson != nil && *input.SettingsJson != nil {
-
-		settingsValue, err := json.Marshal(*input.SettingsJson)
-		if err != nil {
-			return outputList, err
-		}
-
-		output.SettingsJson = string(settingsValue)
-	}
-
-	if input.SuppressFailures != nil {
-		output.SuppressFailures = *input.SuppressFailures
-	}
-
-	if input.Type != nil {
-		output.Type = *input.Type
-	}
-
-	if input.TypeHandlerVersion != nil {
-		output.TypeHandlerVersion = *input.TypeHandlerVersion
-	}
-
-	return append(outputList, output), nil
-}
-
-func flattenKeyVaultSecretReferenceModel(input *fleets.KeyVaultSecretReference) []KeyVaultSecretReferenceModel {
-	var outputList []KeyVaultSecretReferenceModel
+func flattenProtectedSettingsFromKeyVaultModel(input *fleets.KeyVaultSecretReference) []ProtectedSettingsFromKeyVaultModel {
+	var outputList []ProtectedSettingsFromKeyVaultModel
 	if input == nil {
 		return outputList
 	}
-	output := KeyVaultSecretReferenceModel{
-		SecretUrl:   input.SecretUrl,
-		SourceVault: flattenSubResourceId(&input.SourceVault),
+
+	output := ProtectedSettingsFromKeyVaultModel{
+		SecretUrl:     input.SecretURL,
+		SourceVaultId: pointer.From(input.SourceVault.Id),
 	}
 
 	return append(outputList, output)
 }
 
-func flattenVirtualMachineScaleSetHardwareProfileModel(input *fleets.VirtualMachineScaleSetHardwareProfile) []VirtualMachineScaleSetHardwareProfileModel {
-	var outputList []VirtualMachineScaleSetHardwareProfileModel
+func flattenVMSizeModel(input *fleets.VirtualMachineScaleSetHardwareProfile) []VMSizeModel {
+	var outputList []VMSizeModel
 	if input == nil {
 		return outputList
 	}
-	output := VirtualMachineScaleSetHardwareProfileModel{
-		VMSizeProperties: flattenVMSizePropertiesModel(input.VMSizeProperties),
-	}
 
-	return append(outputList, output)
-}
-
-func flattenVMSizePropertiesModel(input *fleets.VMSizeProperties) []VMSizePropertiesModel {
-	var outputList []VMSizePropertiesModel
-	if input == nil {
-		return outputList
-	}
-	output := VMSizePropertiesModel{}
-	if input.VCPUsAvailable != nil {
-		output.VCPUAvailableCount = *input.VCPUsAvailable
-	}
-
-	if input.VCPUsPerCore != nil {
-		output.VCPUPerCoreCount = *input.VCPUsPerCore
+	output := VMSizeModel{}
+	if props := input.VMSizeProperties; props != nil {
+		output.VCPUAvailableCount = pointer.From(props.VCPUsAvailable)
+		output.VCPUPerCoreCount = pointer.From(props.VCPUsPerCore)
 	}
 
 	return append(outputList, output)
@@ -2689,9 +2465,6 @@ func flattenSubResourceId(inputList []fleets.SubResource) []string {
 	}
 	return outputList
 }
-
-
-
 
 func flattenPublicIPAddressModel(input *fleets.VirtualMachineScaleSetPublicIPAddressConfiguration) []PublicIPAddressModel {
 	var outputList []PublicIPAddressModel
@@ -3045,41 +2818,41 @@ func flattenOSDiskModel(input *fleets.VirtualMachineScaleSetOSDisk) []StoragePro
 	}
 
 	output := StorageProfileOSDiskModel{
-		ManagedDisk:      flattenManagedDiskModel(input.ManagedDisk),
+		ManagedDisk: flattenManagedDiskModel(input.ManagedDisk),
 	}
-	if v := input.DiffDiskSettings; v != nil{
+	if v := input.DiffDiskSettings; v != nil {
 		output.DiffDiskOption = string(pointer.From(v.Option))
 		output.DiffDiskPlacement = string(pointer.From(v.Placement))
 	}
 
-	if v := input.Image; v != nil{
+	if v := input.Image; v != nil {
 		output.ImageUri = pointer.From(v.Uri)
 	}
-	output.CreateOption =    string(input.CreateOption)
+	output.CreateOption = string(input.CreateOption)
 	output.Caching = string(pointer.From(input.Caching))
 	output.DeleteOption = string(pointer.From(input.DeleteOption))
 	output.DiskSizeInGB = pointer.From(input.DiskSizeGB)
 	output.Name = pointer.From(input.Name)
-	output.OsType = string(pointer.From(input.OsType)))
+	output.OsType = string(pointer.From(input.OsType))
 	output.VhdContainers = pointer.From(input.VhdContainers)
 	output.WriteAcceleratorEnabled = pointer.From(input.WriteAcceleratorEnabled)
 
 	return append(outputList, output)
 }
 
-func flattenComputeProfileModel(input *fleets.ComputeProfile) ([]ComputeProfileModel, error) {
+func flattenComputeProfileModel(input *fleets.ComputeProfile, metadata sdk.ResourceMetaData) ([]ComputeProfileModel, error) {
 	var outputList []ComputeProfileModel
 	if input == nil {
 		return outputList, nil
 	}
 
 	output := ComputeProfileModel{}
-	if v := input.AdditionalVirtualMachineCapabilities; v != nil{
-		output.AdditionalCapabilitiesHibernationEnabled =  pointer.From(v.HibernationEnabled)
-		output.AdditionalCapabilitiesUltraSSDEnabled =  pointer.From(v.UltraSSDEnabled)
+	if v := input.AdditionalVirtualMachineCapabilities; v != nil {
+		output.AdditionalCapabilitiesHibernationEnabled = pointer.From(v.HibernationEnabled)
+		output.AdditionalCapabilitiesUltraSSDEnabled = pointer.From(v.UltraSSDEnabled)
 	}
 
-	baseVirtualMachineProfileValue, err := flattenVirtualMachineProfileModel(&input.BaseVirtualMachineProfile)
+	baseVirtualMachineProfileValue, err := flattenVirtualMachineProfileModel(&input.BaseVirtualMachineProfile, metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -3089,7 +2862,6 @@ func flattenComputeProfileModel(input *fleets.ComputeProfile) ([]ComputeProfileM
 
 	return append(outputList, output), nil
 }
-
 
 func flattenPlanModel(input *fleets.Plan) []PlanModel {
 	var outputList []PlanModel
@@ -3171,7 +2943,6 @@ func flattenVMAttributesModel(input *fleets.VMAttributes) []VMAttributesModel {
 	return append(outputList, output)
 }
 
-
 func flattenVMAttributeMinMaxIntegerModel(input *fleets.VMAttributeMinMaxInteger) []VMAttributeMinMaxIntegerModel {
 	var outputList []VMAttributeMinMaxIntegerModel
 	if input == nil {
@@ -3210,7 +2981,7 @@ func flattenToStringSlice[T any](inputList *[]T) []string {
 	return result
 }
 
-func flattenVMSizeProfileModelArray(inputList *[]fleets.VMSizeProfile) []VMSizeProfileModel {
+func flattenVMSizeProfileModel(inputList *[]fleets.VMSizeProfile) []VMSizeProfileModel {
 	var outputList []VMSizeProfileModel
 	if inputList == nil {
 		return outputList

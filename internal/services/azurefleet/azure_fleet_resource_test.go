@@ -1,4 +1,4 @@
- azurefleet_test
+package azurefleet_test
 
 import (
 	"context"
