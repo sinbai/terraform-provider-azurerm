@@ -37,6 +37,7 @@ import (
 	authorization "github.com/hashicorp/terraform-provider-azurerm/internal/services/authorization/client"
 	automanage "github.com/hashicorp/terraform-provider-azurerm/internal/services/automanage/client"
 	automation "github.com/hashicorp/terraform-provider-azurerm/internal/services/automation/client"
+	azurefleet "github.com/hashicorp/terraform-provider-azurerm/internal/services/azurefleet/client"
 	azureStackHCI "github.com/hashicorp/terraform-provider-azurerm/internal/services/azurestackhci/client"
 	batch "github.com/hashicorp/terraform-provider-azurerm/internal/services/batch/client"
 	blueprints "github.com/hashicorp/terraform-provider-azurerm/internal/services/blueprints/client"
@@ -172,6 +173,7 @@ type Client struct {
 	Authorization                     *authorization.Client
 	Automanage                        *automanage.Client
 	Automation                        *automation.Client
+	AzureFleet                        *azurefleet.Client
 	AzureStackHCI                     *azurestackhci_v2024_01_01.Client
 	Batch                             *batch.Client
 	Blueprints                        *blueprints.Client
@@ -340,6 +342,9 @@ func (client *Client) Build(ctx context.Context, o *common.ClientOptions) error 
 	}
 	if client.Automation, err = automation.NewClient(o); err != nil {
 		return fmt.Errorf("building clients for Automation: %+v", err)
+	}
+	if client.AzureFleet, err = azurefleet.NewClient(o); err != nil {
+		return fmt.Errorf("building clients for Azure Fleet: %+v", err)
 	}
 	if client.AzureStackHCI, err = azureStackHCI.NewClient(o); err != nil {
 		return fmt.Errorf("building clients for AzureStackHCI: %+v", err)
