@@ -6,9 +6,11 @@ import (
 
 type Registration struct{}
 
-var (
-	_ sdk.TypedServiceRegistration = Registration{}
-)
+var _ sdk.TypedServiceRegistration = Registration{}
+
+func (r Registration) AssociatedGitHubLabel() string {
+	return "service/azure-fleet"
+}
 
 // Name is the name of this Service
 func (r Registration) Name() string {

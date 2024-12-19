@@ -78,6 +78,11 @@ service/automation:
   - any-glob-to-any-file:
     - internal/services/automation/**/*
 
+service/azure-fleet:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/azurefleet/**/*
+
 service/azure-stack-hci:
 - changed-files:
   - any-glob-to-any-file:
