@@ -79,11 +79,6 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
-					// need to test the possible values
-					//ValidateFunc: validation.StringInSlice([]string{
-					//	"RHEL_BYOS",
-					//	"SLES_BYOS",
-					//}, false),
 				},
 
 				"network_health_probe_id": {

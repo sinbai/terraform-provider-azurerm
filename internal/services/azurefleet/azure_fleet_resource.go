@@ -455,8 +455,9 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 					},
 
 					"rank": {
-						Type:     pluginsdk.TypeInt,
-						Optional: true,
+						Type:         pluginsdk.TypeInt,
+						Optional:     true,
+						ValidateFunc: validation.IntBetween(0, 65535),
 					},
 				},
 			},
@@ -474,7 +475,7 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 			},
 		},
 
-		"identity": commonschema.SystemAssignedUserAssignedIdentityOptional(),
+		"identity": commonschema.UserAssignedIdentityOptional(),
 
 		"plan": {
 			Type:     pluginsdk.TypeList,
@@ -483,20 +484,23 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"name": {
-						Type:         pluginsdk.TypeString,
-						Required:     true,
+						Type:     pluginsdk.TypeString,
+						Required: true,
+						//ForceNew:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
 
 					"product": {
-						Type:         pluginsdk.TypeString,
-						Required:     true,
+						Type:     pluginsdk.TypeString,
+						Required: true,
+						//ForceNew:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
 
 					"publisher": {
-						Type:         pluginsdk.TypeString,
-						Required:     true,
+						Type:     pluginsdk.TypeString,
+						Required: true,
+						//ForceNew:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
 
@@ -820,7 +824,7 @@ func vmAttributesMaxMinIntegerSchema(parent string) map[string]*pluginsdk.Schema
 		"min": {
 			Type:         pluginsdk.TypeInt,
 			Optional:     true,
-			ValidateFunc: validation.FloatAtLeast(0),
+			ValidateFunc: validation.IntAtLeast(0),
 			AtLeastOneOf: []string{"vm_attributes.0." + parent + ".0.max", "vm_attributes.0." + parent + ".0.min"},
 		},
 	}
