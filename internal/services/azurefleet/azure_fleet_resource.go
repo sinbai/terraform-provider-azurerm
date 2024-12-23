@@ -443,26 +443,6 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 			},
 		},
 
-		"vm_sizes_profile": {
-			Type:     pluginsdk.TypeList,
-			Required: true,
-			Elem: &pluginsdk.Resource{
-				Schema: map[string]*pluginsdk.Schema{
-					"name": {
-						Type:         pluginsdk.TypeString,
-						Required:     true,
-						ValidateFunc: validation.StringIsNotEmpty,
-					},
-
-					"rank": {
-						Type:         pluginsdk.TypeInt,
-						Optional:     true,
-						ValidateFunc: validation.IntBetween(0, 65535),
-					},
-				},
-			},
-		},
-
 		"additional_location_profile": {
 			Type:     pluginsdk.TypeList,
 			Optional: true,
@@ -617,15 +597,38 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 
 		"vm_attributes": vmAttributesSchema(),
 
+		"vm_sizes_profile": {
+			Type:     pluginsdk.TypeList,
+			Optional: true,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"name": {
+						Type:         pluginsdk.TypeString,
+						Required:     true,
+						ValidateFunc: validation.StringIsNotEmpty,
+					},
+
+					"rank": {
+						Type:         pluginsdk.TypeInt,
+						Optional:     true,
+						ValidateFunc: validation.IntBetween(0, 65535),
+					},
+				},
+			},
+			ConflictsWith: []string{"vm_attributes.0.excluded_vm_sizes_profile"},
+			AtLeastOneOf:  []string{"vm_sizes_profile", "vm_attributes"},
+		},
+
 		"zones": commonschema.ZonesMultipleOptionalForceNew(),
 	}
 }
 
 func vmAttributesSchema() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
-		Type:     pluginsdk.TypeList,
-		Optional: true,
-		MaxItems: 1,
+		Type:         pluginsdk.TypeList,
+		Optional:     true,
+		MaxItems:     1,
+		AtLeastOneOf: []string{"vm_sizes_profile", "vm_attributes"},
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"memory_in_gib": {
@@ -725,6 +728,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 						Type:         pluginsdk.TypeString,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
+					ConflictsWith: []string{"vm_sizes_profile"},
 				},
 
 				"local_storage_disk_types": {
@@ -956,6 +960,11 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 			}
 
 			properties := existing.Model
+
+			// set `admin_password` as API requires 'osProfile.adminPassword' when updating but the GET API does not return the password
+			if v := properties.Properties.ComputeProfile.BaseVirtualMachineProfile.OsProfile; v != nil {
+				v.AdminPassword = pointer.To(model.ComputeProfile[0].VirtualMachineProfile[0].OsProfile[0].AdminPassword)
+			}
 			if metadata.ResourceData.HasChange("identity") {
 				identityValue, err := identity.ExpandLegacySystemAndUserAssignedMapFromModel(model.Identity)
 				if err != nil {
@@ -1000,8 +1009,6 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 			if metadata.ResourceData.HasChange("vm_sizes_profile") {
 				properties.Properties.VMSizesProfile = pointer.From(expandVMSizeProfileModel(model.VMSizesProfile))
 			}
-
-			//properties.SystemData = nil
 
 			if metadata.ResourceData.HasChange("tags") {
 				properties.Tags = &model.Tags
@@ -1134,21 +1141,14 @@ func (r AzureFleetResource) CustomizeDiff() sdk.ResourceFunc {
 						return fmt.Errorf("enabling `spot_priority_profile.0.maintain_enabled` requires all qualified availability zones in the region to be supported")
 					}
 				} else {
-					// need to confirm (portal does not allow update but API does): capacity can only be updated when maintain_enabled is enabled capacity preference is set to maintain
-					//if oldVal, newVal := metadata.ResourceDiff.GetChange("spot_priority_profile.0.capacity"); oldVal.(int) != newVal.(int) {
-					//	if err := metadata.ResourceDiff.ForceNew("spot_priority_profile.0.capacity"); err != nil {
-					//		return err
-					//	}
-					//}
-
-					//if metadata.ResourceData.HasChange("spot_priority_profile.0.capacity") {
-					//	if oldVal, newVal := metadata.ResourceDiff.GetChange("spot_priority_profile.0.capacity"); oldVal.(int) != newVal.(int) {
-					//
-					//		if err := metadata.ResourceDiff.ForceNew("spot_priority_profile.0.capacity"); err != nil {
-					//			return err
-					//		}
-					//	}
-					//}
+					// comment "Target capacity can only be updated when capacity preference is set to maintain" on Azure Portal
+					// API allows update capacity although maintain_enabled is disabled
+					// Need to confirm the truth
+					if metadata.ResourceDiff.HasChange("spot_priority_profile.0.capacity") {
+						if err := metadata.ResourceDiff.ForceNew("spot_priority_profile.0.capacity"); err != nil {
+							return err
+						}
+					}
 				}
 
 				if state.SpotPriorityProfile[0].MinCapacity > state.SpotPriorityProfile[0].Capacity {

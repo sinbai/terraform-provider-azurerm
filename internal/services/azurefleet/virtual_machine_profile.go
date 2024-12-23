@@ -30,7 +30,6 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 	vmProfile := &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
 		Required: required,
-		ForceNew: true,
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
@@ -49,7 +48,6 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 				"boot_diagnostic_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
-					ForceNew: true,
 				},
 
 				"boot_diagnostic_storage_account_endpoint": {
