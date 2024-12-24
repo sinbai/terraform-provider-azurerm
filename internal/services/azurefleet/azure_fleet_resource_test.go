@@ -57,6 +57,62 @@ func TestAccAzureFleet_spotCapacity(t *testing.T) {
 	})
 }
 
+func TestAccAzureFleet_spotVmSizeProfile(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
+	r := AzureFleetResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.spotVmSizeProfile(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		{
+			Config: r.spotVmSizeProfileUpdate(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		{
+			Config: r.spotVmSizeProfile(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+	})
+}
+
+func TestAccAzureFleet_additionalLocationProfile(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
+	r := AzureFleetResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.fleet(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		{
+			Config: r.fleetUpdate(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		{
+			Config: r.fleet(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+	})
+}
+
 func TestAccAzureFleet_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
 	r := AzureFleetResource{}
@@ -350,6 +406,154 @@ resource "azurerm_azure_fleet" "test" {
   }
   vm_sizes_profile {
     name = "Standard_D2as_v4"
+  }
+
+  compute_profile {
+    virtual_machine_profile {
+      storage_profile {
+        image_reference {
+          offer     = "0001-com-ubuntu-server-focal"
+          publisher = "canonical"
+          sku       = "20_04-lts-gen2"
+          version   = "latest"
+        }
+
+        os_disk {
+          caching       = "ReadWrite"
+          create_option = "FromImage"
+          os_type       = "Linux"
+          managed_disk {
+            storage_account_type = "Standard_LRS"
+          }
+        }
+      }
+
+      os_profile {
+        computer_name_prefix = "prefix"
+        admin_username       = "azureuser"
+        admin_password       = "TestPassword$0"
+        linux_configuration {
+          password_authentication_enabled = true
+        }
+      }
+
+      network_interface {
+        name                           = "networkProTest"
+        accelerated_networking_enabled = false
+        ip_forwarding_enabled          = true
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.test.id
+        }
+        primary = true
+      }
+      network_api_version = "2020-11-01"
+    }
+  }
+  zones = ["1", "2", "3"]
+}
+`, template, data.RandomInteger, data.Locations.Primary)
+}
+
+func (r AzureFleetResource) spotVmSizeProfile(data acceptance.TestData) string {
+	template := r.template(data)
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_azure_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  spot_priority_profile {
+    maintain_enabled = true
+    capacity         = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+  vm_sizes_profile {
+    name = "Standard_D2s_v3"
+  }
+  vm_sizes_profile {
+    name = "Standard_D2as_v4"
+  }
+
+  compute_profile {
+    virtual_machine_profile {
+      storage_profile {
+        image_reference {
+          offer     = "0001-com-ubuntu-server-focal"
+          publisher = "canonical"
+          sku       = "20_04-lts-gen2"
+          version   = "latest"
+        }
+
+        os_disk {
+          caching       = "ReadWrite"
+          create_option = "FromImage"
+          os_type       = "Linux"
+          managed_disk {
+            storage_account_type = "Standard_LRS"
+          }
+        }
+      }
+
+      os_profile {
+        computer_name_prefix = "prefix"
+        admin_username       = "azureuser"
+        admin_password       = "TestPassword$0"
+        linux_configuration {
+          password_authentication_enabled = true
+        }
+      }
+
+      network_interface {
+        name                           = "networkProTest"
+        accelerated_networking_enabled = false
+        ip_forwarding_enabled          = true
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.test.id
+        }
+        primary = true
+      }
+      network_api_version = "2020-11-01"
+    }
+  }
+  zones = ["1", "2", "3"]
+}
+`, template, data.RandomInteger, data.Locations.Primary)
+}
+
+func (r AzureFleetResource) spotVmSizeProfileUpdate(data acceptance.TestData) string {
+	template := r.template(data)
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_azure_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  spot_priority_profile {
+    maintain_enabled = true
+    capacity         = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+  vm_sizes_profile {
+    name = "Standard_D2s_v3"
+  }
+  vm_sizes_profile {
+    name = "Standard_DS2_v2"
   }
 
   compute_profile {

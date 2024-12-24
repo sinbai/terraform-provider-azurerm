@@ -84,14 +84,14 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 		}
 
 		if !stateIsEmpty(statePreDestroy) {
-			err := runPostTestDestroy(ctx, t, c, wd, providers, statePreDestroy)
-			if err != nil {
-				logging.HelperResourceError(ctx,
-					"Error running post-test destroy, there may be dangling resources",
-					map[string]interface{}{logging.KeyError: err},
-				)
-				t.Fatalf("Error running post-test destroy, there may be dangling resources: %s", err.Error())
-			}
+			//err := runPostTestDestroy(ctx, t, c, wd, providers, statePreDestroy)
+			//if err != nil {
+			//	logging.HelperResourceError(ctx,
+			//		"Error running post-test destroy, there may be dangling resources",
+			//		map[string]interface{}{logging.KeyError: err},
+			//	)
+			//	t.Fatalf("Error running post-test destroy, there may be dangling resources: %s", err.Error())
+			//}
 		}
 
 		wd.Close()

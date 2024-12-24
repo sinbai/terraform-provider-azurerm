@@ -1141,12 +1141,20 @@ func (r AzureFleetResource) CustomizeDiff() sdk.ResourceFunc {
 						return fmt.Errorf("enabling `spot_priority_profile.0.maintain_enabled` requires all qualified availability zones in the region to be supported")
 					}
 				} else {
-					// comment "Target capacity can only be updated when capacity preference is set to maintain" on Azure Portal
-					// API allows update capacity although maintain_enabled is disabled
-					// Need to confirm the truth
+					// You can update your Spot VM target capacity of the Compute Fleet while it's running, if the capacity preference is set to Maintain capacity.
 					if metadata.ResourceDiff.HasChange("spot_priority_profile.0.capacity") {
 						if err := metadata.ResourceDiff.ForceNew("spot_priority_profile.0.capacity"); err != nil {
 							return err
+						}
+					}
+
+					if len(state.RegularPriorityProfile) == 0 {
+						// For Spot VMs, you may delete or replace existing VM sizes in your Compute Fleet configuration, if the capacity preference is set to Maintain capacity.
+						// In all other scenarios requiring a modification to the running Compute Fleet, you may have to delete the existing Compute Fleet and create a new one.
+						if metadata.ResourceDiff.HasChange("vm_sizes_profile") {
+							if err := metadata.ResourceDiff.ForceNew("vm_sizes_profile"); err != nil {
+								return err
+							}
 						}
 					}
 				}
