@@ -91,7 +91,7 @@ type ExtensionsModel struct {
 
 type ProtectedSettingsFromKeyVaultModel struct {
 	SecretUrl     string `tfschema:"secret_url"`
-	SourceVaultId string `tfschema:"source_vault_id"`
+	SourceVaultId string `tfschema:"source_key_vault_id"`
 }
 
 type VMSizeModel struct {
@@ -156,7 +156,7 @@ type OSProfileModel struct {
 	CustomDataBase64                   string                      `tfschema:"custom_data_base64"`
 	LinuxConfiguration                 []LinuxConfigurationModel   `tfschema:"linux_configuration"`
 	RequireGuestProvisionSignalEnabled bool                        `tfschema:"require_guest_provision_signal_enabled"`
-	OsProfileSecrets                   []OsProfileSecretsModel     `tfschema:"os_profile_secrets"`
+	Secret                             []SecretModel               `tfschema:"secret"`
 	WindowsConfiguration               []WindowsConfigurationModel `tfschema:"windows_configuration"`
 }
 
@@ -184,14 +184,14 @@ type SshKeyModel struct {
 	Path    string `tfschema:"path"`
 }
 
-type OsProfileSecretsModel struct {
-	SourceVaultId     string                  `tfschema:"source_vault_id"`
-	VaultCertificates []VaultCertificateModel `tfschema:"vault_certificates"`
+type SecretModel struct {
+	KeyVaultId   string             `tfschema:"key_vault_id"`
+	Certificates []CertificateModel `tfschema:"certificates"`
 }
 
-type VaultCertificateModel struct {
-	CertificateStore string `tfschema:"certificate_store"`
-	CertificateUrl   string `tfschema:"certificate_url"`
+type CertificateModel struct {
+	Store string `tfschema:"store"`
+	Url   string `tfschema:"url"`
 }
 
 type WindowsConfigurationModel struct {

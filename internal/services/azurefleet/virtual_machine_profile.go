@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/azurefleet/2024-11-01/fleets"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/compute/2022-03-01/capacityreservationgroups"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/compute/2022-03-01/images"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/compute/2022-03-03/galleryapplicationversions"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2023-09-01/applicationsecuritygroups"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/network/2023-11-01/networksecuritygroups"
@@ -68,6 +69,7 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 				"extensions_time_budget": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
+					Default:      "PT1H30M",
 					ValidateFunc: azValidate.ISO8601DurationBetween("PT15M", "PT2H"),
 				},
 
@@ -629,11 +631,11 @@ func osProfileSchema() *pluginsdk.Schema {
 					ValidateFunc: validation.StringIsBase64,
 				},
 
-				// need to check if this is split to two resource. if yes, this should be a required property.
 				"linux_configuration": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					MaxItems: 1,
+					Type:          pluginsdk.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"compute_profile.0.virtual_machine_profile.0.os_profile.0.windows_configuration"},
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
 							"password_authentication_enabled": {
@@ -682,28 +684,29 @@ func osProfileSchema() *pluginsdk.Schema {
 					Optional: true,
 				},
 
-				"os_profile_secrets": {
+				"secret": {
 					Type:     pluginsdk.TypeList,
 					Optional: true,
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
-							"source_vault_id": {
+							"key_vault_id": {
 								Type:         pluginsdk.TypeString,
 								Required:     true,
 								ValidateFunc: azure.ValidateResourceID,
 							},
 
-							"vault_certificates": {
+							"certificate": {
 								Type:     pluginsdk.TypeList,
 								Optional: true,
 								Elem: &pluginsdk.Resource{
 									Schema: map[string]*pluginsdk.Schema{
-										"certificate_url": {
+										"url": {
 											Type:         pluginsdk.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringIsNotEmpty,
 										},
-										"certificate_store": {
+										// linux does not contain this property?
+										"store": {
 											Type:         pluginsdk.TypeString,
 											Optional:     true,
 											ValidateFunc: validation.StringIsNotEmpty,
@@ -716,9 +719,10 @@ func osProfileSchema() *pluginsdk.Schema {
 				},
 
 				"windows_configuration": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					MaxItems: 1,
+					Type:          pluginsdk.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"compute_profile.0.virtual_machine_profile.0.os_profile.0.linux_configuration"},
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
 							"additional_unattend_content": {
@@ -1209,7 +1213,7 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 
 func storageProfileImageReferenceSchema() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
-		Type:     pluginsdk.TypeSet,
+		Type:     pluginsdk.TypeList,
 		Required: true,
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
@@ -1241,25 +1245,36 @@ func storageProfileImageReferenceSchema() *pluginsdk.Schema {
 				},
 
 				"id": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringIsNotEmpty,
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+					ValidateFunc: validation.Any(
+						images.ValidateImageID,
+						validate.SharedImageID,
+						validate.SharedImageVersionID,
+					),
 				},
 
 				"community_gallery_image_id": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringIsNotEmpty,
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+					ValidateFunc: validation.Any(
+						images.ValidateImageID,
+						validate.CommunityGalleryImageID,
+						validate.CommunityGalleryImageVersionID,
+					),
 				},
 
 				"shared_gallery_image_id": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringIsNotEmpty,
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+					ValidateFunc: validation.Any(
+						images.ValidateImageID,
+						validate.SharedGalleryImageID,
+						validate.SharedGalleryImageVersionID,
+					),
 				},
 			},
 		},
-		Set: resourceStorageProfileImageReferenceHash,
 	}
 }
 
@@ -1726,7 +1741,7 @@ func expandOSProfileModel(inputList []OSProfileModel, d *schema.ResourceData) *f
 		AdminPassword:            pointer.To(input.AdminPassword),
 		AllowExtensionOperations: pointer.To(input.ExtensionOperationsEnabled),
 		LinuxConfiguration:       expandLinuxConfigurationModel(input.LinuxConfiguration),
-		Secrets:                  expandOsProfileSecretsModel(input.OsProfileSecrets),
+		Secrets:                  expandOsProfileSecretsModel(input.Secret),
 		WindowsConfiguration:     expandWindowsConfigurationModel(input.WindowsConfiguration),
 	}
 
@@ -1824,7 +1839,7 @@ func expandSshConfigurationModel(inputList []SshKeyModel) *fleets.SshConfigurati
 	return &output
 }
 
-func expandOsProfileSecretsModel(inputList []OsProfileSecretsModel) *[]fleets.VaultSecretGroup {
+func expandOsProfileSecretsModel(inputList []SecretModel) *[]fleets.VaultSecretGroup {
 	if len(inputList) == 0 {
 		return nil
 	}
@@ -1833,8 +1848,8 @@ func expandOsProfileSecretsModel(inputList []OsProfileSecretsModel) *[]fleets.Va
 	for _, v := range inputList {
 		input := v
 		output := fleets.VaultSecretGroup{
-			SourceVault:       expandSubResource(input.SourceVaultId),
-			VaultCertificates: expandVaultCertificateModel(input.VaultCertificates),
+			SourceVault:       expandSubResource(input.KeyVaultId),
+			VaultCertificates: expandVaultCertificateModel(input.Certificates),
 		}
 
 		outputList = append(outputList, output)
@@ -1842,18 +1857,18 @@ func expandOsProfileSecretsModel(inputList []OsProfileSecretsModel) *[]fleets.Va
 	return &outputList
 }
 
-func expandVaultCertificateModel(inputList []VaultCertificateModel) *[]fleets.VaultCertificate {
+func expandVaultCertificateModel(inputList []CertificateModel) *[]fleets.VaultCertificate {
 	var outputList []fleets.VaultCertificate
 	for _, v := range inputList {
 		input := v
 		output := fleets.VaultCertificate{}
 
-		if input.CertificateStore != "" {
-			output.CertificateStore = pointer.To(input.CertificateStore)
+		if input.Store != "" {
+			output.CertificateStore = pointer.To(input.Store)
 		}
 
-		if input.CertificateUrl != "" {
-			output.CertificateURL = pointer.To(input.CertificateUrl)
+		if input.Url != "" {
+			output.CertificateURL = pointer.To(input.Url)
 		}
 		outputList = append(outputList, output)
 	}
@@ -2450,17 +2465,17 @@ func flattenNetworkInterfaceModel(input *fleets.VirtualMachineScaleSetNetworkPro
 	return outputList
 }
 
-func flattenOsProfileSecretsModel(inputList *[]fleets.VaultSecretGroup) []OsProfileSecretsModel {
-	var outputList []OsProfileSecretsModel
+func flattenOsProfileSecretsModel(inputList *[]fleets.VaultSecretGroup) []SecretModel {
+	var outputList []SecretModel
 	if inputList == nil {
 		return outputList
 	}
 	for _, input := range *inputList {
-		output := OsProfileSecretsModel{
-			VaultCertificates: flattenVaultCertificateModel(input.VaultCertificates),
+		output := SecretModel{
+			Certificates: flattenVaultCertificateModel(input.VaultCertificates),
 		}
 		if v := input.SourceVault; v != nil {
-			output.SourceVaultId = pointer.From(v.Id)
+			output.KeyVaultId = pointer.From(v.Id)
 		}
 
 		outputList = append(outputList, output)
@@ -2475,7 +2490,7 @@ func flattenOSProfileModel(input *fleets.VirtualMachineScaleSetOSProfile, d *sch
 	}
 	output := OSProfileModel{
 		LinuxConfiguration:   flattenLinuxConfigurationModel(input.LinuxConfiguration),
-		OsProfileSecrets:     flattenOsProfileSecretsModel(input.Secrets),
+		Secret:               flattenOsProfileSecretsModel(input.Secrets),
 		WindowsConfiguration: flattenWindowsConfigurationModel(input.WindowsConfiguration),
 	}
 
@@ -2489,17 +2504,17 @@ func flattenOSProfileModel(input *fleets.VirtualMachineScaleSetOSProfile, d *sch
 	return append(outputList, output), nil
 }
 
-func flattenVaultCertificateModel(inputList *[]fleets.VaultCertificate) []VaultCertificateModel {
-	var outputList []VaultCertificateModel
+func flattenVaultCertificateModel(inputList *[]fleets.VaultCertificate) []CertificateModel {
+	var outputList []CertificateModel
 	if inputList == nil {
 		return outputList
 	}
 
 	for _, input := range *inputList {
-		output := VaultCertificateModel{}
+		output := CertificateModel{}
 
-		output.CertificateStore = pointer.From(input.CertificateStore)
-		output.CertificateUrl = pointer.From(input.CertificateURL)
+		output.Store = pointer.From(input.CertificateStore)
+		output.Url = pointer.From(input.CertificateURL)
 
 		outputList = append(outputList, output)
 	}
@@ -2521,15 +2536,6 @@ func flattenWindowsConfigurationModel(input *fleets.WindowsConfiguration) []Wind
 	output.ProvisionVMAgentEnabled = pointer.From(input.ProvisionVMAgent)
 	output.TimeZone = pointer.From(input.TimeZone)
 	output.PatchSetting = flattenWindowsPatchSettingModel(input.PatchSettings)
-	//if ps := input.PatchSettings; ps != nil {
-	//	output.PatchMode = string(pointer.From(ps.PatchMode))
-	//	//output.PatchAssessmentMode = string(pointer.From(ps.AssessmentMode))
-	//	//output.HotPatchingEnabled = pointer.From(ps.EnableHotpatching)
-	//	//if v := ps.AutomaticByPlatformSettings; v != nil {
-	//	//	output.PatchBypassPlatformSafetyChecksEnabled = pointer.From(v.BypassPlatformSafetyChecksOnUserSchedule)
-	//	//	output.PatchRebootSetting = string(pointer.From(v.RebootSetting))
-	//	//}
-	//}
 
 	return append(outputList, output)
 }
