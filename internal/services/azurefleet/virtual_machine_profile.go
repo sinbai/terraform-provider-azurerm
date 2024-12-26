@@ -1135,10 +1135,10 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
-				"create_option": {
+				"os_type": {
 					Type:         pluginsdk.TypeString,
 					Required:     true,
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskCreateOptionTypes(), false),
+					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
 				"caching": {
@@ -1146,16 +1146,15 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 					Optional: true,
 					ValidateFunc: validation.StringInSlice([]string{
 						// NOTE: because there is a `None` value in the possible values, it's handled in the Create/Update and Read functions.
-						//string(fleets.CachingTypesNone),
 						string(fleets.CachingTypesReadOnly),
 						string(fleets.CachingTypesReadWrite),
 					}, false),
 				},
-
-				"os_type": {
+				"create_option": {
 					Type:         pluginsdk.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringIsNotEmpty,
+					Optional:     true,
+					Default:      string(fleets.DiskCreateOptionTypesEmpty),
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskCreateOptionTypes(), false),
 				},
 
 				"managed_disk": osDiskManagedDiskSchema(),
