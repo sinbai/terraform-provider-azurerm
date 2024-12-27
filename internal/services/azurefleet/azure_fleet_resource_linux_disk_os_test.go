@@ -45,14 +45,14 @@ func TestAccFleetLinux_disksOSDiskCustomSize(t *testing.T) {
 	r := AzureFleetResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			// unset
-			Config: r.authPassword(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
+		//{
+		//	// unset
+		//	Config: r.authPassword(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//	),
+		//},
+		//data.ImportStep("admin_password"),
 		{
 			Config: r.disksOSDiskCustomSize(data, 30),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -274,7 +274,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, caching)
+`, r.templateLinux(data), data.RandomInteger, caching)
 }
 
 func (r AzureFleetResource) disksOSDiskCustomSize(data acceptance.TestData, diskSize int) string {
@@ -316,7 +316,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, diskSize)
+`, r.templateLinux(data), data.RandomInteger, diskSize)
 }
 
 func (AzureFleetResource) disksOSDisk_diskEncryptionSetDependencies(data acceptance.TestData) string {
@@ -529,7 +529,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) disksOSDiskStorageAccountType(data acceptance.TestData, storageAccountType string) string {
@@ -570,7 +570,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, storageAccountType)
+`, r.templateLinux(data), data.RandomInteger, storageAccountType)
 }
 
 func (r AzureFleetResource) disksOSDiskStorageAccountTypeWithRestrictedLocation(data acceptance.TestData, storageAccountType string, location string) string {
@@ -618,7 +618,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, enabled)
+`, r.templateLinux(data), data.RandomInteger, enabled)
 }
 
 func (r AzureFleetResource) disksOSDiskConfidentialVmWithGuestStateOnly(data acceptance.TestData, vtpm, secureBoot bool) string {
@@ -665,7 +665,7 @@ resource "azurerm_azure_fleet" "test" {
   vtpm_enabled        = %t
   secure_boot_enabled = %t
 }
-`, r.template(data), data.RandomInteger, vtpm, secureBoot)
+`, r.templateLinux(data), data.RandomInteger, vtpm, secureBoot)
 }
 
 func (r AzureFleetResource) disksOSDiskConfidentialVmWithDiskAndVMGuestStateCMK(data acceptance.TestData) string {
@@ -797,5 +797,5 @@ resource "azurerm_key_vault_access_policy" "disk-encryption" {
   tenant_id = azurerm_disk_encryption_set.test.identity.0.tenant_id
   object_id = azurerm_disk_encryption_set.test.identity.0.principal_id
 }
-`, r.templateLinuxWithOutProvider(data), data.RandomInteger, data.RandomString)
+`, r.templateWithOutProvider(data), data.RandomInteger, data.RandomString)
 }

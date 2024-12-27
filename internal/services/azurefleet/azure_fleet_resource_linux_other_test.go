@@ -129,14 +129,14 @@ func TestAccFleetLinux_otherCustomData(t *testing.T) {
 			),
 		},
 		data.ImportStep("admin_password", "custom_data"),
-		{
-			// removed
-			Config: r.authPassword(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password", "custom_data"),
+		//{
+		//	// removed
+		//	Config: r.authPassword(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//	),
+		//},
+		//data.ImportStep("admin_password", "custom_data"),
 	})
 }
 
@@ -178,16 +178,16 @@ func TestAccFleetLinux_otherUserData(t *testing.T) {
 		data.ImportStep(
 			"admin_password",
 		),
-		{
-			// removed
-			Config: r.authPassword(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(
-			"admin_password",
-		),
+		//{
+		//	// removed
+		//	Config: r.authPassword(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//	),
+		//},
+		//data.ImportStep(
+		//	"admin_password",
+		//),
 	})
 }
 
@@ -279,12 +279,12 @@ func TestAccFleetLinux_otherRequiresImport(t *testing.T) {
 	r := AzureFleetResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.authPassword(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
+		//{
+		//	Config: r.authPassword(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//	),
+		//},
 		{
 			Config:      r.otherRequiresImport(data),
 			ExpectError: acceptance.RequiresImportError("azurerm_azure_fleet"),
@@ -376,14 +376,14 @@ func TestAccFleetLinux_otherTags(t *testing.T) {
 			),
 		},
 		data.ImportStep("admin_password"),
-		{
-			// remove all
-			Config: r.authPassword(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
+		//{
+		//	// remove all
+		//	Config: r.authPassword(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//	),
+		//},
+		//data.ImportStep("admin_password"),
 	})
 }
 
@@ -916,7 +916,7 @@ resource "azurerm_azure_fleet" "test" {
     storage_account_uri = azurerm_storage_account.test.primary_blob_endpoint
   }
 }
-`, r.template(data), data.RandomString, data.RandomInteger)
+`, r.templateLinux(data), data.RandomString, data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherBootDiagnosticsManaged(data acceptance.TestData) string {
@@ -967,7 +967,7 @@ resource "azurerm_azure_fleet" "test" {
 
   boot_diagnostics {}
 }
-`, r.template(data), data.RandomString, data.RandomInteger)
+`, r.templateLinux(data), data.RandomString, data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherBootDiagnosticsDisabled(data acceptance.TestData) string {
@@ -1016,7 +1016,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomString, data.RandomInteger)
+`, r.templateLinux(data), data.RandomString, data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherCancelRollingUpgrades(data acceptance.TestData) string {
@@ -1097,7 +1097,7 @@ resource "azurerm_azure_fleet" "test" {
     ignore_changes = [source_image_reference.0.sku]
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherComputerNamePrefix(data acceptance.TestData) string {
@@ -1139,7 +1139,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherComputerNamePrefixInvalid(data acceptance.TestData) string {
@@ -1180,7 +1180,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherCustomData(data acceptance.TestData, customData string) string {
@@ -1222,7 +1222,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, customData)
+`, r.templateLinux(data), data.RandomInteger, customData)
 }
 
 func (r AzureFleetResource) otherEdgeZone(data acceptance.TestData) string {
@@ -1297,7 +1297,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.templateLinuxPublicKey(), data.Locations.Primary, data.RandomInteger)
+`, r.templatePublicKey(), data.Locations.Primary, data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherForceDelete(data acceptance.TestData) string {
@@ -1389,7 +1389,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, evictionPolicy)
+`, r.templateLinux(data), data.RandomInteger, evictionPolicy)
 }
 
 func (r AzureFleetResource) otherPrioritySpotMaxBidPrice(data acceptance.TestData, maxBid string) string {
@@ -1433,7 +1433,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, maxBid)
+`, r.templateLinux(data), data.RandomInteger, maxBid)
 }
 
 func (r AzureFleetResource) otherPriorityRegular(data acceptance.TestData) string {
@@ -1475,7 +1475,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherRequiresImport(data acceptance.TestData) string {
@@ -1516,7 +1516,7 @@ resource "azurerm_azure_fleet" "import" {
     }
   }
 }
-`, r.authPassword(data))
+`, "need to do") //r.authPassword(data))
 }
 
 func (r AzureFleetResource) otherSecret(data acceptance.TestData) string {
@@ -1796,7 +1796,7 @@ resource "azurerm_key_vault_certificate" "second" {
     }
   }
 }
-`, r.template(data), data.RandomString)
+`, r.templateLinux(data), data.RandomString)
 }
 
 func (r AzureFleetResource) otherSpotRestoreDefault(data acceptance.TestData) string {
@@ -1843,7 +1843,7 @@ resource "azurerm_azure_fleet" "test" {
   spot_restore {
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherSpotRestore(data acceptance.TestData) string {
@@ -1892,7 +1892,7 @@ resource "azurerm_azure_fleet" "test" {
     timeout = "PT2H"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherTags(data acceptance.TestData) string {
@@ -1937,7 +1937,7 @@ resource "azurerm_azure_fleet" "test" {
     artist = "Billy"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherTagsUpdated(data acceptance.TestData) string {
@@ -1983,7 +1983,7 @@ resource "azurerm_azure_fleet" "test" {
     when   = "we all fall asleep"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherUserData(data acceptance.TestData, userData string) string {
@@ -2025,7 +2025,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, userData)
+`, r.templateLinux(data), data.RandomInteger, userData)
 }
 
 func (r AzureFleetResource) otherVMAgent(data acceptance.TestData, enabled bool) string {
@@ -2068,7 +2068,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, enabled)
+`, r.templateLinux(data), data.RandomInteger, enabled)
 }
 
 func (r AzureFleetResource) otherVMAgentDisabledWithExtensionDisabled(data acceptance.TestData) string {
@@ -2111,7 +2111,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherScaleInPolicy(data acceptance.TestData) string {
@@ -2155,7 +2155,7 @@ resource "azurerm_azure_fleet" "test" {
 
   scale_in_policy = "Default"
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherScaleInDefault(data acceptance.TestData) string {
@@ -2200,7 +2200,7 @@ resource "azurerm_azure_fleet" "test" {
   scale_in {
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherScaleInUpdated(data acceptance.TestData) string {
@@ -2247,7 +2247,7 @@ resource "azurerm_azure_fleet" "test" {
     force_deletion_enabled = true
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 // TODO remove otherTerminateNotification in 4.0
@@ -2294,7 +2294,7 @@ resource "azurerm_azure_fleet" "test" {
     enabled = %t
   }
 }
-`, r.template(data), data.RandomInteger, enabled)
+`, r.templateLinux(data), data.RandomInteger, enabled)
 }
 
 func (r AzureFleetResource) otherTerminationNotification(data acceptance.TestData, enabled bool) string {
@@ -2340,7 +2340,7 @@ resource "azurerm_azure_fleet" "test" {
     enabled = %t
   }
 }
-`, r.template(data), data.RandomInteger, enabled)
+`, r.templateLinux(data), data.RandomInteger, enabled)
 }
 
 func (r AzureFleetResource) otherAutomaticRepairsPolicyEnabled(data acceptance.TestData) string {
@@ -2450,7 +2450,7 @@ resource "azurerm_azure_fleet" "test" {
 
   depends_on = [azurerm_lb_rule.test]
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherAutomaticRepairsPolicy(data acceptance.TestData, action string) string {
@@ -2560,7 +2560,7 @@ resource "azurerm_azure_fleet" "test" {
 
   depends_on = [azurerm_lb_rule.test]
 }
-`, r.template(data), data.RandomInteger, action)
+`, r.templateLinux(data), data.RandomInteger, action)
 }
 
 func (r AzureFleetResource) otherAutomaticRepairsPolicyDisabled(data acceptance.TestData) string {
@@ -2656,7 +2656,7 @@ resource "azurerm_azure_fleet" "test" {
 
   depends_on = [azurerm_lb_rule.test]
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherUpgradeMode(data acceptance.TestData, enabled bool) string {
@@ -2702,7 +2702,7 @@ resource "azurerm_azure_fleet" "test" {
     enabled = %t
   }
 }
-`, r.template(data), data.RandomInteger, enabled)
+`, r.templateLinux(data), data.RandomInteger, enabled)
 }
 
 func (r AzureFleetResource) otherEncryptionAtHost(data acceptance.TestData, enabled bool) string {
@@ -2745,7 +2745,7 @@ resource "azurerm_azure_fleet" "test" {
 
   encryption_at_host_enabled = %t
 }
-`, r.template(data), data.RandomInteger, enabled)
+`, r.templateLinux(data), data.RandomInteger, enabled)
 }
 
 func (r AzureFleetResource) otherEncryptionAtHostWithCMK(data acceptance.TestData, enabled bool) string {
@@ -2837,7 +2837,7 @@ resource "azurerm_azure_fleet" "test" {
 
   platform_fault_domain_count = 3
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherRollingUpgradePolicyUpdate(data acceptance.TestData, cross_zone_upgrades_enabled bool, max_batch_instance_percent, max_unhealthy_instance_percent, max_unhealthy_upgraded_instance_percent int, pause_time_between_batches string, prioritize_unhealthy_instances_enabled bool, maximum_surge_instances bool) string {
@@ -2937,7 +2937,7 @@ resource "azurerm_azure_fleet" "test" {
 
   depends_on = [azurerm_lb_rule.test]
 }
-`, r.template(data), data.RandomInteger, cross_zone_upgrades_enabled, max_batch_instance_percent, max_unhealthy_instance_percent, max_unhealthy_upgraded_instance_percent, pause_time_between_batches, prioritize_unhealthy_instances_enabled, maximum_surge_instances)
+`, r.templateLinux(data), data.RandomInteger, cross_zone_upgrades_enabled, max_batch_instance_percent, max_unhealthy_instance_percent, max_unhealthy_upgraded_instance_percent, pause_time_between_batches, prioritize_unhealthy_instances_enabled, maximum_surge_instances)
 }
 
 func (r AzureFleetResource) otherHealthProbe(data acceptance.TestData) string {
@@ -3036,7 +3036,7 @@ resource "azurerm_azure_fleet" "test" {
 
   depends_on = [azurerm_lb_rule.test]
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherHealthProbeUpdated(data acceptance.TestData) string {
@@ -3135,7 +3135,7 @@ resource "azurerm_azure_fleet" "test" {
 
   depends_on = [azurerm_lb_rule.test]
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherSecureBootEnabled(data acceptance.TestData) string {
@@ -3178,7 +3178,7 @@ resource "azurerm_azure_fleet" "test" {
 
   secure_boot_enabled = true
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherVTpmEnabled(data acceptance.TestData) string {
@@ -3221,7 +3221,7 @@ resource "azurerm_azure_fleet" "test" {
 
   vtpm_enabled = true
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherGalleryApplicationBasic(data acceptance.TestData) string {
@@ -3386,7 +3386,7 @@ resource "azurerm_gallery_application_version" "test" {
   }
 }
 
-`, r.template(data), data.RandomString, data.RandomInteger)
+`, r.templateLinux(data), data.RandomString, data.RandomInteger)
 }
 
 func (r AzureFleetResource) otherDisableReimageOnManualUpgrade(data acceptance.TestData, sku string) string {

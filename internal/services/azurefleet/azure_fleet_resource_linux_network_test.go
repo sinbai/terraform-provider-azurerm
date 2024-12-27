@@ -493,7 +493,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, enabled)
+`, r.templateLinux(data), data.RandomInteger, enabled)
 }
 
 func (AzureFleetResource) networkApplicationGateway(data acceptance.TestData) string {
@@ -687,7 +687,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkApplicationSecurityGroupUpdated(data acceptance.TestData) string {
@@ -752,7 +752,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger, data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkDNSServers(data acceptance.TestData) string {
@@ -794,7 +794,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkDNSServersUpdated(data acceptance.TestData) string {
@@ -836,7 +836,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkIPForwarding(data acceptance.TestData) string {
@@ -878,7 +878,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkIPv6(data acceptance.TestData) string {
@@ -919,7 +919,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkLoadBalancer(data acceptance.TestData) string {
@@ -996,7 +996,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger, data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkMultipleIPConfigurations(data acceptance.TestData) string {
@@ -1042,7 +1042,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkMultipleIPConfigurationsIPv6(data acceptance.TestData) string {
@@ -1089,7 +1089,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkMultipleNICs(data acceptance.TestData) string {
@@ -1140,7 +1140,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkMultipleNICsMultipleIPConfigurations(data acceptance.TestData) string {
@@ -1201,7 +1201,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkMultipleNICsWithDifferentDNSServers(data acceptance.TestData) string {
@@ -1254,7 +1254,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkMultipleNICsMultiplePublicIPs(data acceptance.TestData) string {
@@ -1317,7 +1317,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger, data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkNetworkSecurityGroup(data acceptance.TestData) string {
@@ -1369,7 +1369,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkNetworkSecurityGroupUpdated(data acceptance.TestData) string {
@@ -1431,7 +1431,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger, data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkPrivate(data acceptance.TestData) string {
@@ -1472,7 +1472,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkPublicIP(data acceptance.TestData) string {
@@ -1518,7 +1518,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkPublicIPDomainNameLabel(data acceptance.TestData) string {
@@ -1565,7 +1565,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkPublicIPFromPrefix(data acceptance.TestData) string {
@@ -1618,7 +1618,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkPublicIPFromPrefixUpdate(data acceptance.TestData) string {
@@ -1671,7 +1671,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger)
 }
 
 // skipped
@@ -1731,7 +1731,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) networkPublicIPTags(data acceptance.TestData) string {
@@ -1827,5 +1827,5 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomStringOfLength(9))
+`, r.templateLinux(data), data.RandomInteger, data.RandomStringOfLength(9))
 }

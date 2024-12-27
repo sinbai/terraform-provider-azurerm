@@ -25,6 +25,7 @@ import (
 	keyVaultValidate "github.com/hashicorp/terraform-provider-azurerm/internal/services/keyvault/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
+	"regexp"
 )
 
 func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
@@ -69,7 +70,6 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 				"extensions_time_budget": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
-					Default:      "PT1H30M",
 					ValidateFunc: azValidate.ISO8601DurationBetween("PT15M", "PT2H"),
 				},
 
@@ -662,12 +662,12 @@ func osProfileSchema() *pluginsdk.Schema {
 								Optional: true,
 								Elem: &pluginsdk.Resource{
 									Schema: map[string]*pluginsdk.Schema{
-										"path": {
+										"username": {
 											Type:         pluginsdk.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringIsNotEmpty,
 										},
-										"key_data": {
+										"public_key": {
 											Type:         pluginsdk.TypeString,
 											Optional:     true,
 											ValidateFunc: validation.StringIsNotEmpty,
@@ -1820,12 +1820,13 @@ func expandSshConfigurationModel(inputList []SshKeyModel) *fleets.SshConfigurati
 	var publicKeys []fleets.SshPublicKey
 	for _, v := range inputList {
 		input := v
+
 		output := fleets.SshPublicKey{
-			Path: pointer.To(input.Path),
+			Path: pointer.To(fmt.Sprintf("/home/%s/.ssh/authorized_keys", input.Username)),
 		}
 
-		if input.KeyData != "" {
-			output.KeyData = &input.KeyData
+		if input.PublicKey != "" {
+			output.KeyData = pointer.To(input.PublicKey)
 		}
 
 		publicKeys = append(publicKeys, output)
@@ -2310,20 +2311,25 @@ func flattenVirtualMachineProfileModel(input *fleets.BaseVirtualMachineProfile, 
 	return append(outputList, output), nil
 }
 
-func flattenLinuxConfigurationModel(input *fleets.LinuxConfiguration) []LinuxConfigurationModel {
+func flattenLinuxConfigurationModel(input *fleets.LinuxConfiguration) ([]LinuxConfigurationModel, error) {
 	var outputList []LinuxConfigurationModel
 	if input == nil {
-		return outputList
+		return outputList, nil
 	}
 
 	output := LinuxConfigurationModel{}
 	output.PasswordAuthenticationEnabled = !pointer.From(input.DisablePasswordAuthentication)
 	output.VMAgentPlatformUpdatesEnabled = pointer.From(input.ProvisionVMAgent)
 	output.ProvisionVMAgentEnabled = pointer.From(input.ProvisionVMAgent)
-	output.SshKeys = flattenSshKeyModel(input.Ssh)
 	output.PatchSetting = flattenLinuxPatchSettingModel(input.PatchSettings)
 
-	return append(outputList, output)
+	flattenedSSHKeys, err := flattenSshKeyModel(input.Ssh)
+	if err != nil {
+		return nil, fmt.Errorf("flattening `admin_ssh_key`: %+v", err)
+	}
+	output.SshKeys = flattenedSSHKeys
+
+	return append(outputList, output), nil
 }
 
 func flattenLinuxPatchSettingModel(input *fleets.LinuxPatchSettings) []LinuxPatchSettingModel {
@@ -2353,24 +2359,49 @@ func flattenLinuxAutomaticByPlatformSettingModel(input *fleets.LinuxVMGuestPatch
 	return append(outputList, output)
 }
 
-func flattenSshKeyModel(input *fleets.SshConfiguration) []SshKeyModel {
+func flattenSshKeyModel(input *fleets.SshConfiguration) ([]SshKeyModel, error) {
 	var outputList []SshKeyModel
 	if input == nil || input.PublicKeys == nil {
-		return outputList
+		return outputList, nil
 	}
 
 	for _, input := range *input.PublicKeys {
+
 		output := SshKeyModel{}
-		if input.KeyData != nil {
-			output.KeyData = *input.KeyData
+		username := parseUsernameFromAuthorizedKeysPath(*input.Path)
+		if username == nil {
+			return nil, fmt.Errorf("parsing username from %q", *input.Path)
 		}
-		if input.Path != nil {
-			output.Path = *input.Path
-		}
+
+		output.PublicKey = pointer.From(input.KeyData)
+		output.Username = pointer.From(username)
+
 		outputList = append(outputList, output)
 	}
 
-	return outputList
+	return outputList, nil
+}
+
+func parseUsernameFromAuthorizedKeysPath(input string) *string {
+	// the Azure VM agent hard-codes this to `/home/username/.ssh/authorized_keys`
+	// as such we can hard-code this for a better UX
+	r := regexp.MustCompile("(/home/)+(?P<username>.*?)(/.ssh/authorized_keys)+")
+
+	keys := r.SubexpNames()
+	values := r.FindStringSubmatch(input)
+
+	if values == nil {
+		return nil
+	}
+
+	for i, k := range keys {
+		if k == "username" {
+			value := values[i]
+			return &value
+		}
+	}
+
+	return nil
 }
 
 func flattenApplicationProfileModel(input *fleets.ApplicationProfile) []GalleryApplicationModel {
@@ -2488,10 +2519,15 @@ func flattenOSProfileModel(input *fleets.VirtualMachineScaleSetOSProfile, d *sch
 		return outputList, nil
 	}
 	output := OSProfileModel{
-		LinuxConfiguration:   flattenLinuxConfigurationModel(input.LinuxConfiguration),
 		Secret:               flattenOsProfileSecretsModel(input.Secrets),
 		WindowsConfiguration: flattenWindowsConfigurationModel(input.WindowsConfiguration),
 	}
+
+	linuxConfiguration, err := flattenLinuxConfigurationModel(input.LinuxConfiguration)
+	if err != nil {
+		return nil, fmt.Errorf("flattening `linux_configuration`: %+v", err)
+	}
+	output.LinuxConfiguration = linuxConfiguration
 
 	output.AdminPassword = d.Get("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password").(string)
 	output.AdminUsername = pointer.From(input.AdminUsername)

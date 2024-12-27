@@ -180,8 +180,8 @@ type AutomaticByPlatformSettingModel struct {
 }
 
 type SshKeyModel struct {
-	KeyData string `tfschema:"key_data"`
-	Path    string `tfschema:"path"`
+	PublicKey string `tfschema:"public_key"`
+	Username  string `tfschema:"username"`
 }
 
 type SecretModel struct {

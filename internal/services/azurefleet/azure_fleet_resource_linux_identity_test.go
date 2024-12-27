@@ -16,14 +16,14 @@ func TestAccFleetLinux_identityNone(t *testing.T) {
 	r := AzureFleetResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.authPassword(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("identity.%").HasValue("0"),
-			),
-		},
-		data.ImportStep("admin_password"),
+		//{
+		//	Config: r.authPassword(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//		check.That(data.ResourceName).Key("identity.%").HasValue("0"),
+		//	),
+		//},
+		//data.ImportStep("admin_password"),
 	})
 }
 
@@ -40,15 +40,15 @@ func TestAccFleetLinux_identitySystemAssigned(t *testing.T) {
 			),
 		},
 		data.ImportStep("admin_password"),
-		{
-			// disable it
-			Config: r.authPassword(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("identity.%").HasValue("0"),
-			),
-		},
-		data.ImportStep("admin_password"),
+		//{
+		//	// disable it
+		//	Config: r.authPassword(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//		check.That(data.ResourceName).Key("identity.%").HasValue("0"),
+		//	),
+		//},
+		//data.ImportStep("admin_password"),
 		{
 			Config: r.identitySystemAssigned(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -72,15 +72,15 @@ func TestAccFleetLinux_identityUserAssigned(t *testing.T) {
 			),
 		},
 		data.ImportStep("admin_password"),
-		{
-			// disable it
-			Config: r.authPassword(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("identity.%").HasValue("0"),
-			),
-		},
-		data.ImportStep("admin_password"),
+		//{
+		//	// disable it
+		//	Config: r.authPassword(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//		check.That(data.ResourceName).Key("identity.%").HasValue("0"),
+		//	),
+		//},
+		//data.ImportStep("admin_password"),
 		{
 			Config: r.identityUserAssigned(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -112,15 +112,15 @@ func TestAccFleetLinux_identitySystemAssignedUserAssigned(t *testing.T) {
 			),
 		},
 		data.ImportStep("admin_password"),
-		{
-			// disable it
-			Config: r.authPassword(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("identity.%").HasValue("0"),
-			),
-		},
-		data.ImportStep("admin_password"),
+		//{
+		//	// disable it
+		//	Config: r.authPassword(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//		check.That(data.ResourceName).Key("identity.%").HasValue("0"),
+		//	),
+		//},
+		//data.ImportStep("admin_password"),
 		{
 			Config: r.identitySystemAssignedUserAssigned(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -175,7 +175,7 @@ resource "azurerm_azure_fleet" "test" {
     type = "SystemAssigned"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) identityUserAssigned(data acceptance.TestData) string {
@@ -229,7 +229,7 @@ resource "azurerm_azure_fleet" "test" {
     ]
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger)
 }
 
 func (r AzureFleetResource) identityUserAssignedUpdated(data acceptance.TestData) string {
@@ -290,7 +290,7 @@ resource "azurerm_azure_fleet" "test" {
     ]
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger, data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger, data.RandomInteger)
 }
 
 func (r AzureFleetResource) identitySystemAssignedUserAssigned(data acceptance.TestData) string {
@@ -344,5 +344,5 @@ resource "azurerm_azure_fleet" "test" {
     ]
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger)
 }

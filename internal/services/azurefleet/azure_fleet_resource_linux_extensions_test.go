@@ -413,7 +413,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, enabled)
+`, r.templateLinux(data), data.RandomInteger, enabled)
 }
 
 func (r AzureFleetResource) extensionOnlySettings(data acceptance.TestData) string {
@@ -471,7 +471,7 @@ resource "azurerm_azure_fleet" "test" {
     accTest = "true"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) extensionBasic(data acceptance.TestData) string {
@@ -533,7 +533,7 @@ resource "azurerm_azure_fleet" "test" {
     accTest = "true"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) extensionForceUpdateTag(data acceptance.TestData, updateTag string) string {
@@ -595,7 +595,7 @@ resource "azurerm_azure_fleet" "test" {
     accTest = "true"
   }
 }
-`, r.template(data), data.RandomInteger, updateTag)
+`, r.templateLinux(data), data.RandomInteger, updateTag)
 }
 
 func (r AzureFleetResource) extensionMultiple(data acceptance.TestData) string {
@@ -671,7 +671,7 @@ resource "azurerm_azure_fleet" "test" {
     accTest = "true"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) extensionUpdate(data acceptance.TestData) string {
@@ -728,7 +728,7 @@ resource "azurerm_azure_fleet" "test" {
     accTest = "true"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) extensionsRollingUpgradeWithHealthExtension(data acceptance.TestData) string {
@@ -785,7 +785,7 @@ resource "azurerm_azure_fleet" "test" {
     accTest = "true"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) extensionsWithHealthExtension(data acceptance.TestData) string {
@@ -837,7 +837,7 @@ resource "azurerm_azure_fleet" "test" {
     accTest = "true"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) extensionsAutomaticUpgradeWithHealthExtension(data acceptance.TestData) string {
@@ -898,11 +898,11 @@ resource "azurerm_azure_fleet" "test" {
     accTest = "true"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) extensionWithTimeBudget(data acceptance.TestData, duration string) string {
-	template := r.template(data)
+	templateLinux := r.templateLinux(data)
 	return fmt.Sprintf(`
 %s
 
@@ -958,11 +958,11 @@ resource "azurerm_azure_fleet" "test" {
 
   extensions_time_budget = "%s"
 }
-`, template, data.RandomInteger, duration)
+`, templateLinux, data.RandomInteger, duration)
 }
 
 func (r AzureFleetResource) extensionTimeBudgetWithoutExtensions(data acceptance.TestData, duration string) string {
-	template := r.template(data)
+	templateLinux := r.templateLinux(data)
 	return fmt.Sprintf(`
 %s
 
@@ -1002,11 +1002,11 @@ resource "azurerm_azure_fleet" "test" {
 
   extensions_time_budget = "%s"
 }
-`, template, data.RandomInteger, duration)
+`, templateLinux, data.RandomInteger, duration)
 }
 
 func (r AzureFleetResource) extensionsAutomaticUpgradeWithServiceFabricExtension(data acceptance.TestData) string {
-	template := r.template(data)
+	templateLinux := r.templateLinux(data)
 	return fmt.Sprintf(`
 %s
 
@@ -1092,7 +1092,7 @@ resource "azurerm_azure_fleet" "test" {
     })
   }
 }
-`, template, data.RandomInteger, data.RandomInteger)
+`, templateLinux, data.RandomInteger, data.RandomInteger)
 }
 
 func (r AzureFleetResource) extensionAutomaticUpgradeEnabled(data acceptance.TestData) string {
@@ -1146,7 +1146,7 @@ resource "azurerm_azure_fleet" "test" {
     accTest = "true"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) extensionOperationsEnabled(data acceptance.TestData) string {
@@ -1210,7 +1210,7 @@ resource "azurerm_azure_fleet" "test" {
     accTest = "true"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) extensionOperationsDisabled(data acceptance.TestData) string {
@@ -1257,7 +1257,7 @@ resource "azurerm_azure_fleet" "test" {
     accTest = "true"
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) extensionProtectedSettingsFromKeyVault(data acceptance.TestData) string {

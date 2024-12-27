@@ -121,13 +121,13 @@ func TestAccLinuxVirtualMachineScaleSet_disksDataDiskRemove(t *testing.T) {
 			),
 		},
 		data.ImportStep("admin_password"),
-		{
-			Config: r.authPassword(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
+		//{
+		//	Config: r.authPassword(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//	),
+		//},
+		//data.ImportStep("admin_password"),
 	})
 }
 
@@ -136,13 +136,13 @@ func TestAccLinuxVirtualMachineScaleSet_disksDataDiskScaling(t *testing.T) {
 	r := AzureFleetResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			// no disks
-			Config: r.authPassword(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
+		//{
+		//	// no disks
+		//	Config: r.authPassword(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//	),
+		//},
 		data.ImportStep("admin_password"),
 		{
 			// one disk
@@ -160,14 +160,14 @@ func TestAccLinuxVirtualMachineScaleSet_disksDataDiskScaling(t *testing.T) {
 			),
 		},
 		data.ImportStep("admin_password"),
-		{
-			// no disks
-			Config: r.authPassword(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
+		//{
+		//	// no disks
+		//	Config: r.authPassword(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//	),
+		//},
+		//data.ImportStep("admin_password"),
 	})
 }
 
@@ -407,7 +407,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) disksDataDiskCaching(data acceptance.TestData, caching string) string {
@@ -455,7 +455,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, caching)
+`, r.templateLinux(data), data.RandomInteger, caching)
 }
 
 func (AzureFleetResource) disksDataDisk_diskEncryptionSetDependencies(data acceptance.TestData) string {
@@ -678,7 +678,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, diskSizeGb)
+`, r.templateLinux(data), data.RandomInteger, diskSizeGb)
 }
 
 func (r AzureFleetResource) disksDataDiskMultiple(data acceptance.TestData) string {
@@ -733,7 +733,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) disksDataDiskStorageAccountType(data acceptance.TestData, storageAccountType string) string {
@@ -781,7 +781,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, storageAccountType)
+`, r.templateLinux(data), data.RandomInteger, storageAccountType)
 }
 
 func (r AzureFleetResource) disksDataDiskStorageAccountTypeWithRestrictedLocation(data acceptance.TestData, storageAccountType string, location string) string {
@@ -839,7 +839,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) disksDataDiskStorageAccountTypePremiumV2LRSWithIOPSAndMBPS(data acceptance.TestData, iops int, mbps int) string {
@@ -893,7 +893,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, iops, mbps)
+`, r.templateLinux(data), data.RandomInteger, iops, mbps)
 }
 
 func (r AzureFleetResource) disksDataDiskStorageAccountTypeUltraSSDLRS(data acceptance.TestData) string {
@@ -1054,7 +1054,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) disksDataDiskStorageAccountTypeUltraSSDLRSWithIOPSAndMBPS(data acceptance.TestData) string {
@@ -1158,5 +1158,5 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }

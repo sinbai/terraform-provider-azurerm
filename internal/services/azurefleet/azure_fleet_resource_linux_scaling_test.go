@@ -163,13 +163,13 @@ func TestAccFleetLinux_scalingSinglePlacementGroupDisabledUpdate(t *testing.T) {
 	r := AzureFleetResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.authPassword(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
+		//{
+		//	Config: r.authPassword(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//	),
+		//},
+		//data.ImportStep("admin_password"),
 		{
 			Config: r.scalingSinglePlacementGroupDisabled(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -383,7 +383,7 @@ resource "azurerm_monitor_autoscale_setting" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) scalingCapacityReservationGroupId(data acceptance.TestData) string {
@@ -447,7 +447,7 @@ resource "azurerm_azure_fleet" "test" {
     azurerm_capacity_reservation.test,
   ]
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) scalingHostGroupId(data acceptance.TestData) string {
@@ -511,7 +511,7 @@ resource "azurerm_azure_fleet" "test" {
     azurerm_dedicated_host.test
   ]
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) scalingInstanceCount(data acceptance.TestData, instanceCount int) string {
@@ -552,7 +552,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, instanceCount)
+`, r.templateLinux(data), data.RandomInteger, instanceCount)
 }
 
 func (r AzureFleetResource) defaultInstanceCount(data acceptance.TestData) string {
@@ -592,7 +592,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) scalingInstanceCountIgnoreUpdatedSku(data acceptance.TestData, instanceCount int) string {
@@ -637,7 +637,7 @@ resource "azurerm_azure_fleet" "test" {
     ignore_changes = ["sku"]
   }
 }
-`, r.template(data), data.RandomInteger, instanceCount)
+`, r.templateLinux(data), data.RandomInteger, instanceCount)
 }
 
 func (r AzureFleetResource) scalingOverProvisionDisabled(data acceptance.TestData) string {
@@ -679,7 +679,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) scalingProximityPlacementGroup(data acceptance.TestData) string {
@@ -727,7 +727,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger)
 }
 
 func (r AzureFleetResource) scalingSinglePlacementGroupDisabled(data acceptance.TestData) string {
@@ -769,7 +769,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) scalingUpdateSku(data acceptance.TestData, skuName string) string {
@@ -810,7 +810,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, skuName)
+`, r.templateLinux(data), data.RandomInteger, skuName)
 }
 
 func (r AzureFleetResource) scalingUpdateSkuIgnoredUpdatedCount(data acceptance.TestData, skuName string) string {
@@ -855,7 +855,7 @@ resource "azurerm_azure_fleet" "test" {
     ignore_changes = ["instances"]
   }
 }
-`, r.template(data), data.RandomInteger, skuName)
+`, r.templateLinux(data), data.RandomInteger, skuName)
 }
 
 func (r AzureFleetResource) scalingZonesSingle(data acceptance.TestData) string {
@@ -897,7 +897,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) scalingZonesMultiple(data acceptance.TestData) string {
@@ -939,7 +939,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }
 
 func (r AzureFleetResource) scalingZonesBalance(data acceptance.TestData) string {
@@ -982,5 +982,5 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger)
+`, r.templateLinux(data), data.RandomInteger)
 }

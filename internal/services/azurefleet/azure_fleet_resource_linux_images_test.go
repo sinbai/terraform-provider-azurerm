@@ -298,7 +298,7 @@ resource "azurerm_azure_fleet" "test" {
 
   depends_on = ["azurerm_lb_rule.test"]
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger, data.RandomInteger, offer, sku)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger, data.RandomInteger, offer, sku)
 }
 
 func (r AzureFleetResource) imagesDisableAutomaticUpdate(data acceptance.TestData, offer, sku string) string {
@@ -351,7 +351,7 @@ resource "azurerm_azure_fleet" "test" {
     pause_time_between_batches              = "PT30S"
   }
 }
-`, r.template(data), data.RandomInteger, offer, sku)
+`, r.templateLinux(data), data.RandomInteger, offer, sku)
 }
 
 func (r AzureFleetResource) imagesFromVirtualMachinePrerequisites(data acceptance.TestData) string {
@@ -393,7 +393,7 @@ resource "azurerm_storage_container" "test" {
   storage_account_name  = azurerm_storage_account.test.name
   container_access_type = "blob"
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger, data.RandomString)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger, data.RandomString)
 }
 
 func (r AzureFleetResource) imagesFromVirtualMachinePrerequisitesWithVM(data acceptance.TestData) string {
@@ -545,7 +545,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data), data.RandomInteger, offer, sku)
+`, r.templateLinux(data), data.RandomInteger, offer, sku)
 }
 
 func (r AzureFleetResource) imagesManualUpdateExternalRoll(data acceptance.TestData, offer, sku string) string {
@@ -699,7 +699,7 @@ resource "azurerm_azure_fleet" "test" {
 
   depends_on = ["azurerm_lb_rule.test"]
 }
-`, r.template(data), data.RandomInteger, data.RandomInteger, data.RandomInteger, offer, sku)
+`, r.templateLinux(data), data.RandomInteger, data.RandomInteger, data.RandomInteger, offer, sku)
 }
 
 func (r AzureFleetResource) imagesPlan(data acceptance.TestData, publisher string, offer string, sku string) string {
@@ -754,7 +754,7 @@ resource "azurerm_azure_fleet" "test" {
 
   depends_on = ["azurerm_marketplace_agreement.test"]
 }
-`, r.template(data), data.RandomInteger, publisher, offer, sku)
+`, r.templateLinux(data), data.RandomInteger, publisher, offer, sku)
 }
 
 func (AzureFleetResource) empty() string {
