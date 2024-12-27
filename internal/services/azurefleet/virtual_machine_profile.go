@@ -613,7 +613,7 @@ func osProfileSchema() *pluginsdk.Schema {
 
 				"admin_password": {
 					Type:         pluginsdk.TypeString,
-					Required:     true,
+					Optional:     true,
 					Sensitive:    true,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
@@ -640,7 +640,7 @@ func osProfileSchema() *pluginsdk.Schema {
 						Schema: map[string]*pluginsdk.Schema{
 							"password_authentication_enabled": {
 								Type:     pluginsdk.TypeBool,
-								Required: true,
+								Optional: true,
 								ForceNew: true,
 							},
 

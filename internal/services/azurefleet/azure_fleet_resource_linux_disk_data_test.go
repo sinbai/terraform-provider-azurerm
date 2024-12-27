@@ -11,451 +11,476 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 )
 
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskBasic(t *testing.T) {
+func TestAccFleetLinux_disksDataDiskBasic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
 	r := AzureFleetResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.disksDataDiskBasic(data),
+			Config: r.linuxTemplate(data, data.Locations.Primary, r.disksDataDiskBasicVirtualMachineProfile()),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("admin_password"),
+		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskCaching(t *testing.T) {
+func TestAccFleetLinux_disksDataDiskCaching(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
 	r := AzureFleetResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.disksDataDiskCaching(data, "None"),
+			Config: r.linuxTemplate(data, data.Locations.Primary, r.disksDataDiskCachingVirtualMachineProfile()),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("admin_password"),
-		{
-			Config: r.disksDataDiskCaching(data, "ReadOnly"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-		{
-			Config: r.disksDataDiskCaching(data, "ReadWrite"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
+		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskDiskEncryptionSet(t *testing.T) {
+func TestAccFleetLinux_disksDataDiskDiskEncryptionSet(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
 	r := AzureFleetResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.disksDataDisk_diskEncryptionSet(data),
+			Config: r.linuxTemplateWithoutProvider(data, data.Locations.Primary, r.disksDataDisk_diskEncryptionSetVirtualMachineProfile(), r.disksDataDisk_diskEncryptionSetResource(data)),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("admin_password"),
+		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskResizing(t *testing.T) {
+func TestAccFleetLinux_disksDataDiskMultiple(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
 	r := AzureFleetResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			// 30GB
-			Config: r.disksDataDiskResize(data, 30),
+			Config: r.linuxTemplate(data, data.Locations.Primary, r.disksDataDiskMultipleVirtualMachineProfile()),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("admin_password"),
-		{
-			// 60GB
-			Config: r.disksDataDiskResize(data, 60),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
+		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskMultiple(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disksDataDiskMultiple(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-	})
-}
-
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskRemove(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disksDataDiskBasic(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-		//{
-		//	Config: r.authPassword(data),
-		//	Check: acceptance.ComposeTestCheckFunc(
-		//		check.That(data.ResourceName).ExistsInAzure(r),
-		//	),
-		//},
-		//data.ImportStep("admin_password"),
-	})
-}
-
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskScaling(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		//{
-		//	// no disks
-		//	Config: r.authPassword(data),
-		//	Check: acceptance.ComposeTestCheckFunc(
-		//		check.That(data.ResourceName).ExistsInAzure(r),
-		//	),
-		//},
-		data.ImportStep("admin_password"),
-		{
-			// one disk
-			Config: r.disksDataDiskBasic(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-		{
-			// two disks
-			Config: r.disksDataDiskMultiple(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-		//{
-		//	// no disks
-		//	Config: r.authPassword(data),
-		//	Check: acceptance.ComposeTestCheckFunc(
-		//		check.That(data.ResourceName).ExistsInAzure(r),
-		//	),
-		//},
-		//data.ImportStep("admin_password"),
-	})
-}
-
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskStorageAccountTypeStandardLRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disksDataDiskStorageAccountType(data, "Standard_LRS"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-	})
-}
-
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskStorageAccountTypeStandardSSDLRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disksDataDiskStorageAccountType(data, "StandardSSD_LRS"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-	})
-}
-
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskStorageAccountTypeStandardSSDZRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disksDataDiskStorageAccountTypeWithRestrictedLocation(data, "StandardSSD_ZRS", "westeurope"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-	})
-}
-
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskStorageAccountTypePremiumLRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disksDataDiskStorageAccountType(data, "Premium_LRS"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-	})
-}
-
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskStorageAccountTypePremiumV2LRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disksDataDiskStorageAccountTypePremiumV2LRS(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-	})
-}
-
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskStorageAccountTypePremiumV2LRSWithIOPSAndMBPS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disksDataDiskStorageAccountTypePremiumV2LRSWithIOPSAndMBPS(data, 3001, 126),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-		{
-			Config: r.disksDataDiskStorageAccountTypePremiumV2LRSWithIOPSAndMBPS(data, 3002, 127),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-	})
-}
-
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskStorageAccountTypePremiumZRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disksDataDiskStorageAccountTypeWithRestrictedLocation(data, "Premium_ZRS", "westeurope"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-	})
-}
-
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskStorageAccountTypeUltraSSDLRS(t *testing.T) {
+func TestAccFleetLinux_disksDataDiskStorageAccountTypeUltraSSDLRSWithIOPSAndMBPS(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
 	r := AzureFleetResource{}
 	// Are supported in East US 2, SouthEast Asia, and North Europe, in two availability zones per region
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.disksDataDiskStorageAccountTypeUltraSSDLRS(data),
+			// Are supported in East US 2, SouthEast Asia, and North Europe, in two availability zones per region
+			Config: r.linuxTemplate(data, "eastus2", r.disksDataDiskStorageAccountTypeUltraSSDLRSWithIOPSAndMBPSVirtualMachineProfile()),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("admin_password"),
+		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskStorageAccountTypeUltraSSDLRSWithIOPS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
-	// Are supported in East US 2, SouthEast Asia, and North Europe, in two availability zones per region
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disksDataDiskStorageAccountTypeUltraSSDLRSWithIOPS(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-	})
-}
-
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskStorageAccountTypeUltraSSDLRSWithMBPS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
-	// Are supported in East US 2, SouthEast Asia, and North Europe, in two availability zones per region
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disksDataDiskStorageAccountTypeUltraSSDLRSWithMBPS(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-	})
-}
-
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskStorageAccountTypeUltraSSDLRSWithIOPSAndMBPS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
-	// Are supported in East US 2, SouthEast Asia, and North Europe, in two availability zones per region
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disksDataDiskStorageAccountTypeUltraSSDLRSWithIOPSAndMBPS(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("admin_password"),
-	})
-}
-
-func TestAccLinuxVirtualMachineScaleSet_disksDataDiskWriteAcceleratorEnabled(t *testing.T) {
+func TestAccFleetLinux_disksDataDiskWriteAcceleratorEnabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
 	r := AzureFleetResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.disksDataDiskWriteAcceleratorEnabled(data),
+			Config: r.linuxTemplate(data, data.Locations.Primary, r.disksDataDiskStorageAccountTypeUltraSSDLRSWithIOPSAndMBPSVirtualMachineProfile()),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("admin_password"),
+		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
-func (r AzureFleetResource) disksDataDiskBasic(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%s
+func (r AzureFleetResource) disksDataDiskBasicVirtualMachineProfile() string {
+	return `
+virtual_machine_profile {
+    storage_profile {
+        image_reference {
+          publisher = "Canonical"
+          offer     = "0001-com-ubuntu-server-jammy"
+          sku       = "22_04-lts"
+          version   = "latest"
+        }
 
-resource "azurerm_azure_fleet" "test" {
-  name                = "acctestvmss-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  sku                 = "Standard_F2"
-  instances           = 1
-  admin_username      = "adminuser"
-  admin_password      = "P@ssword1234!"
+        os_disk {
+          caching = "ReadWrite"
+          create_option = "FromImage"
+          os_type       = "Linux"
+          managed_disk {
+            storage_account_type = "Standard_LRS"
+          }
+        }
 
-  disable_password_authentication = false
+		data_disk {
+			managed_disk {
+            storage_account_type = "Premium_LRS"
+            }
+			disk_size_in_gb         = 10
+			lun                  = 10
+		  }
+      }
 
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
+      os_profile {
+        computer_name_prefix = "prefix"
+        admin_username       = "azureuser"
+        admin_password       = "P@ssw0rd1234!"
+        linux_configuration {
+          password_authentication_enabled = true
+          ssh_keys {
+			username   = "azureuser"
+			public_key = local.first_public_key
+		  }
+        }
+      }
 
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
+      network_interface {
+        name                           = "networkProTest"
+        accelerated_networking_enabled = false
+        ip_forwarding_enabled          = true
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.test.id
+        }
+        primary = true
+      }
 
-  data_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-    disk_size_gb         = 10
-    lun                  = 10
-  }
-
-  network_interface {
-    name    = "example"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.test.id
+      network_api_version = "2020-11-01"
     }
-  }
-}
-`, r.templateLinux(data), data.RandomInteger)
+`
 }
 
-func (r AzureFleetResource) disksDataDiskCaching(data acceptance.TestData, caching string) string {
-	return fmt.Sprintf(`
-%s
+func (r AzureFleetResource) disksDataDiskCachingVirtualMachineProfile() string {
+	return `
+virtual_machine_profile {
+    storage_profile {
+        image_reference {
+          publisher = "Canonical"
+          offer     = "0001-com-ubuntu-server-jammy"
+          sku       = "22_04-lts"
+          version   = "latest"
+        }
 
-resource "azurerm_azure_fleet" "test" {
-  name                = "acctestvmss-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  sku                 = "Standard_F2"
-  instances           = 1
-  admin_username      = "adminuser"
-  admin_password      = "P@ssword1234!"
+        os_disk {
+          caching = "ReadWrite"
+          create_option = "FromImage"
+          os_type       = "Linux"
+          managed_disk {
+            storage_account_type = "Standard_LRS"
+          }
+        }
 
-  disable_password_authentication = false
+		data_disk {
+			managed_disk {
+            storage_account_type = "Standard_LRS"
+            }
+            caching              = "ReadOnly"
+			disk_size_in_gb         = 10
+			lun                  = 10
+		  }
+      }
 
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
+      os_profile {
+        computer_name_prefix = "prefix"
+        admin_username       = "azureuser"
+        admin_password       = "P@ssw0rd1234!"
+        linux_configuration {
+          password_authentication_enabled = true
+          ssh_keys {
+			username   = "azureuser"
+			public_key = local.first_public_key
+		  }
+        }
+      }
 
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
+      network_interface {
+        name                           = "networkProTest"
+        accelerated_networking_enabled = false
+        ip_forwarding_enabled          = true
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.test.id
+        }
+        primary = true
+      }
 
-  data_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = %q
-    disk_size_gb         = 10
-    lun                  = 10
-  }
-
-  network_interface {
-    name    = "example"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.test.id
+      network_api_version = "2020-11-01"
     }
-  }
+`
 }
-`, r.templateLinux(data), data.RandomInteger, caching)
+
+func (r AzureFleetResource) disksDataDisk_diskEncryptionSetVirtualMachineProfile() string {
+	return `
+virtual_machine_profile {
+    storage_profile {
+        image_reference {
+          publisher = "Canonical"
+          offer     = "0001-com-ubuntu-server-jammy"
+          sku       = "22_04-lts"
+          version   = "latest"
+        }
+
+        os_disk {
+          caching = "ReadWrite"
+          create_option = "FromImage"
+          os_type       = "Linux"
+          managed_disk {
+            storage_account_type = "Standard_LRS"
+          }
+        }
+
+		data_disk {
+			managed_disk {
+            storage_account_type = "Standard_LRS"
+            }
+        caching                = "ReadWrite"
+        disk_encryption_set_id = azurerm_disk_encryption_set.test.id
+			disk_size_in_gb         = 10
+			lun                  = 10
+		  }
+      }
+
+      os_profile {
+        computer_name_prefix = "prefix"
+        admin_username       = "azureuser"
+        admin_password       = "P@ssw0rd1234!"
+        linux_configuration {
+          password_authentication_enabled = true
+          ssh_keys {
+			username   = "azureuser"
+			public_key = local.first_public_key
+		  }
+        }
+      }
+
+      network_interface {
+        name                           = "networkProTest"
+        accelerated_networking_enabled = false
+        ip_forwarding_enabled          = true
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.test.id
+        }
+        primary = true
+      }
+
+      network_api_version = "2020-11-01"
+    }
+`
+}
+
+func (r AzureFleetResource) disksDataDiskMultipleVirtualMachineProfile() string {
+	return `
+virtual_machine_profile {
+    storage_profile {
+        image_reference {
+          publisher = "Canonical"
+          offer     = "0001-com-ubuntu-server-jammy"
+          sku       = "22_04-lts"
+          version   = "latest"
+        }
+
+        os_disk {
+          caching = "ReadWrite"
+          create_option = "FromImage"
+          os_type       = "Linux"
+          managed_disk {
+            storage_account_type = "Standard_LRS"
+          }
+        }
+
+		data_disk {
+			managed_disk {
+            storage_account_type = "Standard_LRS"
+            }
+        caching                = "ReadWrite"
+       
+			disk_size_in_gb         = 10
+			lun                  = 10
+		  }
+
+         data_disk {
+			managed_disk {
+            storage_account_type = "Standard_LRS"
+            }
+        caching                = "ReadWrite"
+       
+			disk_size_in_gb         = 10
+			lun                  = 20
+		  }
+      }
+
+      os_profile {
+        computer_name_prefix = "prefix"
+        admin_username       = "azureuser"
+        admin_password       = "P@ssw0rd1234!"
+        linux_configuration {
+          password_authentication_enabled = true
+          ssh_keys {
+			username   = "azureuser"
+			public_key = local.first_public_key
+		  }
+        }
+      }
+
+      network_interface {
+        name                           = "networkProTest"
+        accelerated_networking_enabled = false
+        ip_forwarding_enabled          = true
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.test.id
+        }
+        primary = true
+      }
+
+      network_api_version = "2020-11-01"
+    }
+`
+}
+
+func (r AzureFleetResource) disksDataDiskStorageAccountTypeUltraSSDLRSWithIOPSAndMBPSVirtualMachineProfile() string {
+	return `
+additional_capabilities_ultra_ssd_enabled = true
+
+virtual_machine_profile {
+    storage_profile {
+        image_reference {
+          publisher = "Canonical"
+          offer     = "0001-com-ubuntu-server-jammy"
+          sku       = "22_04-lts"
+          version   = "latest"
+        }
+
+        os_disk {
+          caching = "ReadWrite"
+          create_option = "FromImage"
+          os_type       = "Linux"
+          managed_disk {
+            storage_account_type = "Standard_LRS"
+          }
+        }
+
+		data_disk {
+			managed_disk {
+            storage_account_type = "UltraSSD_LRS"
+            }
+			disk_size_in_gb         = 10
+			lun                  = 10
+            disk_iops_read_write = 101
+            disk_mbps_read_write = 11
+		  }
+      }
+
+      os_profile {
+        computer_name_prefix = "prefix"
+        admin_username       = "azureuser"
+        admin_password       = "P@ssw0rd1234!"
+        linux_configuration {
+          password_authentication_enabled = true
+          ssh_keys {
+			username   = "azureuser"
+			public_key = local.first_public_key
+		  }
+        }
+      }
+
+      network_interface {
+        name                           = "networkProTest"
+        accelerated_networking_enabled = false
+        ip_forwarding_enabled          = true
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.test.id
+        }
+        primary = true
+      }
+
+      network_api_version = "2020-11-01"
+    }
+`
+}
+
+func (r AzureFleetResource) disksDataDiskWriteAcceleratorEnabledVirtualMachineProfile() string {
+	return `
+virtual_machine_profile {
+    storage_profile {
+        image_reference {
+          publisher = "Canonical"
+          offer     = "0001-com-ubuntu-server-jammy"
+          sku       = "22_04-lts"
+          version   = "latest"
+        }
+
+        os_disk {
+          caching = "ReadWrite"
+          create_option = "FromImage"
+          os_type       = "Linux"
+          managed_disk {
+            storage_account_type = "Standard_LRS"
+          }
+        }
+
+		data_disk {
+			managed_disk {
+            storage_account_type = "Premium_LRS"
+            }
+			disk_size_in_gb         = 10
+			lun                  = 10
+write_accelerator_enabled = true
+		  }
+      }
+
+      os_profile {
+        computer_name_prefix = "prefix"
+        admin_username       = "azureuser"
+        admin_password       = "P@ssw0rd1234!"
+        linux_configuration {
+          password_authentication_enabled = true
+          ssh_keys {
+			username   = "azureuser"
+			public_key = local.first_public_key
+		  }
+        }
+      }
+
+      network_interface {
+        name                           = "networkProTest"
+        accelerated_networking_enabled = false
+        ip_forwarding_enabled          = true
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.test.id
+        }
+        primary = true
+      }
+
+      network_api_version = "2020-11-01"
+    }
+`
 }
 
 func (AzureFleetResource) disksDataDisk_diskEncryptionSetDependencies(data acceptance.TestData) string {
@@ -577,586 +602,4 @@ resource "azurerm_role_assignment" "disk-encryption-read-keyvault" {
   principal_id         = azurerm_disk_encryption_set.test.identity.0.principal_id
 }
 `, r.disksDataDisk_diskEncryptionSetDependencies(data), data.RandomInteger)
-}
-
-func (r AzureFleetResource) disksDataDisk_diskEncryptionSet(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_azure_fleet" "test" {
-  name                = "acctestvmss-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  sku                 = "Standard_F2"
-  instances           = 1
-  admin_username      = "adminuser"
-  admin_password      = "P@ssword1234!"
-
-  disable_password_authentication = false
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
-
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
-
-  data_disk {
-    storage_account_type   = "Standard_LRS"
-    caching                = "ReadWrite"
-    disk_encryption_set_id = azurerm_disk_encryption_set.test.id
-    disk_size_gb           = 10
-    lun                    = 10
-  }
-
-  network_interface {
-    name    = "example"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.test.id
-    }
-  }
-
-  depends_on = [
-    "azurerm_role_assignment.disk-encryption-read-keyvault",
-    "azurerm_key_vault_access_policy.disk-encryption",
-  ]
-}
-`, r.disksDataDisk_diskEncryptionSetResource(data), data.RandomInteger)
-}
-
-func (r AzureFleetResource) disksDataDiskResize(data acceptance.TestData, diskSizeGb int) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_azure_fleet" "test" {
-  name                = "acctestvmss-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  sku                 = "Standard_F2"
-  instances           = 1
-  admin_username      = "adminuser"
-  admin_password      = "P@ssword1234!"
-
-  disable_password_authentication = false
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
-
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
-
-  data_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-    lun                  = 10
-    disk_size_gb         = %d
-  }
-
-  network_interface {
-    name    = "example"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.test.id
-    }
-  }
-}
-`, r.templateLinux(data), data.RandomInteger, diskSizeGb)
-}
-
-func (r AzureFleetResource) disksDataDiskMultiple(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_azure_fleet" "test" {
-  name                = "acctestvmss-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  sku                 = "Standard_F2"
-  instances           = 1
-  admin_username      = "adminuser"
-  admin_password      = "P@ssword1234!"
-
-  disable_password_authentication = false
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
-
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
-
-  data_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-    disk_size_gb         = 10
-    lun                  = 10
-  }
-
-  data_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-    disk_size_gb         = 10
-    lun                  = 20
-  }
-
-  network_interface {
-    name    = "example"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.test.id
-    }
-  }
-}
-`, r.templateLinux(data), data.RandomInteger)
-}
-
-func (r AzureFleetResource) disksDataDiskStorageAccountType(data acceptance.TestData, storageAccountType string) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_azure_fleet" "test" {
-  name                = "acctestvmss-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  sku                 = "Standard_F2s_v2"
-  instances           = 1
-  admin_username      = "adminuser"
-  admin_password      = "P@ssword1234!"
-
-  disable_password_authentication = false
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
-
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
-
-  data_disk {
-    storage_account_type = %q
-    caching              = "None"
-    disk_size_gb         = 10
-    lun                  = 10
-  }
-
-  network_interface {
-    name    = "example"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.test.id
-    }
-  }
-}
-`, r.templateLinux(data), data.RandomInteger, storageAccountType)
-}
-
-func (r AzureFleetResource) disksDataDiskStorageAccountTypeWithRestrictedLocation(data acceptance.TestData, storageAccountType string, location string) string {
-	// Limited regional availability for some storage account type
-	data.Locations.Primary = location
-	return r.disksDataDiskStorageAccountType(data, storageAccountType)
-}
-
-func (r AzureFleetResource) disksDataDiskStorageAccountTypePremiumV2LRS(data acceptance.TestData) string {
-	// Limited regional availability for `PremiumV2_LRS`
-	// `PremiumV2_LRS` disks can only be can only be attached to zonal VMs currently
-	data.Locations.Primary = "westeurope"
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_azure_fleet" "test" {
-  name                = "acctestvmss-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  sku                 = "Standard_F2s_v2"
-  instances           = 1
-  admin_username      = "adminuser"
-  admin_password      = "P@ssword1234!"
-  zones               = ["1"]
-
-  disable_password_authentication = false
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
-
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
-
-  data_disk {
-    storage_account_type = "PremiumV2_LRS"
-    caching              = "None"
-    disk_size_gb         = 10
-    lun                  = 10
-  }
-
-  network_interface {
-    name    = "example"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.test.id
-    }
-  }
-}
-`, r.templateLinux(data), data.RandomInteger)
-}
-
-func (r AzureFleetResource) disksDataDiskStorageAccountTypePremiumV2LRSWithIOPSAndMBPS(data acceptance.TestData, iops int, mbps int) string {
-	// Limited regional availability for `PremiumV2_LRS`
-	// `PremiumV2_LRS` disks can only be can only be attached to zonal VMs currently
-	data.Locations.Primary = "westeurope"
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_azure_fleet" "test" {
-  name                = "acctestvmss-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  sku                 = "Standard_F2s_v2"
-  instances           = 1
-  admin_username      = "adminuser"
-  admin_password      = "P@ssword1234!"
-  zones               = ["1"]
-
-  disable_password_authentication = false
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
-
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
-
-  data_disk {
-    storage_account_type           = "PremiumV2_LRS"
-    caching                        = "None"
-    disk_size_gb                   = 10
-    lun                            = 10
-    ultra_ssd_disk_iops_read_write = %d
-    ultra_ssd_disk_mbps_read_write = %d
-  }
-
-  network_interface {
-    name    = "example"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.test.id
-    }
-  }
-}
-`, r.templateLinux(data), data.RandomInteger, iops, mbps)
-}
-
-func (r AzureFleetResource) disksDataDiskStorageAccountTypeUltraSSDLRS(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_azure_fleet" "test" {
-  name                = "acctestvmss-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  sku                 = "Standard_D2s_v3"
-  instances           = 1
-  admin_username      = "adminuser"
-  admin_password      = "P@ssword1234!"
-  zones               = [1, 2, 3]
-
-  disable_password_authentication = false
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
-
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
-
-  data_disk {
-    storage_account_type = "UltraSSD_LRS"
-    caching              = "None"
-    disk_size_gb         = 10
-    lun                  = 10
-  }
-
-  additional_capabilities {
-    ultra_ssd_enabled = true
-  }
-
-  network_interface {
-    name    = "example"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.test.id
-    }
-  }
-}
-`, r.templateLinuxWithLocation(data, "eastus2"), data.RandomInteger)
-}
-
-func (r AzureFleetResource) disksDataDiskStorageAccountTypeUltraSSDLRSWithIOPS(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_azure_fleet" "test" {
-  name                = "acctestvmss-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  sku                 = "Standard_D2s_v3"
-  instances           = 1
-  admin_username      = "adminuser"
-  admin_password      = "P@ssword1234!"
-  zones               = [1, 2, 3]
-
-  disable_password_authentication = false
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
-
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
-
-  data_disk {
-    storage_account_type           = "UltraSSD_LRS"
-    caching                        = "None"
-    disk_size_gb                   = 10
-    lun                            = 10
-    ultra_ssd_disk_iops_read_write = 101
-  }
-
-  additional_capabilities {
-    ultra_ssd_enabled = true
-  }
-
-  network_interface {
-    name    = "example"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.test.id
-    }
-  }
-}
-`, r.templateLinuxWithLocation(data, "eastus2"), data.RandomInteger)
-}
-
-func (r AzureFleetResource) disksDataDiskStorageAccountTypeUltraSSDLRSWithMBPS(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_azure_fleet" "test" {
-  name                = "acctestvmss-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  sku                 = "Standard_D2s_v3"
-  instances           = 1
-  admin_username      = "adminuser"
-  admin_password      = "P@ssword1234!"
-  zones               = [1, 2, 3]
-
-  disable_password_authentication = false
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
-
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
-
-  data_disk {
-    storage_account_type           = "UltraSSD_LRS"
-    caching                        = "None"
-    disk_size_gb                   = 10
-    lun                            = 10
-    ultra_ssd_disk_mbps_read_write = 11
-  }
-
-  additional_capabilities {
-    ultra_ssd_enabled = true
-  }
-
-  network_interface {
-    name    = "example"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.test.id
-    }
-  }
-}
-`, r.templateLinux(data), data.RandomInteger)
-}
-
-func (r AzureFleetResource) disksDataDiskStorageAccountTypeUltraSSDLRSWithIOPSAndMBPS(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_azure_fleet" "test" {
-  name                = "acctestvmss-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  sku                 = "Standard_D2s_v3"
-  instances           = 1
-  admin_username      = "adminuser"
-  admin_password      = "P@ssword1234!"
-  zones               = [1, 2, 3]
-
-  disable_password_authentication = false
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
-
-  os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-  }
-
-  data_disk {
-    storage_account_type           = "UltraSSD_LRS"
-    caching                        = "None"
-    disk_size_gb                   = 10
-    lun                            = 10
-    ultra_ssd_disk_iops_read_write = 101
-    ultra_ssd_disk_mbps_read_write = 11
-  }
-
-  additional_capabilities {
-    ultra_ssd_enabled = true
-  }
-
-  network_interface {
-    name    = "example"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.test.id
-    }
-  }
-}
-`, r.templateLinuxWithLocation(data, "eastus2"), data.RandomInteger)
-}
-
-func (r AzureFleetResource) disksDataDiskWriteAcceleratorEnabled(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_azure_fleet" "test" {
-  name                = "acctestvmss-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-  sku                 = "Standard_M8ms"
-  instances           = 1
-  admin_username      = "adminuser"
-  admin_password      = "P@ssword1234!"
-
-  disable_password_authentication = false
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
-  }
-
-  os_disk {
-    storage_account_type = "Premium_LRS"
-    caching              = "None"
-  }
-
-  data_disk {
-    storage_account_type      = "Premium_LRS"
-    caching                   = "None"
-    disk_size_gb              = 10
-    lun                       = 10
-    write_accelerator_enabled = true
-  }
-
-  network_interface {
-    name    = "example"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.test.id
-    }
-  }
-}
-`, r.templateLinux(data), data.RandomInteger)
 }
