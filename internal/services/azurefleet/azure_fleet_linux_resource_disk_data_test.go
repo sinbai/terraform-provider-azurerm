@@ -22,7 +22,7 @@ func TestAccFleetLinux_disksDataDiskBasic(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
@@ -37,7 +37,7 @@ func TestAccFleetLinux_disksDataDiskCaching(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
@@ -52,7 +52,7 @@ func TestAccFleetLinux_disksDataDiskDiskEncryptionSet(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
@@ -67,7 +67,7 @@ func TestAccFleetLinux_disksDataDiskMultiple(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
@@ -84,7 +84,7 @@ func TestAccFleetLinux_disksDataDiskStorageAccountTypeUltraSSDLRSWithIOPSAndMBPS
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
@@ -99,7 +99,7 @@ func TestAccFleetLinux_disksDataDiskWriteAcceleratorEnabled(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 

@@ -21,7 +21,7 @@ func TestAccFleetLinux_authPassword(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
@@ -51,7 +51,7 @@ func TestAccFleetLinux_authSSHKeyAndPassword(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 

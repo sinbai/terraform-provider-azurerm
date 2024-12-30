@@ -45,7 +45,17 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 
 				"os_profile": osProfileSchema(),
 
-				"storage_profile": storageProfileSchema(),
+				"image_reference": storageProfileImageReferenceSchema(),
+
+				"os_disk": storageProfileOsDiskSchema(),
+
+				"disk_controller_type": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskControllerTypes(), false),
+				},
+
+				"data_disk": storageProfileDataDiskSchema(),
 
 				"boot_diagnostic_enabled": {
 					Type:     pluginsdk.TypeBool,
@@ -631,49 +641,37 @@ func osProfileSchema() *pluginsdk.Schema {
 					ValidateFunc: validation.StringIsBase64,
 				},
 
-				"linux_configuration": {
-					Type:          pluginsdk.TypeList,
-					Optional:      true,
-					MaxItems:      1,
-					ConflictsWith: []string{"compute_profile.0.virtual_machine_profile.0.os_profile.0.windows_configuration"},
+				"password_authentication_enabled": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
+				},
+
+				"vm_agent_platform_updates_enabled": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
+				},
+
+				"patch_setting": linuxPatchSettingSchema(),
+
+				"provision_vm_agent_enabled": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
+				},
+
+				"ssh_keys": {
+					Type:     pluginsdk.TypeList,
+					Optional: true,
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
-							"password_authentication_enabled": {
-								Type:     pluginsdk.TypeBool,
-								Optional: true,
-								ForceNew: true,
+							"username": {
+								Type:         pluginsdk.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringIsNotEmpty,
 							},
-
-							"vm_agent_platform_updates_enabled": {
-								Type:     pluginsdk.TypeBool,
-								Optional: true,
-							},
-
-							"patch_setting": linuxPatchSettingSchema(),
-
-							"provision_vm_agent_enabled": {
-								Type:     pluginsdk.TypeBool,
-								Optional: true,
-								ForceNew: true,
-							},
-
-							"ssh_keys": {
-								Type:     pluginsdk.TypeList,
-								Optional: true,
-								Elem: &pluginsdk.Resource{
-									Schema: map[string]*pluginsdk.Schema{
-										"username": {
-											Type:         pluginsdk.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringIsNotEmpty,
-										},
-										"public_key": {
-											Type:         pluginsdk.TypeString,
-											Optional:     true,
-											ValidateFunc: validation.StringIsNotEmpty,
-										},
-									},
-								},
+							"public_key": {
+								Type:         pluginsdk.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringIsNotEmpty,
 							},
 						},
 					},
@@ -717,7 +715,6 @@ func osProfileSchema() *pluginsdk.Schema {
 						},
 					},
 				},
-
 				"windows_configuration": {
 					Type:          pluginsdk.TypeList,
 					Optional:      true,
@@ -808,29 +805,6 @@ func osProfileSchema() *pluginsdk.Schema {
 	}
 }
 
-func storageProfileSchema() *pluginsdk.Schema {
-	return &pluginsdk.Schema{
-		Type:     pluginsdk.TypeList,
-		Required: true,
-		MaxItems: 1,
-		Elem: &pluginsdk.Resource{
-			Schema: map[string]*pluginsdk.Schema{
-				"image_reference": storageProfileImageReferenceSchema(),
-
-				"os_disk": storageProfileOsDiskSchema(),
-
-				"disk_controller_type": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskControllerTypes(), false),
-				},
-
-				"data_disk": storageProfileDataDiskSchema(),
-			},
-		},
-	}
-}
-
 func linuxPatchSettingSchema() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
@@ -838,30 +812,21 @@ func linuxPatchSettingSchema() *pluginsdk.Schema {
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
+				"bypass_platform_safety_checks_enabled": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
+				},
+
+				"reboot_setting": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchAutomaticByPlatformRebootSetting(), false),
+				},
+
 				"assessment_mode": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxPatchAssessmentMode(), false),
-				},
-
-				"automatic_by_platform_setting": {
-					Type:     pluginsdk.TypeList,
-					Required: true,
-					MaxItems: 1,
-					Elem: &pluginsdk.Resource{
-						Schema: map[string]*pluginsdk.Schema{
-							"bypass_platform_safety_checks_enabled": {
-								Type:     pluginsdk.TypeBool,
-								Optional: true,
-							},
-
-							"reboot_setting": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchAutomaticByPlatformRebootSetting(), false),
-							},
-						},
-					},
 				},
 
 				"patch_mode": {
@@ -929,6 +894,10 @@ func securityProfileSchema() *pluginsdk.Schema {
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
+				"proxy_agent_key_incarnation_value": {
+					Type:     pluginsdk.TypeInt,
+					Required: true,
+				},
 				"encryption_at_host_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
@@ -939,14 +908,19 @@ func securityProfileSchema() *pluginsdk.Schema {
 					Optional:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
-
+				"proxy_agent_mode": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					Default:      string(fleets.ModeEnforce),
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForMode(), false),
+				},
 				"proxy_agent": {
 					Type:     pluginsdk.TypeList,
 					Optional: true,
 					MaxItems: 1,
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
-							// there is another property enable exists
+							// there is another property `enable` exists
 							// need to confirm whether the following properties should be set when this feature is enable?
 							// key_incarnation_value is required?
 							"key_incarnation_value": {
@@ -972,13 +946,11 @@ func securityProfileSchema() *pluginsdk.Schema {
 				"uefi_secure_boot_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
-					ForceNew: true,
 				},
 
 				"uefi_vtpm_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
-					ForceNew: true,
 				},
 			},
 		},
@@ -1157,7 +1129,36 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskCreateOptionTypes(), false),
 				},
 
-				"managed_disk": osDiskManagedDiskSchema(),
+				"disk_encryption_set_id": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validate.DiskEncryptionSetID,
+				},
+
+				"security_disk_encryption_set_id": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validate.DiskEncryptionSetID,
+				},
+
+				"security_encryption_type": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForSecurityTypes(), false),
+				},
+
+				"storage_account_type": {
+					Type:     pluginsdk.TypeString,
+					Required: true,
+					// `PremiumV2_LRS` and `UltraSSD_LRS` is not supported OS Disk
+					ValidateFunc: validation.StringInSlice([]string{
+						string(fleets.StorageAccountTypesPremiumLRS),
+						string(fleets.StorageAccountTypesPremiumZRS),
+						string(fleets.StorageAccountTypesStandardLRS),
+						string(fleets.StorageAccountTypesStandardSSDLRS),
+						string(fleets.StorageAccountTypesStandardSSDZRS),
+					}, false),
+				},
 
 				"delete_option": {
 					Type:         pluginsdk.TypeString,
@@ -1753,7 +1754,7 @@ func expandOSProfileModel(inputList []OSProfileModel, d *schema.ResourceData) *f
 
 	// The property 'osProfile.RequireGuestProvisionSignalEnabled' is not valid because the 'Microsoft.Compute/Agentless' feature is not enabled for this subscription
 	// it must either be set to True or omitted.
-	if v := d.GetRawConfig().AsValueMap()["compute_profile"].AsValueSlice()[0].AsValueMap()["virtual_machine_profile"].AsValueSlice()[0].AsValueMap()["os_profile"].AsValueSlice()[0].AsValueMap()["require_guest_provision_signal_enabled"]; !v.IsNull() {
+	if v := d.GetRawConfig().AsValueMap()["virtual_machine_profile"].AsValueSlice()[0].AsValueMap()["os_profile"].AsValueSlice()[0].AsValueMap()["require_guest_provision_signal_enabled"]; !v.IsNull() {
 		output.RequireGuestProvisionSignal = pointer.To(input.RequireGuestProvisionSignalEnabled)
 	}
 
@@ -2529,7 +2530,7 @@ func flattenOSProfileModel(input *fleets.VirtualMachineScaleSetOSProfile, d *sch
 	}
 	output.LinuxConfiguration = linuxConfiguration
 
-	output.AdminPassword = d.Get("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password").(string)
+	output.AdminPassword = d.Get("virtual_machine_profile.0.os_profile.0.admin_password").(string)
 	output.AdminUsername = pointer.From(input.AdminUsername)
 	output.ExtensionOperationsEnabled = pointer.From(input.AllowExtensionOperations)
 	output.ComputerNamePrefix = pointer.From(input.ComputerNamePrefix)

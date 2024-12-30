@@ -28,7 +28,7 @@ func TestAccAzureFleet_basic(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
@@ -56,21 +56,21 @@ func TestAccAzureFleet_update(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 		{
 			Config: r.update(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
@@ -84,21 +84,21 @@ func TestAccAzureFleet_spotCapacity(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 		{
 			Config: r.spotCapacityUpdate(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 		{
 			Config: r.spotCapacity(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
@@ -112,21 +112,21 @@ func TestAccAzureFleet_spotVmSizeProfile(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 		{
 			Config: r.spotVmSizeProfileUpdate(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 		{
 			Config: r.spotVmSizeProfile(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
@@ -140,7 +140,7 @@ func TestAccAzureFleet_additionalLocation(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
@@ -154,14 +154,14 @@ func TestAccAzureFleet_tempTest(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password", "compute_profile.0.compute_api_version"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password", "compute_api_version"),
 		{
 			Config: r.tempTestUpdate(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("compute_profile.0.virtual_machine_profile.0.os_profile.0.admin_password", "compute_profile.0.compute_api_version"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password", "compute_api_version"),
 	})
 }
 
@@ -196,9 +196,7 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DS1_v2"
   }
 
-  compute_profile {
-    %[4]s
-  }
+  %[4]s
 }
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.basicVirtualMachineProfile())
 }
@@ -227,9 +225,7 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_D2as_v4"
   }
 
-  compute_profile {
     %[4]s
-  }
   zones = ["1", "2", "3"]
 }
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.basicVirtualMachineProfile())
@@ -261,9 +257,9 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_D2as_v4"
   }
 
-  compute_profile {
+ 
     %[4]s
-  }
+  
   zones = ["1", "2", "3"]
 }
 `, template, data.RandomInteger, data.Locations.Primary, vmProfile)
@@ -293,11 +289,11 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_D2as_v4"
   }
 
-  compute_profile {
+ 
 
     %[4]s
 
-  }
+  
 
   zones = ["1", "2", "3"]
 }
@@ -328,11 +324,11 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DS2_v2"
   }
 
-  compute_profile {
+ 
 
     %[4]s
 
-  }
+  
   zones = ["1", "2", "3"]
 }
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.basicVirtualMachineProfile())
@@ -361,7 +357,7 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DS1_v2"
   }
 
-  compute_profile {
+
     compute_api_version = "2023-09-01"
     virtual_machine_profile {
       storage_profile {
@@ -405,7 +401,7 @@ resource "azurerm_azure_fleet" "test" {
       }
       network_api_version = "2020-11-01"
     }
-  }
+  
 
   zones = ["1", "2", "3"]
 }
@@ -435,7 +431,7 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DS1_v2"
   }
 
-  compute_profile {
+  
     compute_api_version = "2024-03-01"
     virtual_machine_profile {
       storage_profile {
@@ -479,7 +475,7 @@ resource "azurerm_azure_fleet" "test" {
       }
       network_api_version = "2020-11-01"
     }
-  }
+  
 
   zones = ["1", "2", "3"]
 }
@@ -504,9 +500,9 @@ resource "azurerm_azure_fleet" "import" {
     name = "Standard_DS1_v2"
   }
 
-  compute_profile {
+ 
     %s
-  }
+  
 }
 `, r.basic(data), r.basicVirtualMachineProfile())
 }
@@ -526,9 +522,9 @@ resource "azurerm_azure_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  compute_profile {
+  
     %[4]s
-  }
+  
 
   additional_location_profile {
     location = "%[5]s"
@@ -585,9 +581,9 @@ resource "azurerm_azure_fleet" "test" {
     rank = "10001"
   }
 
-  compute_profile {
+ 
     %[4]s
-  }
+  
   additional_location_profile {
     location = "%[5]s"
     %[6]s
@@ -908,9 +904,9 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DS1_v2"
   }
 
-  compute_profile {
+  
 		%[5]s
-  }
+  
 
   zones = [1, 2, 3]
 }
@@ -939,9 +935,9 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DS1_v2"
   }
 
-  compute_profile {
+ 
 		%[5]s
-  }
+  
 }
 
 %[6]s

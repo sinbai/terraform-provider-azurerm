@@ -20,20 +20,24 @@ import (
 )
 
 type AzureFleetResourceModel struct {
-	Name                      string                                     `tfschema:"name"`
-	ResourceGroupName         string                                     `tfschema:"resource_group_name"`
-	Identity                  []identity.ModelSystemAssignedUserAssigned `tfschema:"identity"`
-	Location                  string                                     `tfschema:"location"`
-	Plan                      []PlanModel                                `tfschema:"plan"`
-	AdditionalLocationProfile []AdditionalLocationProfileModel           `tfschema:"additional_location_profile"`
-	ComputeProfile            []ComputeProfileModel                      `tfschema:"compute_profile"`
-	RegularPriorityProfile    []RegularPriorityProfileModel              `tfschema:"regular_priority_profile"`
-	SpotPriorityProfile       []SpotPriorityProfileModel                 `tfschema:"spot_priority_profile"`
-	UniqueId                  string                                     `tfschema:"unique_id"`
-	VMAttributes              []VMAttributesModel                        `tfschema:"vm_attributes"`
-	VMSizesProfile            []VMSizeProfileModel                       `tfschema:"vm_sizes_profile"`
-	Tags                      map[string]string                          `tfschema:"tags"`
-	Zones                     []string                                   `tfschema:"zones"`
+	Name                                     string                                     `tfschema:"name"`
+	ResourceGroupName                        string                                     `tfschema:"resource_group_name"`
+	Identity                                 []identity.ModelSystemAssignedUserAssigned `tfschema:"identity"`
+	Location                                 string                                     `tfschema:"location"`
+	Plan                                     []PlanModel                                `tfschema:"plan"`
+	AdditionalLocationProfile                []AdditionalLocationProfileModel           `tfschema:"additional_location_profile"`
+	AdditionalCapabilitiesHibernationEnabled bool                                       `tfschema:"additional_capabilities_ultra_ssd_enabled"`
+	AdditionalCapabilitiesUltraSSDEnabled    bool                                       `tfschema:"additional_capabilities_hibernation_enabled"`
+	VirtualMachineProfile                    []VirtualMachineProfileModel               `tfschema:"virtual_machine_profile"`
+	ComputeApiVersion                        string                                     `tfschema:"compute_api_version"`
+	PlatformFaultDomainCount                 int64                                      `tfschema:"platform_fault_domain_count"`
+	RegularPriorityProfile                   []RegularPriorityProfileModel              `tfschema:"regular_priority_profile"`
+	SpotPriorityProfile                      []SpotPriorityProfileModel                 `tfschema:"spot_priority_profile"`
+	UniqueId                                 string                                     `tfschema:"unique_id"`
+	VMAttributes                             []VMAttributesModel                        `tfschema:"vm_attributes"`
+	VMSizesProfile                           []VMSizeProfileModel                       `tfschema:"vm_sizes_profile"`
+	Tags                                     map[string]string                          `tfschema:"tags"`
+	Zones                                    []string                                   `tfschema:"zones"`
 }
 
 type AdditionalLocationProfileModel struct {
@@ -295,14 +299,6 @@ type OSDiskModel struct {
 	WriteAcceleratorEnabled bool               `tfschema:"write_accelerator_enabled"`
 }
 
-type ComputeProfileModel struct {
-	AdditionalCapabilitiesHibernationEnabled bool                         `tfschema:"additional_capabilities_ultra_ssd_enabled"`
-	AdditionalCapabilitiesUltraSSDEnabled    bool                         `tfschema:"additional_capabilities_hibernation_enabled"`
-	VirtualMachineProfile                    []VirtualMachineProfileModel `tfschema:"virtual_machine_profile"`
-	ComputeApiVersion                        string                       `tfschema:"compute_api_version"`
-	PlatformFaultDomainCount                 int64                        `tfschema:"platform_fault_domain_count"`
-}
-
 type PlanModel struct {
 	Name          string `tfschema:"name"`
 	Product       string `tfschema:"product"`
@@ -402,45 +398,33 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 
 		"resource_group_name": commonschema.ResourceGroupName(),
 
-		"compute_profile": {
-			Type:     pluginsdk.TypeList,
-			Required: true,
-			MaxItems: 1,
-			Elem: &pluginsdk.Resource{
-				Schema: map[string]*pluginsdk.Schema{
-					"virtual_machine_profile": virtualMachineProfileSchema(true),
+		"virtual_machine_profile": virtualMachineProfileSchema(true),
 
-					"additional_capabilities_hibernation_enabled": {
-						Type:     pluginsdk.TypeBool,
-						Optional: true,
-						Default:  false,
-						ForceNew: true,
-					},
+		"additional_capabilities_hibernation_enabled": {
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
 
-					// NOTE: requires registration to use:
-					// $ az feature show --namespace Microsoft.Compute --name UltraSSDWithVMSS
-					// $ az provider register -n Microsoft.Compute
-					"additional_capabilities_ultra_ssd_enabled": {
-						Type:     pluginsdk.TypeBool,
-						Optional: true,
-						Default:  false,
-						ForceNew: true,
-					},
+		// NOTE: requires registration to use:
+		// $ az feature show --namespace Microsoft.Compute --name UltraSSDWithVMSS
+		// $ az provider register -n Microsoft.Compute
+		"additional_capabilities_ultra_ssd_enabled": {
+			Type:     pluginsdk.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
 
-					"platform_fault_domain_count": {
-						Type:     pluginsdk.TypeInt,
-						Optional: true,
-						ForceNew: true,
-						Default:  1,
-					},
+		"platform_fault_domain_count": {
+			Type:     pluginsdk.TypeInt,
+			Optional: true,
+			Default:  1,
+		},
 
-					"compute_api_version": {
-						Type:         pluginsdk.TypeString,
-						Optional:     true,
-						ValidateFunc: validation.StringIsNotEmpty,
-					},
-				},
-			},
+		"compute_api_version": {
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"additional_location_profile": {
@@ -854,11 +838,6 @@ func vmAttributesMaxMinFloatSchema(parent string) map[string]*pluginsdk.Schema {
 
 func (r AzureFleetResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
-		"time_created": {
-			Type:     pluginsdk.TypeString,
-			Computed: true,
-		},
-
 		"unique_id": {
 			Type:     pluginsdk.TypeString,
 			Computed: true,
@@ -913,11 +892,25 @@ func (r AzureFleetResource) Create() sdk.ResourceFunc {
 			}
 			properties.Properties.AdditionalLocationsProfile = additionalLocationsProfileValue
 
-			computeProfileValue, err := expandComputeProfileModel(model.ComputeProfile, metadata.ResourceData)
+			computeProfile := fleets.ComputeProfile{
+				AdditionalVirtualMachineCapabilities: &fleets.AdditionalCapabilities{
+					HibernationEnabled: pointer.To(model.AdditionalCapabilitiesHibernationEnabled),
+					UltraSSDEnabled:    pointer.To(model.AdditionalCapabilitiesUltraSSDEnabled),
+				},
+				PlatformFaultDomainCount: pointer.To(model.PlatformFaultDomainCount),
+			}
+
+			baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData)
 			if err != nil {
 				return err
 			}
-			properties.Properties.ComputeProfile = pointer.From(computeProfileValue)
+			computeProfile.BaseVirtualMachineProfile = pointer.From(baseVirtualMachineProfileValue)
+
+			properties.Properties.ComputeProfile = computeProfile
+
+			if model.ComputeApiVersion != "" {
+				computeProfile.ComputeApiVersion = pointer.To(model.ComputeApiVersion)
+			}
 
 			properties.Properties.VMSizesProfile = pointer.From(expandVMSizeProfileModel(model.VMSizesProfile))
 
@@ -963,7 +956,7 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 
 			// set `admin_password` as API requires 'osProfile.adminPassword' when updating but the GET API does not return the password
 			if v := properties.Properties.ComputeProfile.BaseVirtualMachineProfile.OsProfile; v != nil {
-				v.AdminPassword = pointer.To(model.ComputeProfile[0].VirtualMachineProfile[0].OsProfile[0].AdminPassword)
+				v.AdminPassword = pointer.To(model.VirtualMachineProfile[0].OsProfile[0].AdminPassword)
 			}
 			if metadata.ResourceData.HasChange("identity") {
 				identityValue, err := identity.ExpandLegacySystemAndUserAssignedMapFromModel(model.Identity)
@@ -985,13 +978,38 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 				properties.Properties.AdditionalLocationsProfile = additionalLocationsProfileValue
 			}
 
-			if metadata.ResourceData.HasChange("compute_profile") {
-				computeProfileValue, err := expandComputeProfileModel(model.ComputeProfile, metadata.ResourceData)
+			computeProfile := properties.Properties.ComputeProfile
+			if metadata.ResourceData.HasChange("additional_capabilities_ultra_ssd_enabled") {
+				if computeProfile.AdditionalVirtualMachineCapabilities != nil {
+					computeProfile.AdditionalVirtualMachineCapabilities.UltraSSDEnabled = pointer.To(model.AdditionalCapabilitiesUltraSSDEnabled)
+				} else {
+					computeProfile.AdditionalVirtualMachineCapabilities = &fleets.AdditionalCapabilities{
+						UltraSSDEnabled: pointer.To(model.AdditionalCapabilitiesUltraSSDEnabled),
+					}
+				}
+			}
+			if metadata.ResourceData.HasChange("additional_capabilities_hibernation_enabled") {
+				if computeProfile.AdditionalVirtualMachineCapabilities != nil {
+					computeProfile.AdditionalVirtualMachineCapabilities.HibernationEnabled = pointer.To(model.AdditionalCapabilitiesHibernationEnabled)
+				} else {
+					computeProfile.AdditionalVirtualMachineCapabilities = &fleets.AdditionalCapabilities{
+						HibernationEnabled: pointer.To(model.AdditionalCapabilitiesHibernationEnabled),
+					}
+				}
+			}
+			if metadata.ResourceData.HasChange("virtual_machine_profile") {
+
+				baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData)
 				if err != nil {
 					return err
 				}
-
-				properties.Properties.ComputeProfile = pointer.From(computeProfileValue)
+				computeProfile.BaseVirtualMachineProfile = pointer.From(baseVirtualMachineProfileValue)
+			}
+			if metadata.ResourceData.HasChange("platform_fault_domain_count") {
+				computeProfile.PlatformFaultDomainCount = pointer.To(model.PlatformFaultDomainCount)
+			}
+			if metadata.ResourceData.HasChange("compute_api_version") {
+				computeProfile.ComputeApiVersion = pointer.To(model.ComputeApiVersion)
 			}
 
 			if metadata.ResourceData.HasChange("regular_priority_profile") {
@@ -1072,11 +1090,21 @@ func (r AzureFleetResource) Read() sdk.ResourceFunc {
 					}
 					state.AdditionalLocationProfile = additionalLocationsProfileValue
 
-					computeProfileValue, err := flattenComputeProfileModel(&props.ComputeProfile, metadata)
+					if v := props.ComputeProfile.AdditionalVirtualMachineCapabilities; v != nil {
+						state.AdditionalCapabilitiesHibernationEnabled = pointer.From(v.HibernationEnabled)
+						state.AdditionalCapabilitiesUltraSSDEnabled = pointer.From(v.UltraSSDEnabled)
+					}
+
+					baseVirtualMachineProfileValue, err := flattenVirtualMachineProfileModel(&props.ComputeProfile.BaseVirtualMachineProfile, metadata)
 					if err != nil {
 						return err
 					}
-					state.ComputeProfile = computeProfileValue
+					state.VirtualMachineProfile = baseVirtualMachineProfileValue
+
+					// Since the default value returned by API will be the latest supported computeApiVersion by Compute Fleet, get the `compute_api_version` from config.
+					state.ComputeApiVersion = metadata.ResourceData.Get("compute_api_version").(string)
+					state.PlatformFaultDomainCount = pointer.From(props.ComputeProfile.PlatformFaultDomainCount)
+
 					state.RegularPriorityProfile = flattenRegularPriorityProfileModel(props.RegularPriorityProfile)
 					state.SpotPriorityProfile = flattenSpotPriorityProfileModel(props.SpotPriorityProfile)
 					state.UniqueId = pointer.From(props.UniqueId)
@@ -1174,12 +1202,12 @@ func (r AzureFleetResource) CustomizeDiff() sdk.ResourceFunc {
 				return fmt.Errorf("the VM sizes count of `vm_sizes_profile` cannot be greater than `15`")
 			}
 
-			if v := state.ComputeProfile[0].VirtualMachineProfile[0].StorageProfile[0].DataDisks; len(v) > 0 {
-				storageAccountType := state.ComputeProfile[0].VirtualMachineProfile[0].StorageProfile[0].DataDisks[0].ManagedDisk[0].StorageAccountType
-				ultraSSDEnabled := state.ComputeProfile[0].AdditionalCapabilitiesUltraSSDEnabled
+			if v := state.VirtualMachineProfile[0].StorageProfile[0].DataDisks; len(v) > 0 {
+				storageAccountType := state.VirtualMachineProfile[0].StorageProfile[0].DataDisks[0].ManagedDisk[0].StorageAccountType
+				ultraSSDEnabled := state.AdditionalCapabilitiesUltraSSDEnabled
 
 				if !ultraSSDEnabled && storageAccountType == string(fleets.StorageAccountTypesUltraSSDLRS) {
-					return fmt.Errorf("`UltraSSD_LRS` storage account type can be used only when compute_profile.0.AdditionalCapabilitiesUltraSSDEnabled is enalbed")
+					return fmt.Errorf("`UltraSSD_LRS` storage account type can be used only when AdditionalCapabilitiesUltraSSDEnabled is enalbed")
 				}
 
 				if storageAccountType == string(fleets.StorageAccountTypesPremiumVTwoLRS) {
@@ -1447,42 +1475,6 @@ func expandVMSizeProfileModel(inputList []VMSizeProfileModel) *[]fleets.VMSizePr
 	return &outputList
 }
 
-func expandComputeProfileModel(inputList []ComputeProfileModel, d *schema.ResourceData) (*fleets.ComputeProfile, error) {
-	if len(inputList) == 0 {
-		return nil, nil
-	}
-	input := &inputList[0]
-	output := fleets.ComputeProfile{
-		AdditionalVirtualMachineCapabilities: expandAdditionalCapabilitiesModel(input),
-		PlatformFaultDomainCount:             pointer.To(input.PlatformFaultDomainCount),
-	}
-
-	baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(input.VirtualMachineProfile, d)
-	if err != nil {
-		return nil, err
-	}
-	output.BaseVirtualMachineProfile = pointer.From(baseVirtualMachineProfileValue)
-
-	if input.ComputeApiVersion != "" {
-		output.ComputeApiVersion = pointer.To(input.ComputeApiVersion)
-	}
-
-	return &output, nil
-}
-
-func expandAdditionalCapabilitiesModel(input *ComputeProfileModel) *fleets.AdditionalCapabilities {
-	if input == nil {
-		return nil
-	}
-
-	output := fleets.AdditionalCapabilities{
-		HibernationEnabled: pointer.To(input.AdditionalCapabilitiesHibernationEnabled),
-		UltraSSDEnabled:    pointer.To(input.AdditionalCapabilitiesUltraSSDEnabled),
-	}
-
-	return &output
-}
-
 func expandAdditionalLocationProfileModel(inputList []AdditionalLocationProfileModel, d *schema.ResourceData) (*fleets.AdditionalLocationsProfile, error) {
 	if len(inputList) == 0 {
 		return nil, nil
@@ -1548,31 +1540,6 @@ func flattenAdditionalLocationProfileModel(input *fleets.AdditionalLocationsProf
 	}
 
 	output := AdditionalLocationProfileModel{}
-
-	return append(outputList, output), nil
-}
-
-func flattenComputeProfileModel(input *fleets.ComputeProfile, metadata sdk.ResourceMetaData) ([]ComputeProfileModel, error) {
-	var outputList []ComputeProfileModel
-	if input == nil {
-		return outputList, nil
-	}
-
-	output := ComputeProfileModel{}
-	if v := input.AdditionalVirtualMachineCapabilities; v != nil {
-		output.AdditionalCapabilitiesHibernationEnabled = pointer.From(v.HibernationEnabled)
-		output.AdditionalCapabilitiesUltraSSDEnabled = pointer.From(v.UltraSSDEnabled)
-	}
-
-	baseVirtualMachineProfileValue, err := flattenVirtualMachineProfileModel(&input.BaseVirtualMachineProfile, metadata)
-	if err != nil {
-		return nil, err
-	}
-	output.VirtualMachineProfile = baseVirtualMachineProfileValue
-
-	// Since the default value returned by API will be the latest supported computeApiVersion by Compute Fleet, get the `compute_api_version` from config.
-	output.ComputeApiVersion = metadata.ResourceData.Get("compute_profile.0.compute_api_version").(string)
-	output.PlatformFaultDomainCount = pointer.From(input.PlatformFaultDomainCount)
 
 	return append(outputList, output), nil
 }
