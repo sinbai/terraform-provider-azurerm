@@ -65,7 +65,10 @@ type VirtualMachineProfileModel struct {
 	SecurityPostureReference             []SecurityPostureReferenceModel `tfschema:"security_posture_reference"`
 	SecurityProfile                      []SecurityProfileModel          `tfschema:"security_profile"`
 	ServiceArtifactId                    string                          `tfschema:"service_artifact_id"`
-	StorageProfile                       []StorageProfileModel           `tfschema:"storage_profile"`
+	DataDisks                            []DataDiskModel                 `tfschema:"data_disk"`
+	OsDisk                               []OSDiskModel                   `tfschema:"os_disk"`
+	DiskControllerType                   string                          `tfschema:"disk_controller_type"`
+	ImageReference                       []ImageReferenceModel           `tfschema:"image_reference"`
 	UserDataBase64                       string                          `tfschema:"user_data_base64"`
 }
 
@@ -245,13 +248,6 @@ type SecurityProfileModel struct {
 type ProxyAgentModel struct {
 	KeyIncarnationValue int64  `tfschema:"key_incarnation_value"`
 	mode                string `tfschema:"mode"`
-}
-
-type StorageProfileModel struct {
-	DataDisks          []DataDiskModel       `tfschema:"data_disk"`
-	DiskControllerType string                `tfschema:"disk_controller_type"`
-	ImageReference     []ImageReferenceModel `tfschema:"image_reference"`
-	OsDisk             []OSDiskModel         `tfschema:"os_disk"`
 }
 
 type DataDiskModel struct {

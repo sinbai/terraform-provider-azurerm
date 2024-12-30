@@ -641,37 +641,49 @@ func osProfileSchema() *pluginsdk.Schema {
 					ValidateFunc: validation.StringIsBase64,
 				},
 
-				"password_authentication_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-				},
-
-				"vm_agent_platform_updates_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-				},
-
-				"patch_setting": linuxPatchSettingSchema(),
-
-				"provision_vm_agent_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-				},
-
-				"ssh_keys": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
+				"linux_configuration": {
+					Type:          pluginsdk.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"compute_profile.0.virtual_machine_profile.0.os_profile.0.windows_configuration"},
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
-							"username": {
-								Type:         pluginsdk.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
+							"password_authentication_enabled": {
+								Type:     pluginsdk.TypeBool,
+								Optional: true,
+								ForceNew: true,
 							},
-							"public_key": {
-								Type:         pluginsdk.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
+
+							"vm_agent_platform_updates_enabled": {
+								Type:     pluginsdk.TypeBool,
+								Optional: true,
+							},
+
+							"patch_setting": linuxPatchSettingSchema(),
+
+							"provision_vm_agent_enabled": {
+								Type:     pluginsdk.TypeBool,
+								Optional: true,
+								ForceNew: true,
+							},
+
+							"ssh_keys": {
+								Type:     pluginsdk.TypeList,
+								Optional: true,
+								Elem: &pluginsdk.Resource{
+									Schema: map[string]*pluginsdk.Schema{
+										"username": {
+											Type:         pluginsdk.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringIsNotEmpty,
+										},
+										"public_key": {
+											Type:         pluginsdk.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringIsNotEmpty,
+										},
+									},
+								},
 							},
 						},
 					},
@@ -715,6 +727,7 @@ func osProfileSchema() *pluginsdk.Schema {
 						},
 					},
 				},
+
 				"windows_configuration": {
 					Type:          pluginsdk.TypeList,
 					Optional:      true,
@@ -1324,7 +1337,6 @@ func expandBaseVirtualMachineProfileModel(inputList []VirtualMachineProfileModel
 		SecurityPostureReference: expandSecurityPostureReferenceModel(input.SecurityPostureReference),
 		SecurityProfile:          expandSecurityProfileModel(input.SecurityProfile),
 		ServiceArtifactReference: expandServiceArtifactReference(input.ServiceArtifactId),
-		StorageProfile:           expandStorageProfileModel(input.StorageProfile),
 	}
 
 	extensionProfileValue, err := expandExtensionProfileModel(input.Extensions, input.ExtensionsTimeBudget)
@@ -1340,6 +1352,14 @@ func expandBaseVirtualMachineProfileModel(inputList []VirtualMachineProfileModel
 	if input.UserDataBase64 != "" {
 		output.UserData = pointer.To(input.UserDataBase64)
 	}
+
+	storageProfile := &fleets.VirtualMachineScaleSetStorageProfile{
+		DataDisks:          expandDataDiskModel(input.DataDisks),
+		DiskControllerType: pointer.To(fleets.DiskControllerTypes(input.DiskControllerType)),
+		ImageReference:     expandImageReferenceModel(input.ImageReference),
+		OsDisk:             expandOSDiskModel(input.OsDisk),
+	}
+	output.StorageProfile = storageProfile
 
 	return &output, nil
 }
@@ -2051,22 +2071,6 @@ func expandProxyAgentModel(inputList []ProxyAgentModel) *fleets.ProxyAgentSettin
 	return &output
 }
 
-func expandStorageProfileModel(inputList []StorageProfileModel) *fleets.VirtualMachineScaleSetStorageProfile {
-	if len(inputList) == 0 {
-		return nil
-	}
-
-	input := &inputList[0]
-	output := fleets.VirtualMachineScaleSetStorageProfile{
-		DataDisks:          expandDataDiskModel(input.DataDisks),
-		DiskControllerType: pointer.To(fleets.DiskControllerTypes(input.DiskControllerType)),
-		ImageReference:     expandImageReferenceModel(input.ImageReference),
-		OsDisk:             expandOSDiskModel(input.OsDisk),
-	}
-
-	return &output
-}
-
 func expandDataDiskModel(inputList []DataDiskModel) *[]fleets.VirtualMachineScaleSetDataDisk {
 	var outputList []fleets.VirtualMachineScaleSetDataDisk
 	for _, v := range inputList {
@@ -2263,6 +2267,32 @@ func flattenVirtualMachineProfileModel(input *fleets.BaseVirtualMachineProfile, 
 	if v := input.ServiceArtifactReference; v != nil {
 		output.ServiceArtifactId = pointer.From(v.Id)
 	}
+
+
+	//func flattenStorageProfileModel(input *fleets.VirtualMachineScaleSetStorageProfile) []StorageProfileModel {
+	//	var outputList []StorageProfileModel
+	//	if input == nil {
+	//	return outputList
+	//}
+	//	output := StorageProfileModel{
+	//	DataDisks:      flattenDataDiskModel(input.DataDisks),
+	//	ImageReference: flattenImageReferenceModel(input.ImageReference),
+	//	OsDisk:         flattenOSDiskModel(input.OsDisk),
+	//}
+	//
+	//	output.DiskControllerType = string(pointer.From(input.DiskControllerType))
+	//
+	//	return append(outputList, output)
+	//}
+
+
+	if v := input.StorageProfile; v != nil {
+	output.DataDisks =      flattenDataDiskModel(input),
+			output.ImageReference = flattenImageReferenceModel(input.ImageReference),
+			output.OsDisk =        flattenOSDiskModel(input.OsDisk),
+		output.DiskControllerType = string(pointer.From(input.DiskControllerType))
+	}
+
 
 	if se := input.ScheduledEventsProfile; se != nil {
 		if v := se.TerminateNotificationProfile; v != nil {
@@ -2683,22 +2713,6 @@ func flattenProxyAgentModel(input *fleets.ProxyAgentSettings) []ProxyAgentModel 
 	output := ProxyAgentModel{}
 	output.KeyIncarnationValue = pointer.From(input.KeyIncarnationId)
 	output.mode = string(pointer.From(input.Mode))
-
-	return append(outputList, output)
-}
-
-func flattenStorageProfileModel(input *fleets.VirtualMachineScaleSetStorageProfile) []StorageProfileModel {
-	var outputList []StorageProfileModel
-	if input == nil {
-		return outputList
-	}
-	output := StorageProfileModel{
-		DataDisks:      flattenDataDiskModel(input.DataDisks),
-		ImageReference: flattenImageReferenceModel(input.ImageReference),
-		OsDisk:         flattenOSDiskModel(input.OsDisk),
-	}
-
-	output.DiskControllerType = string(pointer.From(input.DiskControllerType))
 
 	return append(outputList, output)
 }
