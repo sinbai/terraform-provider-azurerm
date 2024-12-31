@@ -55,9 +55,10 @@ type VirtualMachineProfileModel struct {
 	VMSize                               []VMSizeModel                   `tfschema:"vm_size"`
 	LicenseType                          string                          `tfschema:"license_type"`
 	NetworkHealthProbeId                 string                          `tfschema:"network_health_probe_id"`
-	NetworkApiVersion                    string                          `tfschema:"network_api_version"`
 	NetworkInterface                     []NetworkInterfaceModel         `tfschema:"network_interface"`
 	OsProfile                            []OSProfileModel                `tfschema:"os_profile"`
+	ExtensionOperationsEnabled           bool                            `tfschema:"extension_operations_enabled"`
+	RequireGuestProvisionSignalEnabled   bool                            `tfschema:"require_guest_provision_signal_enabled"`
 	ScheduledEventTerminationEnabled     bool                            `tfschema:"scheduled_event_termination_enabled"`
 	ScheduledEventTerminationTimeout     string                          `tfschema:"scheduled_event_termination_timeout"`
 	ScheduledEventOsImageEnabled         bool                            `tfschema:"scheduled_event_os_image_enabled"`
@@ -139,15 +140,15 @@ type PublicIPAddressModel struct {
 	DomainNameLabel      string       `tfschema:"domain_name_label"`
 	DomainNameLabelScope string       `tfschema:"domain_name_label_scope"`
 	IdleTimeoutInMinutes int64        `tfschema:"idle_timeout_in_minutes"`
-	IPTags               []IPTagModel `tfschema:"ip_tags"`
+	IPTag                []IPTagModel `tfschema:"ip_tag"`
 	Version              string       `tfschema:"version"`
 	PublicIPPrefix       string       `tfschema:"public_ip_prefix_id"`
 	Sku                  []SkuModel   `tfschema:"sku"`
 }
 
 type IPTagModel struct {
-	IPTagType string `tfschema:"ip_tag_type"`
-	Tag       string `tfschema:"tag"`
+	Type string `tfschema:"type"`
+	Tag  string `tfschema:"tag"`
 }
 
 type SkuModel struct {
@@ -156,18 +157,16 @@ type SkuModel struct {
 }
 
 type OSProfileModel struct {
-	AdminPassword                      string                      `tfschema:"admin_password"`
-	AdminUsername                      string                      `tfschema:"admin_username"`
-	ExtensionOperationsEnabled         bool                        `tfschema:"extension_operations_enabled"`
-	ComputerNamePrefix                 string                      `tfschema:"computer_name_prefix"`
-	CustomDataBase64                   string                      `tfschema:"custom_data_base64"`
-	LinuxConfiguration                 []LinuxConfigurationModel   `tfschema:"linux_configuration"`
-	RequireGuestProvisionSignalEnabled bool                        `tfschema:"require_guest_provision_signal_enabled"`
-	Secret                             []SecretModel               `tfschema:"secret"`
-	WindowsConfiguration               []WindowsConfigurationModel `tfschema:"windows_configuration"`
+	CustomDataBase64     string                      `tfschema:"custom_data_base64"`
+	LinuxConfiguration   []LinuxConfigurationModel   `tfschema:"linux_configuration"`
+	WindowsConfiguration []WindowsConfigurationModel `tfschema:"windows_configuration"`
 }
 
 type LinuxConfigurationModel struct {
+	AdminPassword                 string                   `tfschema:"admin_password"`
+	AdminUsername                 string                   `tfschema:"admin_username"`
+	ComputerNamePrefix            string                   `tfschema:"computer_name_prefix"`
+	Secret                        []SecretModel            `tfschema:"secret"`
 	PasswordAuthenticationEnabled bool                     `tfschema:"password_authentication_enabled"`
 	VMAgentPlatformUpdatesEnabled bool                     `tfschema:"vm_agent_platform_updates_enabled"`
 	PatchSetting                  []LinuxPatchSettingModel `tfschema:"patch_setting"`
@@ -202,20 +201,20 @@ type CertificateModel struct {
 }
 
 type WindowsConfigurationModel struct {
-	AdditionalUnattendContent     []AdditionalUnattendContentModel `tfschema:"additional_unattend_content"`
-	AutomaticUpdatesEnabled       bool                             `tfschema:"automatic_updates_enabled"`
-	VMAgentPlatformUpdatesEnabled bool                             `tfschema:"vm_agent_platform_updates_enabled"`
-	PatchSetting                  []WindowsPatchSettingModel       `tfschema:"patch_setting"`
-	ProvisionVMAgentEnabled       bool                             `tfschema:"provision_vm_agent_enabled"`
-	TimeZone                      string                           `tfschema:"time_zone"`
-	WinRM                         []WinRMModel                     `tfschema:"winrm"`
-}
-
-type WindowsPatchSettingModel struct {
-	AssessmentMode             string                            `tfschema:"assessment_mode"`
-	PatchMode                  string                            `tfschema:"patch_mode"`
-	AutomaticByPlatformSetting []AutomaticByPlatformSettingModel `tfschema:"automatic_by_platform_setting"`
-	HotPatchingEnabled         bool                              `tfschema:"hot_patching_enabled"`
+	AdminPassword                 string                            `tfschema:"admin_password"`
+	AdminUsername                 string                            `tfschema:"admin_username"`
+	ComputerNamePrefix            string                            `tfschema:"computer_name_prefix"`
+	Secret                        []SecretModel                     `tfschema:"secret"`
+	AdditionalUnattendContent     []AdditionalUnattendContentModel  `tfschema:"additional_unattend_content"`
+	AutomaticUpdatesEnabled       bool                              `tfschema:"automatic_updates_enabled"`
+	VMAgentPlatformUpdatesEnabled bool                              `tfschema:"vm_agent_platform_updates_enabled"`
+	AssessmentMode                string                            `tfschema:"assessment_mode"`
+	PatchMode                     string                            `tfschema:"patch_mode"`
+	AutomaticByPlatformSetting    []AutomaticByPlatformSettingModel `tfschema:"automatic_by_platform_setting"`
+	HotPatchingEnabled            bool                              `tfschema:"hot_patching_enabled"`
+	ProvisionVMAgentEnabled       bool                              `tfschema:"provision_vm_agent_enabled"`
+	TimeZone                      string                            `tfschema:"time_zone"`
+	WinRM                         []WinRMModel                      `tfschema:"winrm_listener"`
 }
 
 type AdditionalUnattendContentModel struct {
@@ -251,23 +250,19 @@ type ProxyAgentModel struct {
 }
 
 type DataDiskModel struct {
-	Caching                 string             `tfschema:"caching"`
-	CreateOption            string             `tfschema:"create_option"`
-	DeleteOption            string             `tfschema:"delete_option"`
-	DiskIOPSReadWrite       int64              `tfschema:"disk_iops_read_write"`
-	DiskMbpsReadWrite       int64              `tfschema:"disk_mbps_read_write"`
-	DiskSizeInGB            int64              `tfschema:"disk_size_in_gb"`
-	Lun                     int64              `tfschema:"lun"`
-	ManagedDisk             []ManagedDiskModel `tfschema:"managed_disk"`
-	Name                    string             `tfschema:"name"`
-	WriteAcceleratorEnabled bool               `tfschema:"write_accelerator_enabled"`
-}
-
-type ManagedDiskModel struct {
+	Caching                     string `tfschema:"caching"`
+	CreateOption                string `tfschema:"create_option"`
+	DeleteOption                string `tfschema:"delete_option"`
+	DiskIOPSReadWrite           int64  `tfschema:"disk_iops_read_write"`
+	DiskMbpsReadWrite           int64  `tfschema:"disk_mbps_read_write"`
+	DiskSizeInGB                int64  `tfschema:"disk_size_in_gb"`
 	DiskEncryptionSetId         string `tfschema:"disk_encryption_set_id"`
 	SecurityDiskEncryptionSetId string `tfschema:"security_disk_encryption_set_id"`
 	SecurityEncryptionType      string `tfschema:"security_encryption_type"`
 	StorageAccountType          string `tfschema:"storage_account_type"`
+	Lun                         int64  `tfschema:"lun"`
+	Name                        string `tfschema:"name"`
+	WriteAcceleratorEnabled     bool   `tfschema:"write_accelerator_enabled"`
 }
 
 type ImageReferenceModel struct {
@@ -281,18 +276,19 @@ type ImageReferenceModel struct {
 }
 
 type OSDiskModel struct {
-	Caching                 string             `tfschema:"caching"`
-	CreateOption            string             `tfschema:"create_option"`
-	DeleteOption            string             `tfschema:"delete_option"`
-	DiffDiskOption          string             `tfschema:"diff_disk_option"`
-	DiffDiskPlacement       string             `tfschema:"diff_disk_placement"`
-	DiskSizeInGB            int64              `tfschema:"disk_size_in_gb"`
-	ImageUri                string             `tfschema:"image_uri"`
-	ManagedDisk             []ManagedDiskModel `tfschema:"managed_disk"`
-	Name                    string             `tfschema:"name"`
-	OsType                  string             `tfschema:"os_type"`
-	VhdContainers           []string           `tfschema:"vhd_containers"`
-	WriteAcceleratorEnabled bool               `tfschema:"write_accelerator_enabled"`
+	Caching                     string   `tfschema:"caching"`
+	DeleteOption                string   `tfschema:"delete_option"`
+	DiffDiskOption              string   `tfschema:"diff_disk_option"`
+	DiffDiskPlacement           string   `tfschema:"diff_disk_placement"`
+	DiskSizeInGB                int64    `tfschema:"disk_size_in_gb"`
+	ImageUri                    string   `tfschema:"image_uri"`
+	DiskEncryptionSetId         string   `tfschema:"disk_encryption_set_id"`
+	SecurityDiskEncryptionSetId string   `tfschema:"security_disk_encryption_set_id"`
+	SecurityEncryptionType      string   `tfschema:"security_encryption_type"`
+	StorageAccountType          string   `tfschema:"storage_account_type"`
+	Name                        string   `tfschema:"name"`
+	VhdContainers               []string `tfschema:"vhd_containers"`
+	WriteAcceleratorEnabled     bool     `tfschema:"write_accelerator_enabled"`
 }
 
 type PlanModel struct {
@@ -952,7 +948,13 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 
 			// set `admin_password` as API requires 'osProfile.adminPassword' when updating but the GET API does not return the password
 			if v := properties.Properties.ComputeProfile.BaseVirtualMachineProfile.OsProfile; v != nil {
-				v.AdminPassword = pointer.To(model.VirtualMachineProfile[0].OsProfile[0].AdminPassword)
+				if v.LinuxConfiguration != nil {
+					v.AdminPassword = pointer.To(model.VirtualMachineProfile[0].OsProfile[0].LinuxConfiguration[0].AdminPassword)
+				}
+				if v.WindowsConfiguration != nil {
+					v.AdminPassword = pointer.To(model.VirtualMachineProfile[0].OsProfile[0].WindowsConfiguration[0].AdminPassword)
+				}
+
 			}
 			if metadata.ResourceData.HasChange("identity") {
 				identityValue, err := identity.ExpandLegacySystemAndUserAssignedMapFromModel(model.Identity)
@@ -1198,8 +1200,8 @@ func (r AzureFleetResource) CustomizeDiff() sdk.ResourceFunc {
 				return fmt.Errorf("the VM sizes count of `vm_sizes_profile` cannot be greater than `15`")
 			}
 
-			if v := state.VirtualMachineProfile[0].StorageProfile[0].DataDisks; len(v) > 0 {
-				storageAccountType := state.VirtualMachineProfile[0].StorageProfile[0].DataDisks[0].ManagedDisk[0].StorageAccountType
+			if v := state.VirtualMachineProfile[0].DataDisks; len(v) > 0 {
+				storageAccountType := state.VirtualMachineProfile[0].DataDisks[0].StorageAccountType
 				ultraSSDEnabled := state.AdditionalCapabilitiesUltraSSDEnabled
 
 				if !ultraSSDEnabled && storageAccountType == string(fleets.StorageAccountTypesUltraSSDLRS) {
@@ -1535,9 +1537,7 @@ func flattenAdditionalLocationProfileModel(input *fleets.AdditionalLocationsProf
 		outputList = append(outputList, output)
 	}
 
-	output := AdditionalLocationProfileModel{}
-
-	return append(outputList, output), nil
+	return outputList, nil
 }
 
 func flattenExtensionModel(input *fleets.VirtualMachineScaleSetExtensionProfile, metadata sdk.ResourceMetaData) ([]ExtensionsModel, error) {
@@ -1634,7 +1634,7 @@ func flattenPublicIPAddressModel(input *fleets.VirtualMachineScaleSetPublicIPAdd
 		output.Version = string(pointer.From(props.PublicIPAddressVersion))
 
 		if v := props.IPTags; v != nil {
-			output.IPTags = flattenIPTagModel(v)
+			output.IPTag = flattenIPTagModel(v)
 		}
 	}
 	return append(outputList, output)
@@ -1661,7 +1661,7 @@ func flattenIPTagModel(inputList *[]fleets.VirtualMachineScaleSetIPTag) []IPTagM
 	for _, input := range *inputList {
 		output := IPTagModel{}
 
-		output.IPTagType = pointer.From(input.IPTagType)
+		output.Type = pointer.From(input.IPTagType)
 		output.Tag = pointer.From(input.Tag)
 		outputList = append(outputList, output)
 	}

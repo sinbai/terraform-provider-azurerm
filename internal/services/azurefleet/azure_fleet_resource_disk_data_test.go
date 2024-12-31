@@ -11,13 +11,13 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 )
 
-func TestAccFleetLinux_disksDataDiskBasic(t *testing.T) {
+func TestAccFleetLinux_basicLinux_managedDisk(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
 	r := AzureFleetResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.linuxTemplate(data, data.Locations.Primary, r.disksDataDiskBasicVirtualMachineProfile()),
+			Config: r.linuxTemplate(data, data.Locations.Primary, r.basicLinux_managedDisk()),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -26,13 +26,13 @@ func TestAccFleetLinux_disksDataDiskBasic(t *testing.T) {
 	})
 }
 
-func TestAccFleetLinux_disksDataDiskCaching(t *testing.T) {
+func TestAccFleetLinux_importBasic_managedDisk_withZones(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
 	r := AzureFleetResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.linuxTemplate(data, data.Locations.Primary, r.disksDataDiskCachingVirtualMachineProfile()),
+			Config: r.linuxTemplate(data, data.Locations.Primary, r.importBasic_managedDisk_withZones()),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -41,7 +41,7 @@ func TestAccFleetLinux_disksDataDiskCaching(t *testing.T) {
 	})
 }
 
-func TestAccFleetLinux_disksDataDiskDiskEncryptionSet(t *testing.T) {
+func TestAccFleetLinux_importBasic_managedDisk_withZonest(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
 	r := AzureFleetResource{}
 
@@ -103,70 +103,51 @@ func TestAccFleetLinux_disksDataDiskWriteAcceleratorEnabled(t *testing.T) {
 	})
 }
 
-func (r AzureFleetResource) disksDataDiskBasicVirtualMachineProfile() string {
+func (r AzureFleetResource) basicLinux_managedDisk() string {
 	return `
 virtual_machine_profile {
-    storage_profile {
-        image_reference {
-          publisher = "Canonical"
-          offer     = "0001-com-ubuntu-server-jammy"
-          sku       = "22_04-lts"
-          version   = "latest"
-        }
+    image_reference {
+	  publisher = "Canonical"
+	  offer     = "0001-com-ubuntu-server-jammy"
+	  sku       = "22_04-lts"
+	  version   = "latest"
+	}
 
-        os_disk {
-          caching = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
-            storage_account_type = "Standard_LRS"
-          }
-        }
+	os_disk {
+	  caching = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+	}
 
-		data_disk {
-			managed_disk {
-            storage_account_type = "Premium_LRS"
-            }
-			disk_size_in_gb         = 10
-			lun                  = 10
-		  }
-      }
-
-      os_profile {
-        computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
-        admin_password       = "P@ssw0rd1234!"
-        linux_configuration {
-          password_authentication_enabled = true
-          ssh_keys {
-			username   = "azureuser"
-			public_key = local.first_public_key
-		  }
-        }
-      }
-
-      network_interface {
-        name                           = "networkProTest"
-        accelerated_networking_enabled = false
-        ip_forwarding_enabled          = true
-        ip_configuration {
-          name                                   = "ipConfigTest"
-          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
-          primary                                = true
-          subnet_id                              = azurerm_subnet.test.id
-        }
-        primary = true
-      }
-
-      network_api_version = "2020-11-01"
+    os_profile {
+	  computer_name_prefix = "prefix"
+	  admin_username       = "azureuser"
+	  admin_password       = "P@ssw0rd1234!"
+	  linux_configuration {
+	    password_authentication_enabled = true
+	  }
     }
+    
+    network_interface {
+      name                           = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        subnet_id                              = azurerm_subnet.test.id
+        primary                                = true
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+  }
 `
 }
 
-func (r AzureFleetResource) disksDataDiskCachingVirtualMachineProfile() string {
+func (r AzureFleetResource) importBasic_managedDisk_withZones() string {
 	return `
 virtual_machine_profile {
-    storage_profile {
         image_reference {
           publisher = "Canonical"
           offer     = "0001-com-ubuntu-server-jammy"
@@ -176,22 +157,22 @@ virtual_machine_profile {
 
         os_disk {
           caching = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
+          
+          
+         
             storage_account_type = "Standard_LRS"
-          }
+          
         }
 
 		data_disk {
-			managed_disk {
+			
             storage_account_type = "Standard_LRS"
-            }
+            
             caching              = "ReadOnly"
 			disk_size_in_gb         = 10
 			lun                  = 10
 		  }
-      }
+      
 
       os_profile {
         computer_name_prefix = "prefix"
@@ -219,7 +200,7 @@ virtual_machine_profile {
         primary = true
       }
 
-      network_api_version = "2020-11-01"
+      
     }
 `
 }
@@ -227,61 +208,43 @@ virtual_machine_profile {
 func (r AzureFleetResource) disksDataDisk_diskEncryptionSetVirtualMachineProfile() string {
 	return `
 virtual_machine_profile {
-    storage_profile {
-        image_reference {
-          publisher = "Canonical"
-          offer     = "0001-com-ubuntu-server-jammy"
-          sku       = "22_04-lts"
-          version   = "latest"
-        }
+	image_reference {
+	  publisher = "Canonical"
+	  offer     = "0001-com-ubuntu-server-jammy"
+	  sku       = "22_04-lts"
+	  version   = "latest"
+	}
 
-        os_disk {
-          caching = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
-            storage_account_type = "Standard_LRS"
-          }
-        }
+	os_disk {
+	  caching = "ReadWrite"
+	  storage_account_type = "Standard_LRS"
+	}
 
-		data_disk {
-			managed_disk {
-            storage_account_type = "Standard_LRS"
-            }
-        caching                = "ReadWrite"
-        disk_encryption_set_id = azurerm_disk_encryption_set.test.id
-			disk_size_in_gb         = 10
-			lun                  = 10
-		  }
-      }
-
-      os_profile {
-        computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
-        admin_password       = "P@ssw0rd1234!"
-        linux_configuration {
-          password_authentication_enabled = true
-          ssh_keys {
-			username   = "azureuser"
-			public_key = local.first_public_key
-		  }
-        }
-      }
+  os_profile {
+	computer_name_prefix = "prefix"
+	admin_username       = "azureuser"
+	admin_password       = "P@ssw0rd1234!"
+	linux_configuration {
+	  password_authentication_enabled = true
+	}
+  }
 
       network_interface {
         name                           = "networkProTest"
-        accelerated_networking_enabled = false
-        ip_forwarding_enabled          = true
+        primary = true
+
         ip_configuration {
           name                                   = "ipConfigTest"
-          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
           primary                                = true
           subnet_id                              = azurerm_subnet.test.id
-        }
-        primary = true
-      }
 
-      network_api_version = "2020-11-01"
+          public_ip_address {
+            name                    = "TestPublicIPConfiguration"
+            domain_name_label       = "test-domain-label"
+            idle_timeout_in_minutes = 4
+         }
+        }
+      } 
     }
 `
 }
@@ -289,7 +252,7 @@ virtual_machine_profile {
 func (r AzureFleetResource) disksDataDiskMultipleVirtualMachineProfile() string {
 	return `
 virtual_machine_profile {
-    storage_profile {
+   
         image_reference {
           publisher = "Canonical"
           offer     = "0001-com-ubuntu-server-jammy"
@@ -299,17 +262,17 @@ virtual_machine_profile {
 
         os_disk {
           caching = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
+          
+          
+         
             storage_account_type = "Standard_LRS"
-          }
+          
         }
 
 		data_disk {
-			managed_disk {
+			
             storage_account_type = "Standard_LRS"
-            }
+            
         caching                = "ReadWrite"
        
 			disk_size_in_gb         = 10
@@ -325,7 +288,7 @@ virtual_machine_profile {
 			disk_size_in_gb         = 10
 			lun                  = 20
 		  }
-      }
+      
 
       os_profile {
         computer_name_prefix = "prefix"
@@ -353,7 +316,7 @@ virtual_machine_profile {
         primary = true
       }
 
-      network_api_version = "2020-11-01"
+      
     }
 `
 }
@@ -363,7 +326,7 @@ func (r AzureFleetResource) disksDataDiskStorageAccountTypeUltraSSDLRSWithIOPSAn
 additional_capabilities_ultra_ssd_enabled = true
 
 virtual_machine_profile {
-    storage_profile {
+  
         image_reference {
           publisher = "Canonical"
           offer     = "0001-com-ubuntu-server-jammy"
@@ -373,23 +336,23 @@ virtual_machine_profile {
 
         os_disk {
           caching = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
+          
+          
+         
             storage_account_type = "Standard_LRS"
-          }
+          
         }
 
 		data_disk {
-			managed_disk {
+			
             storage_account_type = "UltraSSD_LRS"
-            }
+            
 			disk_size_in_gb         = 10
 			lun                  = 10
             disk_iops_read_write = 101
             disk_mbps_read_write = 11
 		  }
-      }
+      
 
       os_profile {
         computer_name_prefix = "prefix"
@@ -417,7 +380,7 @@ virtual_machine_profile {
         primary = true
       }
 
-      network_api_version = "2020-11-01"
+      
     }
 `
 }
@@ -425,7 +388,7 @@ virtual_machine_profile {
 func (r AzureFleetResource) disksDataDiskWriteAcceleratorEnabledVirtualMachineProfile() string {
 	return `
 virtual_machine_profile {
-    storage_profile {
+    
         image_reference {
           publisher = "Canonical"
           offer     = "0001-com-ubuntu-server-jammy"
@@ -435,22 +398,22 @@ virtual_machine_profile {
 
         os_disk {
           caching = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
+          
+          
+          
             storage_account_type = "Standard_LRS"
-          }
+          
         }
 
 		data_disk {
-			managed_disk {
+			
             storage_account_type = "Premium_LRS"
-            }
+            
 			disk_size_in_gb         = 10
 			lun                  = 10
 write_accelerator_enabled = true
 		  }
-      }
+      
 
       os_profile {
         computer_name_prefix = "prefix"
@@ -478,7 +441,7 @@ write_accelerator_enabled = true
         primary = true
       }
 
-      network_api_version = "2020-11-01"
+      
     }
 `
 }

@@ -88,7 +88,7 @@ func TestAccFleetLinux_authEd25519SSHKeys(t *testing.T) {
 func (r AzureFleetResource) authPasswordVirtualMachineProfile() string {
 	return `
 virtual_machine_profile {
-      storage_profile {
+
         image_reference {
           publisher = "Canonical"
           offer     = "0001-com-ubuntu-server-jammy"
@@ -98,13 +98,13 @@ virtual_machine_profile {
 
         os_disk {
           caching = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
+          
+          
+         
             storage_account_type = "Standard_LRS"
-          }
+          
         }
-      }
+      
 
       os_profile {
         computer_name_prefix = "prefix"
@@ -128,7 +128,7 @@ virtual_machine_profile {
         primary = true
       }
 
-      network_api_version = "2020-11-01"
+      
     }
 `
 }
@@ -136,7 +136,7 @@ virtual_machine_profile {
 func (r AzureFleetResource) authSSHKeyVirtualMachineProfile() string {
 	return `
 virtual_machine_profile {
-    storage_profile {
+    
         image_reference {
           publisher = "Canonical"
           offer     = "0001-com-ubuntu-server-jammy"
@@ -146,13 +146,13 @@ virtual_machine_profile {
 
         os_disk {
           caching = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
+          
+          
+         
             storage_account_type = "Standard_LRS"
-          }
+          
         }
-      }
+      
 
       os_profile {
         computer_name_prefix = "prefix"
@@ -178,7 +178,7 @@ virtual_machine_profile {
         primary = true
       }
 
-      network_api_version = "2020-11-01"
+      
     }
 `
 }
@@ -186,7 +186,7 @@ virtual_machine_profile {
 func (r AzureFleetResource) authMultipleSSHKeysVirtualMachineProfile() string {
 	return `
 virtual_machine_profile {
-    storage_profile {
+   
         image_reference {
           publisher = "Canonical"
           offer     = "0001-com-ubuntu-server-jammy"
@@ -196,13 +196,13 @@ virtual_machine_profile {
 
         os_disk {
           caching = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
+          
+          
+         
             storage_account_type = "Standard_LRS"
-          }
+          
         }
-      }
+      
 
       os_profile {
         computer_name_prefix = "prefix"
@@ -232,7 +232,7 @@ virtual_machine_profile {
         primary = true
       }
 
-      network_api_version = "2020-11-01"
+      
     }
 `
 }
@@ -240,7 +240,7 @@ virtual_machine_profile {
 func (r AzureFleetResource) authSSHKeyAndPasswordVirtualMachineProfile() string {
 	return `
 virtual_machine_profile {
-    storage_profile {
+  
         image_reference {
           publisher = "Canonical"
           offer     = "0001-com-ubuntu-server-jammy"
@@ -250,13 +250,13 @@ virtual_machine_profile {
 
         os_disk {
           caching = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
+          
+          
+          
             storage_account_type = "Standard_LRS"
-          }
+          
         }
-      }
+      
 
       os_profile {
         computer_name_prefix = "prefix"
@@ -283,7 +283,7 @@ virtual_machine_profile {
         primary = true
       }
 
-      network_api_version = "2020-11-01"
+      
     }
 `
 }
@@ -291,7 +291,7 @@ virtual_machine_profile {
 func (r AzureFleetResource) authEd25519SSHKeyVirtualMachineProfile() string {
 	return `
 virtual_machine_profile {
-    storage_profile {
+   
         image_reference {
           publisher = "Canonical"
           offer     = "0001-com-ubuntu-server-jammy"
@@ -301,13 +301,13 @@ virtual_machine_profile {
 
         os_disk {
           caching = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
+          
+          
+         
             storage_account_type = "Standard_LRS"
-          }
+          
         }
-      }
+      
 
       os_profile {
         computer_name_prefix = "prefix"
@@ -333,7 +333,7 @@ virtual_machine_profile {
         primary = true
       }
 
-      network_api_version = "2020-11-01"
+      
     }
 `
 }

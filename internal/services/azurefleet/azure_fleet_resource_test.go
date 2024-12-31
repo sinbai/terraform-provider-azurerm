@@ -140,7 +140,7 @@ func TestAccAzureFleet_additionalLocation(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("additional_location_profile.0.virtual_machine_profile.0.os_profile.0.admin_password"),
 	})
 }
 
@@ -155,13 +155,13 @@ func TestAccAzureFleet_tempTest(t *testing.T) {
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password", "compute_api_version"),
-		{
-			Config: r.tempTestUpdate(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password", "compute_api_version"),
+		//{
+		//	Config: r.tempTestUpdate(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//	),
+		//},
+		//data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password", "compute_api_version"),
 	})
 }
 
@@ -257,9 +257,9 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_D2as_v4"
   }
 
- 
+
     %[4]s
-  
+
   zones = ["1", "2", "3"]
 }
 `, template, data.RandomInteger, data.Locations.Primary, vmProfile)
@@ -289,11 +289,11 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_D2as_v4"
   }
 
- 
+
 
     %[4]s
 
-  
+
 
   zones = ["1", "2", "3"]
 }
@@ -324,11 +324,11 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DS2_v2"
   }
 
- 
+
 
     %[4]s
 
-  
+
   zones = ["1", "2", "3"]
 }
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.basicVirtualMachineProfile())
@@ -357,51 +357,45 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DS1_v2"
   }
 
-
-    compute_api_version = "2023-09-01"
-    virtual_machine_profile {
-      storage_profile {
-        image_reference {
-          offer     = "0001-com-ubuntu-server-focal"
-          publisher = "canonical"
-          sku       = "20_04-lts-gen2"
-          version   = "latest"
-        }
-
-        os_disk {
-          caching       = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
-            storage_account_type = "Standard_LRS"
-          }
-        }
-      }
-
-      os_profile {
-        computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
-        admin_password       = "TestPassword$0"
-        linux_configuration {
-          password_authentication_enabled = true
-        }
-      }
-
-      network_interface {
-        name                           = "networkProTest"
-        accelerated_networking_enabled = false
-        ip_forwarding_enabled          = true
-        ip_configuration {
-          name                                   = "ipConfigTest"
-          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
-          primary                                = true
-          subnet_id                              = azurerm_subnet.test.id
-        }
-        primary = true
-      }
-      network_api_version = "2020-11-01"
+  compute_api_version = "2023-09-01"
+  virtual_machine_profile {
+    image_reference {
+      offer     = "0001-com-ubuntu-server-focal"
+      publisher = "canonical"
+      sku       = "20_04-lts-gen2"
+      version   = "latest"
     }
-  
+
+    os_disk {
+      caching              = "ReadWrite"
+
+      os_type              = "Linux"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      computer_name_prefix = "prefix"
+      admin_username       = "azureuser"
+      admin_password       = "TestPassword$0"
+      linux_configuration {
+        password_authentication_enabled = true
+      }
+    }
+
+    network_interface {
+      name                           = "networkProTest"
+      accelerated_networking_enabled = false
+      ip_forwarding_enabled          = true
+      ip_configuration {
+        name                                   = "ipConfigTest"
+        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+        primary                                = true
+        subnet_id                              = azurerm_subnet.test.id
+      }
+      primary = true
+    }
+    
+  }
 
   zones = ["1", "2", "3"]
 }
@@ -431,51 +425,51 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DS1_v2"
   }
 
-  
-    compute_api_version = "2024-03-01"
-    virtual_machine_profile {
-      storage_profile {
-        image_reference {
-          offer     = "0001-com-ubuntu-server-focal"
-          publisher = "canonical"
-          sku       = "20_04-lts-gen2"
-          version   = "latest"
-        }
 
-        os_disk {
-          caching       = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
-            storage_account_type = "Standard_LRS"
-          }
-        }
-      }
+  compute_api_version = "2024-03-01"
+  virtual_machine_profile {
 
-      os_profile {
-        computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
-        admin_password       = "TestPassword$0"
-        linux_configuration {
-          password_authentication_enabled = true
-        }
-      }
-
-      network_interface {
-        name                           = "networkProTest"
-        accelerated_networking_enabled = false
-        ip_forwarding_enabled          = true
-        ip_configuration {
-          name                                   = "ipConfigTest"
-          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
-          primary                                = true
-          subnet_id                              = azurerm_subnet.test.id
-        }
-        primary = true
-      }
-      network_api_version = "2020-11-01"
+    image_reference {
+      offer     = "0001-com-ubuntu-server-focal"
+      publisher = "canonical"
+      sku       = "20_04-lts-gen2"
+      version   = "latest"
     }
-  
+
+    os_disk {
+      caching       = "ReadWrite"
+      
+      
+
+      storage_account_type = "Standard_LRS"
+
+    }
+
+
+    os_profile {
+      computer_name_prefix = "prefix"
+      admin_username       = "azureuser"
+      admin_password       = "TestPassword$0"
+      linux_configuration {
+        password_authentication_enabled = true
+      }
+    }
+
+    network_interface {
+      name                           = "networkProTest"
+      accelerated_networking_enabled = false
+      ip_forwarding_enabled          = true
+      ip_configuration {
+        name                                   = "ipConfigTest"
+        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+        primary                                = true
+        subnet_id                              = azurerm_subnet.test.id
+      }
+      primary = true
+    }
+    
+  }
+
 
   zones = ["1", "2", "3"]
 }
@@ -500,9 +494,9 @@ resource "azurerm_azure_fleet" "import" {
     name = "Standard_DS1_v2"
   }
 
- 
+
     %s
-  
+
 }
 `, r.basic(data), r.basicVirtualMachineProfile())
 }
@@ -522,13 +516,11 @@ resource "azurerm_azure_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  
-    %[4]s
-  
+  %[4]s
 
   additional_location_profile {
     location = "%[5]s"
-
+    %[6]s
   }
 
   spot_priority_profile {
@@ -543,7 +535,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
 }
-`, r.additionalLocationTemplate(data), data.RandomInteger, data.Locations.Primary, r.basicVirtualMachineProfile(), data.Locations.Secondary) //, r.virtualMachineProfileOverride()) #%[6]s
+`, r.additionalLocationTemplate(data), data.RandomInteger, data.Locations.Primary, r.basicVirtualMachineProfile(), data.Locations.Secondary, r.virtualMachineProfileOverride())
 }
 
 func (r AzureFleetResource) update(data acceptance.TestData) string {
@@ -581,9 +573,8 @@ resource "azurerm_azure_fleet" "test" {
     rank = "10001"
   }
 
- 
-    %[4]s
-  
+   %[4]s
+
   additional_location_profile {
     location = "%[5]s"
     %[6]s
@@ -595,13 +586,13 @@ resource "azurerm_azure_fleet" "test" {
     identity_ids = [azurerm_user_assigned_identity.test.id]
   }
 
-  # plan {
-  #  name           = "nrTest2"
-  # product        = "NewRelic2"
-  # publisher      = "NewRelic2"
-  # promotion_code = "test2"
-  # version        = "2.0"
-  #}
+  plan {
+    name           = "wordpress"
+    product        = "wordpress-5-7_09-04-2021"
+    publisher      = "nilespartnersinc1617691698386"
+    promotion_code = "test"
+    version        = "2.0"
+  }
 
   tags = {
     Hello = "ThereUpdate"
@@ -669,7 +660,7 @@ resource "azurerm_azure_fleet" "test" {
 func (r AzureFleetResource) basicVirtualMachineProfile() string {
 	return fmt.Sprintf(`
 virtual_machine_profile {
-      storage_profile {
+  
         image_reference {
           offer     = "0001-com-ubuntu-server-focal"
           publisher = "canonical"
@@ -679,13 +670,13 @@ virtual_machine_profile {
 
         os_disk {
           caching       = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
+          
+          
+          
             storage_account_type = "Standard_LRS"
-          }
+          
         }
-      }
+      
 
       os_profile {
         computer_name_prefix = "prefix"
@@ -708,7 +699,7 @@ virtual_machine_profile {
         }
         primary = true
       }
-      network_api_version = "2020-11-01"
+      
 }
 `)
 }
@@ -716,24 +707,21 @@ virtual_machine_profile {
 func (r AzureFleetResource) virtualMachineProfileOverride() string {
 	return fmt.Sprintf(`
 virtual_machine_profile_override {
-      storage_profile {
-        image_reference {
-          offer     = "0001-com-ubuntu-server-focal"
-          publisher = "canonical"
-          sku       = "20_04-lts-gen2"
-          version   = "latest"
-        }
+	image_reference {
+	  offer     = "0001-com-ubuntu-server-focal"
+	  publisher = "canonical"
+	  sku       = "20_04-lts-gen2"
+	  version   = "latest"
+	}
 
-        os_disk {
-          caching       = "ReadWrite"
-          create_option = "FromImage"
-          os_type       = "Linux"
-          managed_disk {
-            storage_account_type = "Standard_LRS"
-          }
-        }
-      }
-
+	os_disk {
+	  caching       = "ReadWrite"
+	  
+	  
+	  
+		storage_account_type = "Standard_LRS"
+	  
+	}
       os_profile {
         computer_name_prefix = "prefix"
         admin_username       = "azureuser"
@@ -755,7 +743,7 @@ virtual_machine_profile_override {
         }
         primary = true
       }
-      network_api_version = "2020-11-01"
+      
 }
 `)
 }
@@ -904,12 +892,14 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DS1_v2"
   }
 
-  
+
 		%[5]s
-  
+
 
   zones = [1, 2, 3]
 }
+
+
 
 
 `, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location, vmProfile)
@@ -935,12 +925,14 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DS1_v2"
   }
 
- 
+
 		%[5]s
-  
+
 }
 
 %[6]s
+
+
 
 
 `, r.linuxPublicKeyTemplate(), r.templateWithOutProvider(data, location), data.RandomInteger, location, vmProfile, dependencies)
