@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/suppress"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -37,8 +38,6 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
-				"network_interface": networkInterfaceSchema(),
-
 				"os_profile": osProfileSchema(),
 
 				"image_reference": storageProfileImageReferenceSchema(),
@@ -65,18 +64,19 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 				},
 
 				"capacity_reservation_group_id": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ForceNew:     true,
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+
 					ValidateFunc: capacityreservationgroups.ValidateCapacityReservationGroupID,
 				},
 
 				"extension_operations_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
+					Default:  true,
 				},
 
-				"extensions": extensionSchema(),
+				"extension": extensionSchema(),
 
 				"extensions_time_budget": {
 					Type:         pluginsdk.TypeString,
@@ -87,9 +87,13 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 				"gallery_application": galleryApplicationSchema(),
 
 				"license_type": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringIsNotEmpty,
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+					// "None" need to handle in create and update
+					ValidateFunc: validation.StringInSlice([]string{
+						"Windows_Client",
+						"Windows_Server",
+					}, false),
 				},
 
 				"network_health_probe_id": {
@@ -98,11 +102,7 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 					ValidateFunc: azure.ValidateResourceID,
 				},
 
-				// Optional property which must either be set to True or omitted
-				"require_guest_provision_signal_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-				},
+				"network_interface": networkInterfaceSchema(),
 
 				// if it is specified os_image_notification_profile enable is set to true.
 				"scheduled_event_os_image_enabled": {
@@ -211,33 +211,33 @@ func galleryApplicationSchema() *pluginsdk.Schema {
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"version_id": {
-					Type:         pluginsdk.TypeString,
-					Required:     true,
-					ForceNew:     true,
+					Type:     pluginsdk.TypeString,
+					Required: true,
+
 					ValidateFunc: galleryapplicationversions.ValidateApplicationVersionID,
 				},
 
 				// Example: https://mystorageaccount.blob.core.windows.net/configurations/settings_json.config
 				"configuration_blob_uri": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ForceNew:     true,
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+
 					ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 				},
 
 				"order": {
-					Type:         pluginsdk.TypeInt,
-					Optional:     true,
-					Default:      0,
-					ForceNew:     true,
+					Type:     pluginsdk.TypeInt,
+					Optional: true,
+					Default:  0,
+
 					ValidateFunc: validation.IntBetween(0, 2147483647),
 				},
 
 				// NOTE: Per the service team, "this is a pass through value that we just add to the model but don't depend on. It can be any string."
 				"tag": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ForceNew:     true,
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
@@ -285,19 +285,19 @@ func extensionSchema() *pluginsdk.Schema {
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
-				"auto_upgrade_minor_version_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-					Default:  true,
-				},
-
 				"automatic_upgrade_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
 					Default:  false,
 				},
 
-				"force_update_tag": {
+				"auto_upgrade_minor_version_enabled": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+
+				"force_extension_execution_on_change": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
 				},
@@ -313,6 +313,7 @@ func extensionSchema() *pluginsdk.Schema {
 					Type:     pluginsdk.TypeList,
 					Optional: true,
 					MaxItems: 1,
+
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
 							"secret_url": {
@@ -326,7 +327,7 @@ func extensionSchema() *pluginsdk.Schema {
 					},
 				},
 
-				"provision_after_extensions": {
+				"extensions_to_provision_after_vm_creation": {
 					Type:     pluginsdk.TypeList,
 					Optional: true,
 					Elem: &pluginsdk.Schema{
@@ -341,12 +342,6 @@ func extensionSchema() *pluginsdk.Schema {
 					ValidateFunc:     validation.StringIsJSON,
 					DiffSuppressFunc: pluginsdk.SuppressJsonDiff,
 				},
-
-				"suppress_failures_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
 			},
 		},
 	}
@@ -355,48 +350,20 @@ func extensionSchema() *pluginsdk.Schema {
 func networkInterfaceSchema() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
-		Required: true,
+		Optional: true,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"name": {
-					Type:         pluginsdk.TypeString,
-					Required:     true,
-					ForceNew:     true,
+					Type:     pluginsdk.TypeString,
+					Required: true,
+
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
+
 				"accelerated_networking_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
 					Default:  false,
-				},
-
-				"ip_configuration": ipConfigurationSchema(),
-
-				"ip_forwarding_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-
-				"primary": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-
-				"dns_servers": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					Elem: &pluginsdk.Schema{
-						Type:         pluginsdk.TypeString,
-						ValidateFunc: validation.StringIsNotEmpty,
-					},
-				},
-
-				"network_security_group_id": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: networksecuritygroups.ValidateNetworkSecurityGroupID,
 				},
 
 				"auxiliary_mode": {
@@ -421,22 +388,51 @@ func networkInterfaceSchema() *pluginsdk.Schema {
 					}, false),
 				},
 
+				"ip_configuration": ipConfigurationSchema(),
+
+				"ip_forwarding_enabled": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+
 				"delete_option": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
+					Default:      fleets.DiskDeleteOptionTypesDelete,
 					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskDeleteOptionTypes(), false),
 				},
 
-				"tcp_state_tracking_enabled": {
-					Type:     pluginsdk.TypeBool,
+				"dns_servers": {
+					Type:     pluginsdk.TypeList,
 					Optional: true,
-					// need to confirm if DisableTcpStateTracking default value is false?
-					Default: true,
+					Elem: &pluginsdk.Schema{
+						Type:         pluginsdk.TypeString,
+						ValidateFunc: validation.StringIsNotEmpty,
+					},
 				},
 
 				"fpga_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
+				},
+
+				"network_security_group_id": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: networksecuritygroups.ValidateNetworkSecurityGroupID,
+				},
+
+				"primary": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+
+				"tcp_state_tracking_enabled": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
+					Default:  true,
 				},
 			},
 		},
@@ -453,25 +449,6 @@ func ipConfigurationSchema() *pluginsdk.Schema {
 					Type:         pluginsdk.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
-				},
-
-				"load_balancer_backend_address_pool_ids": {
-					Type:     pluginsdk.TypeSet,
-					Optional: true,
-					Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
-					Set:      pluginsdk.HashString,
-				},
-
-				"primary": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-
-				"subnet_id": {
-					Type:         pluginsdk.TypeString,
-					Required:     true,
-					ValidateFunc: commonids.ValidateSubnetID,
 				},
 
 				"application_gateway_backend_address_pool_ids": {
@@ -492,6 +469,27 @@ func ipConfigurationSchema() *pluginsdk.Schema {
 					MaxItems: 20,
 				},
 
+				"load_balancer_backend_address_pool_ids": {
+					Type:     pluginsdk.TypeSet,
+					Optional: true,
+					Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
+					Set:      pluginsdk.HashString,
+				},
+
+				"primary": {
+					Type:     pluginsdk.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+
+				"public_ip_address": publicIPAddressSchema(),
+
+				"subnet_id": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: commonids.ValidateSubnetID,
+				},
+
 				"load_balancer_inbound_nat_rules_ids": {
 					Type:     pluginsdk.TypeSet,
 					Optional: true,
@@ -499,12 +497,9 @@ func ipConfigurationSchema() *pluginsdk.Schema {
 					Set:      pluginsdk.HashString,
 				},
 
-				"public_ip_address": publicIPAddressSchema(),
-
 				"version": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
-					ForceNew:     true,
 					Default:      string(fleets.IPVersionIPvFour),
 					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForIPVersion(), false),
 				},
@@ -528,6 +523,7 @@ func publicIPAddressSchema() *pluginsdk.Schema {
 				"delete_option": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
+					Default:      fleets.DeleteOptionsDelete,
 					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDeleteOptions(), false),
 				},
 
@@ -555,30 +551,28 @@ func publicIPAddressSchema() *pluginsdk.Schema {
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
 							"tag": {
-								Type:         pluginsdk.TypeString,
-								Required:     true,
+								Type:     pluginsdk.TypeString,
+								Required: true,
+
 								ValidateFunc: validation.StringIsNotEmpty,
 							},
 							"type": {
-								Type:         pluginsdk.TypeString,
-								Required:     true,
+								Type:     pluginsdk.TypeString,
+								Required: true,
+
 								ValidateFunc: validation.StringIsNotEmpty,
 							},
 						},
 					},
 				},
-				"version": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					Default:      string(fleets.IPVersionIPvFour),
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForIPVersion(), false),
-				},
+
 				// TODO: preview feature
 				// $ az feature register --namespace Microsoft.Network --name AllowBringYourOwnPublicIpAddress
 				// $ az provider register -n Microsoft.Network
 				"public_ip_prefix_id": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+
 					ValidateFunc: publicipprefixes.ValidatePublicIPPrefixID,
 				},
 
@@ -589,18 +583,28 @@ func publicIPAddressSchema() *pluginsdk.Schema {
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
 							"name": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
+								Type:     pluginsdk.TypeString,
+								Optional: true,
+
 								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForPublicIPAddressSkuName(), false),
 							},
 
 							"tier": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
+								Type:     pluginsdk.TypeString,
+								Optional: true,
+
 								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForPublicIPAddressSkuTier(), false),
 							},
 						},
 					},
+				},
+
+				"version": {
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+
+					Default:      string(fleets.IPVersionIPvFour),
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForIPVersion(), false),
 				},
 			},
 		},
@@ -624,6 +628,7 @@ func osProfileSchema() *pluginsdk.Schema {
 				"linux_configuration": {
 					Type:     pluginsdk.TypeList,
 					Optional: true,
+					Default:  nil,
 					MaxItems: 1,
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
@@ -661,17 +666,15 @@ func osProfileSchema() *pluginsdk.Schema {
 							},
 
 							"computer_name_prefix": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								// Computed since we reuse the VM name if one's not specified
-								Computed:     true,
+								Type:         pluginsdk.TypeString,
+								Required:     true,
 								ValidateFunc: validate.LinuxComputerNamePrefix,
 							},
 
 							"password_authentication_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
-								Default:  false,
+								Default:  true,
 							},
 
 							"provision_vm_agent_enabled": {
@@ -683,9 +686,61 @@ func osProfileSchema() *pluginsdk.Schema {
 							"vm_agent_platform_updates_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
+								Default:  true,
 							},
 
-							"patch_setting": linuxPatchSettingSchema(),
+							// It is not supported in VMSS. need to confirm whether it needs to be exposed.
+							"bypass_platform_safety_checks_enabled": {
+								Type:     pluginsdk.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+
+							"patch_assessment_mode": {
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								Default:      string(fleets.LinuxPatchAssessmentModeImageDefault),
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxPatchAssessmentMode(), false),
+							},
+
+							"patch_mode": {
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								Default:      string(fleets.LinuxVMGuestPatchModeImageDefault),
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchMode(), false),
+							},
+
+							// It is not supported in VMSS. need to confirm whether it needs to be exposed.
+							"reboot_setting": {
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchAutomaticByPlatformRebootSetting(), false),
+							},
+
+							"secret": {
+								Type:     pluginsdk.TypeList,
+								Optional: true,
+								Elem: &pluginsdk.Resource{
+									Schema: map[string]*pluginsdk.Schema{
+										"key_vault_id": commonschema.ResourceIDReferenceRequired(&commonids.KeyVaultId{}),
+
+										"certificate": {
+											Type:     pluginsdk.TypeSet,
+											Required: true,
+											MinItems: 1,
+											Elem: &pluginsdk.Resource{
+												Schema: map[string]*pluginsdk.Schema{
+													"url": {
+														Type:         pluginsdk.TypeString,
+														Required:     true,
+														ValidateFunc: keyVaultValidate.NestedItemId,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -757,9 +812,42 @@ func osProfileSchema() *pluginsdk.Schema {
 							"vm_agent_platform_updates_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
+								Default:  true,
 							},
 
-							"patch_setting": windowsPatchSettingSchema(),
+							"patch_assessment_mode": {
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								Default:      string(fleets.WindowsPatchAssessmentModeImageDefault),
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxPatchAssessmentMode(), false),
+							},
+
+							"patch_mode": {
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								Default:      string(fleets.WindowsVMGuestPatchModeAutomaticByOS),
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchMode(), false),
+							},
+
+							"hot_patching_enabled": {
+								Type:     pluginsdk.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+
+							// It is not supported in VMSS. Need to confirm whether it needs to be exposed.
+							"bypass_platform_safety_checks_enabled": {
+								Type:     pluginsdk.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+
+							// It is not supported in VMSS. Need to confirm whether it needs to be exposed.
+							"reboot_setting": {
+								Type:         pluginsdk.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchAutomaticByPlatformRebootSetting(), false),
+							},
 
 							"provision_vm_agent_enabled": {
 								Type:     pluginsdk.TypeBool,
@@ -822,86 +910,6 @@ func osProfileSchema() *pluginsdk.Schema {
 							},
 						},
 					},
-				},
-			},
-		},
-	}
-}
-
-func linuxPatchSettingSchema() *pluginsdk.Schema {
-	return &pluginsdk.Schema{
-		Type:     pluginsdk.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &pluginsdk.Resource{
-			Schema: map[string]*pluginsdk.Schema{
-				"assessment_mode": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					Default:      string(fleets.LinuxPatchAssessmentModeImageDefault),
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxPatchAssessmentMode(), false),
-				},
-				// It is not supported in VMSS. need to confirm whether it needs to be exposed.
-				"bypass_platform_safety_checks_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-
-				"patch_mode": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					Default:      string(fleets.LinuxVMGuestPatchModeImageDefault),
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchMode(), false),
-				},
-				// It is not supported in VMSS. need to confirm whether it needs to be exposed.
-				"reboot_setting": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchAutomaticByPlatformRebootSetting(), false),
-				},
-			},
-		},
-	}
-}
-
-func windowsPatchSettingSchema() *pluginsdk.Schema {
-	return &pluginsdk.Schema{
-		Type:     pluginsdk.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &pluginsdk.Resource{
-			Schema: map[string]*pluginsdk.Schema{
-				"assessment_mode": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					Default:      string(fleets.WindowsPatchAssessmentModeImageDefault),
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxPatchAssessmentMode(), false),
-				},
-
-				"patch_mode": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					Default:      string(fleets.WindowsVMGuestPatchModeAutomaticByOS),
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchMode(), false),
-				},
-
-				"hot_patching_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-				// It is not supported in vmss. need to confirm whether it needs to be exposed.
-				"bypass_platform_safety_checks_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-				// It is not supported in vmss. need to confirm whether it needs to be exposed.
-				"reboot_setting": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchAutomaticByPlatformRebootSetting(), false),
 				},
 			},
 		},
@@ -1004,24 +1012,26 @@ func storageProfileDataDiskSchema() *pluginsdk.Schema {
 					}, false),
 				},
 
-				// does not exist in orchestrated vmss
 				"delete_option": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
+					Default:      fleets.DiskDeleteOptionTypesDelete,
 					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskDeleteOptionTypes(), false),
 				},
 
-				"disk_iops_read_write": {
-					Type:         pluginsdk.TypeInt,
-					Optional:     true,
-					ValidateFunc: validation.IntAtLeast(1),
-				},
-
-				"disk_mbps_read_write": {
-					Type:         pluginsdk.TypeInt,
-					Optional:     true,
-					ValidateFunc: validation.IntAtLeast(1),
-				},
+				// Property 'dataDisk.diskIOPSReadWrite' can be enabled only on VMs in a Virtual Machine Scale Set.
+				//"disk_iops_read_write": {
+				//	Type:         pluginsdk.TypeInt,
+				//	Optional:     true,
+				//	ValidateFunc: validation.IntAtLeast(1),
+				//},
+				//
+				// Property 'dataDisk.diskMBpsReadWrite' can be enabled only on VMs in a Virtual Machine Scale Set.
+				//"disk_mbps_read_write": {
+				//	Type:         pluginsdk.TypeInt,
+				//	Optional:     true,
+				//	ValidateFunc: validation.IntAtLeast(1),
+				//},
 
 				"disk_encryption_set_id": {
 					Type:         pluginsdk.TypeString,
@@ -1047,14 +1057,12 @@ func storageProfileDataDiskSchema() *pluginsdk.Schema {
 					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForStorageAccountTypes(), false),
 				},
 
-				// does not exist in orchestrated vmss
 				"security_disk_encryption_set_id": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ValidateFunc: validate.DiskEncryptionSetID,
 				},
 
-				// does not exist in orchestrated vmss
 				"security_encryption_type": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
@@ -1127,6 +1135,7 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 				"delete_option": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
+					Default:      fleets.DiskDeleteOptionTypesDelete,
 					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskDeleteOptionTypes(), false),
 				},
 
@@ -1183,16 +1192,16 @@ func storageProfileImageReferenceSchema() *pluginsdk.Schema {
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"publisher": {
-					Type:         pluginsdk.TypeString,
-					Required:     true,
-					ForceNew:     true,
+					Type:     pluginsdk.TypeString,
+					Required: true,
+
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
 				"offer": {
-					Type:         pluginsdk.TypeString,
-					Required:     true,
-					ForceNew:     true,
+					Type:     pluginsdk.TypeString,
+					Required: true,
+
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
@@ -1272,12 +1281,13 @@ func resourceStorageProfileImageReferenceHash(v interface{}) int {
 	return pluginsdk.HashString(buf.String())
 }
 
-func expandBaseVirtualMachineProfileModel(inputList []VirtualMachineProfileModel, d *schema.ResourceData) (*fleets.BaseVirtualMachineProfile, error) {
+func expandBaseVirtualMachineProfileModel(inputList []VirtualMachineProfileModel) (*fleets.BaseVirtualMachineProfile, error) {
 	if len(inputList) == 0 {
 		return nil, nil
 	}
 	input := &inputList[0]
 	output := fleets.BaseVirtualMachineProfile{
+		OsProfile:                expandOSProfileModel(inputList),
 		ApplicationProfile:       expandApplicationProfile(input.GalleryApplicationProfile),
 		CapacityReservation:      expandCapacityReservation(input.CapacityReservationGroupId),
 		DiagnosticsProfile:       expandDiagnosticsProfile(input.BootDiagnosticEnabled, input.BootDiagnosticStorageAccountEndpoint),
@@ -1289,17 +1299,7 @@ func expandBaseVirtualMachineProfileModel(inputList []VirtualMachineProfileModel
 		ServiceArtifactReference: expandServiceArtifactReference(input.ServiceArtifactId),
 	}
 
-	osProfile := expandOSProfileModel(input.OsProfile, d)
-	if osProfile != nil {
-		osProfile.AllowExtensionOperations = pointer.To(input.ExtensionOperationsEnabled)
-		if v := d.GetRawConfig().AsValueMap()["virtual_machine_profile"].AsValueSlice()[0].AsValueMap()["os_profile"].AsValueSlice()[0].AsValueMap()["require_guest_provision_signal_enabled"]; !v.IsNull() {
-			// The property 'osProfile.RequireGuestProvisionSignalEnabled' is not valid because the 'Microsoft.Compute/Agentless' feature is not enabled for this subscription
-			// it must either be set to True or omitted.
-			osProfile.RequireGuestProvisionSignal = pointer.To(input.RequireGuestProvisionSignalEnabled)
-		}
-	}
-
-	extensionProfileValue, err := expandExtensionProfileModel(input.Extensions, input.ExtensionsTimeBudget)
+	extensionProfileValue, err := expandExtensionProfileModel(input.Extension, input.ExtensionsTimeBudget)
 	if err != nil {
 		return nil, err
 	}
@@ -1314,11 +1314,16 @@ func expandBaseVirtualMachineProfileModel(inputList []VirtualMachineProfileModel
 	}
 
 	storageProfile := &fleets.VirtualMachineScaleSetStorageProfile{
-		DataDisks:          expandDataDiskModel(input.DataDisks),
 		DiskControllerType: pointer.To(fleets.DiskControllerTypes(input.DiskControllerType)),
 		ImageReference:     expandImageReferenceModel(input.ImageReference),
 		OsDisk:             expandOSDiskModel(input.OsDisk),
 	}
+
+	dataDisks, err := expandDataDiskModel(input.DataDisks)
+	if err != nil {
+		return nil, err
+	}
+	storageProfile.DataDisks = dataDisks
 
 	if len(input.OsProfile) > 0 {
 		if len(input.OsProfile[0].LinuxConfiguration) > 0 {
@@ -1423,7 +1428,7 @@ func expandDiagnosticsProfile(enabled bool, endpoint string) *fleets.Diagnostics
 	return &output
 }
 
-func expandExtensionProfileModel(inputList []ExtensionsModel, timeBudget string) (*fleets.VirtualMachineScaleSetExtensionProfile, error) {
+func expandExtensionProfileModel(inputList []ExtensionModel, timeBudget string) (*fleets.VirtualMachineScaleSetExtensionProfile, error) {
 	if len(inputList) == 0 {
 		return nil, nil
 	}
@@ -1441,7 +1446,7 @@ func expandExtensionProfileModel(inputList []ExtensionsModel, timeBudget string)
 	return &output, nil
 }
 
-func expandExtensionsModel(inputList []ExtensionsModel) (*[]fleets.VirtualMachineScaleSetExtension, error) {
+func expandExtensionsModel(inputList []ExtensionModel) (*[]fleets.VirtualMachineScaleSetExtension, error) {
 	if len(inputList) == 0 {
 		return nil, nil
 	}
@@ -1466,28 +1471,27 @@ func expandExtensionsModel(inputList []ExtensionsModel) (*[]fleets.VirtualMachin
 	return &outputList, nil
 }
 
-func expandExtensionModel(input ExtensionsModel) (*fleets.VirtualMachineScaleSetExtensionProperties, error) {
+func expandExtensionModel(input ExtensionModel) (*fleets.VirtualMachineScaleSetExtensionProperties, error) {
 	output := fleets.VirtualMachineScaleSetExtensionProperties{
 		AutoUpgradeMinorVersion:       pointer.To(input.AutoUpgradeMinorVersionEnabled),
 		EnableAutomaticUpgrade:        pointer.To(input.AutomaticUpgradeEnabled),
 		ProtectedSettingsFromKeyVault: expandKeyVaultSecretReferenceModel(input.ProtectedSettingsFromKeyVault),
-		SuppressFailures:              pointer.To(input.SuppressFailuresEnabled),
 	}
-	if input.ForceUpdateTag != "" {
-		output.ForceUpdateTag = pointer.To(input.ForceUpdateTag)
+	if input.ForceExtensionExecutionOnChange != "" {
+		output.ForceUpdateTag = pointer.To(input.ForceExtensionExecutionOnChange)
 	}
 
 	if input.ProtectedSettingsJson != "" {
 		protectedSettingsValue := make(map[string]interface{})
 		err := json.Unmarshal([]byte(input.ProtectedSettingsJson), &protectedSettingsValue)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unmarshaling `protected_settings_json`: %+v", err)
 		}
 		output.ProtectedSettings = pointer.To(protectedSettingsValue)
 	}
 
-	if len(input.ProvisionAfterExtensions) > 0 {
-		output.ProvisionAfterExtensions = pointer.To(input.ProvisionAfterExtensions)
+	if len(input.ExtensionsToProvisionAfterVmCreation) > 0 {
+		output.ProvisionAfterExtensions = pointer.To(input.ExtensionsToProvisionAfterVmCreation)
 	}
 
 	if input.Publisher != "" {
@@ -1495,12 +1499,12 @@ func expandExtensionModel(input ExtensionsModel) (*fleets.VirtualMachineScaleSet
 	}
 
 	if input.SettingsJson != "" {
-		settingsValue := make(map[string]interface{})
-		err := json.Unmarshal([]byte(input.SettingsJson), &settingsValue)
+		result := make(map[string]interface{})
+		err := json.Unmarshal([]byte(input.SettingsJson), &result)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unmarshaling `settings_json`: %+v", err)
 		}
-		output.Settings = pointer.To(settingsValue)
+		output.Settings = pointer.To(result)
 	}
 
 	if input.Type != "" {
@@ -1520,10 +1524,9 @@ func expandKeyVaultSecretReferenceModel(inputList []ProtectedSettingsFromKeyVaul
 	}
 	input := &inputList[0]
 	output := fleets.KeyVaultSecretReference{
-		SecretURL: input.SecretUrl,
+		SecretURL:   input.SecretUrl,
+		SourceVault: pointer.From(expandSubResource(input.SourceVaultId)),
 	}
-
-	output.SourceVault = pointer.From(expandSubResource(input.SourceVaultId))
 
 	return &output
 }
@@ -1721,87 +1724,232 @@ func expandPublicIPAddressSkuModel(inputList []SkuModel) *fleets.PublicIPAddress
 	return &output
 }
 
-func expandOSProfileModel(inputList []OSProfileModel, d *schema.ResourceData) *fleets.VirtualMachineScaleSetOSProfile {
-	if len(inputList) == 0 {
+func expandOSProfileModel(inputList []VirtualMachineProfileModel) *fleets.VirtualMachineScaleSetOSProfile {
+	if len(inputList) == 0 || len(inputList[0].OsProfile) == 0 {
 		return nil
 	}
-	input := &inputList[0]
-	output := fleets.VirtualMachineScaleSetOSProfile{}
-	if input.CustomDataBase64 != "" {
-		output.CustomData = pointer.To(input.CustomDataBase64)
+	osProfile := &inputList[0].OsProfile[0]
+	output := fleets.VirtualMachineScaleSetOSProfile{
+		AllowExtensionOperations: pointer.To(inputList[0].ExtensionOperationsEnabled),
 	}
-	if len(input.LinuxConfiguration) > 0 {
-		output.LinuxConfiguration = expandLinuxConfigurationModel(input.LinuxConfiguration)
-		output.AdminUsername = pointer.To(input.LinuxConfiguration[0].AdminUsername)
-		output.AdminPassword = pointer.To(input.LinuxConfiguration[0].AdminPassword)
-		output.ComputerNamePrefix = pointer.To(input.LinuxConfiguration[0].ComputerNamePrefix)
-		output.Secrets = expandOsProfileSecretsModel(input.LinuxConfiguration[0].Secret)
+	if osProfile.CustomDataBase64 != "" {
+		output.CustomData = pointer.To(osProfile.CustomDataBase64)
 	}
 
-	if len(input.WindowsConfiguration) > 0 {
-		output.WindowsConfiguration = expandWindowsConfigurationModel(input.WindowsConfiguration)
-		output.AdminUsername = pointer.To(input.WindowsConfiguration[0].AdminUsername)
-		output.AdminPassword = pointer.To(input.WindowsConfiguration[0].AdminPassword)
-		output.ComputerNamePrefix = pointer.To(input.WindowsConfiguration[0].ComputerNamePrefix)
-		output.Secrets = expandOsProfileSecretsModel(input.WindowsConfiguration[0].Secret)
+	if lConfig := osProfile.LinuxConfiguration; len(lConfig) > 0 {
+		linuxConfig := fleets.LinuxConfiguration{
+			ProvisionVMAgent: pointer.To(lConfig[0].ProvisionVMAgentEnabled),
+			Ssh:              expandSshConfigurationModel(lConfig[0].AdminSshKeys),
+			PatchSettings:    &fleets.LinuxPatchSettings{},
+		}
+
+		// AutomaticByPlatformSettings cannot be set if the PatchMode is not 'AutomaticByPlatform'
+		if lConfig[0].PatchMode == string(fleets.LinuxVMGuestPatchModeAutomaticByPlatform) {
+			linuxConfig.PatchSettings.AutomaticByPlatformSettings = &fleets.LinuxVMGuestPatchAutomaticByPlatformSettings{
+				BypassPlatformSafetyChecksOnUserSchedule: pointer.To(lConfig[0].BypassPlatformSafetyChecksEnabled),
+			}
+
+			if lConfig[0].RebootSetting != "" {
+				linuxConfig.PatchSettings.AutomaticByPlatformSettings.RebootSetting = pointer.To(fleets.LinuxVMGuestPatchAutomaticByPlatformRebootSetting(lConfig[0].RebootSetting))
+			}
+		}
+		if lConfig[0].PatchAssessmentMode != "" {
+			linuxConfig.PatchSettings.AssessmentMode = pointer.To(fleets.LinuxPatchAssessmentMode(lConfig[0].PatchAssessmentMode))
+		}
+		if lConfig[0].PatchMode != "" {
+			linuxConfig.PatchSettings.PatchMode = pointer.To(fleets.LinuxVMGuestPatchMode(lConfig[0].PatchMode))
+		}
+		if lConfig[0].AdminUsername != "" {
+			output.AdminUsername = pointer.To(lConfig[0].AdminUsername)
+		}
+		if lConfig[0].AdminPassword != "" {
+			output.AdminPassword = pointer.To(lConfig[0].AdminPassword)
+		}
+		if lConfig[0].ComputerNamePrefix != "" {
+			output.ComputerNamePrefix = pointer.To(lConfig[0].ComputerNamePrefix)
+		}
+		output.Secrets = expandOsProfileSecretsModel(lConfig[0].Secret)
+
+		linuxConfig.Ssh = expandSshConfigurationModel(lConfig[0].AdminSshKeys)
+
+		output.LinuxConfiguration = &linuxConfig
+	}
+
+	if winConfig := osProfile.WindowsConfiguration; len(winConfig) > 0 {
+		windowsConfig := fleets.WindowsConfiguration{
+			AdditionalUnattendContent:    expandAdditionalUnattendContentModel(winConfig[0].AdditionalUnattendContent),
+			EnableAutomaticUpdates:       pointer.To(winConfig[0].AutomaticUpdatesEnabled),
+			EnableVMAgentPlatformUpdates: pointer.To(winConfig[0].VMAgentPlatformUpdatesEnabled),
+			ProvisionVMAgent:             pointer.To(winConfig[0].ProvisionVMAgentEnabled),
+			WinRM:                        expandWinRM(winConfig[0].WinRM),
+			PatchSettings:                &fleets.PatchSettings{},
+		}
+		if winConfig[0].AdminUsername != "" {
+			output.AdminUsername = pointer.To(winConfig[0].AdminUsername)
+		}
+		if winConfig[0].AdminPassword != "" {
+			output.AdminPassword = pointer.To(winConfig[0].AdminPassword)
+		}
+		if winConfig[0].ComputerNamePrefix != "" {
+			output.ComputerNamePrefix = pointer.To(winConfig[0].ComputerNamePrefix)
+		}
+
+		// AutomaticByPlatformSettings cannot be set if the PatchMode is not 'AutomaticByPlatform'
+		if winConfig[0].PatchMode == string(fleets.WindowsVMGuestPatchModeAutomaticByPlatform) {
+			windowsConfig.PatchSettings.AutomaticByPlatformSettings = &fleets.WindowsVMGuestPatchAutomaticByPlatformSettings{
+				BypassPlatformSafetyChecksOnUserSchedule: pointer.To(winConfig[0].BypassPlatformSafetyChecksEnabled),
+			}
+
+			if winConfig[0].RebootSetting != "" {
+				windowsConfig.PatchSettings.AutomaticByPlatformSettings.RebootSetting = pointer.To(fleets.WindowsVMGuestPatchAutomaticByPlatformRebootSetting(winConfig[0].RebootSetting))
+			}
+		}
+		if winConfig[0].PatchAssessmentMode != "" {
+			windowsConfig.PatchSettings.AssessmentMode = pointer.To(fleets.WindowsPatchAssessmentMode(winConfig[0].PatchAssessmentMode))
+		}
+		if winConfig[0].PatchMode != "" {
+			windowsConfig.PatchSettings.PatchMode = pointer.To(fleets.WindowsVMGuestPatchMode(winConfig[0].PatchMode))
+		}
+		if winConfig[0].TimeZone != "" {
+			windowsConfig.TimeZone = pointer.To(winConfig[0].TimeZone)
+		}
+		output.WindowsConfiguration = &windowsConfig
+
+		output.Secrets = expandOsProfileSecretsModel(winConfig[0].Secret)
 	}
 
 	return &output
 }
 
-func expandLinuxConfigurationModel(inputList []LinuxConfigurationModel) *fleets.LinuxConfiguration {
-	if len(inputList) == 0 {
+func validateWindowsSetting(inputList []VirtualMachineProfileModel, d *schema.ResourceDiff) error {
+	if len(inputList) == 0 || len(inputList[0].OsProfile) == 0 {
 		return nil
 	}
-	input := &inputList[0]
-	output := fleets.LinuxConfiguration{
-		DisablePasswordAuthentication: pointer.To(!input.PasswordAuthenticationEnabled),
-		EnableVMAgentPlatformUpdates:  pointer.To(input.VMAgentPlatformUpdatesEnabled),
-		PatchSettings:                 expandLinuxPatchSettingsModel(input.PatchSetting),
-		ProvisionVMAgent:              pointer.To(input.ProvisionVMAgentEnabled),
-		Ssh:                           expandSshConfigurationModel(input.SshKeys),
-	}
 
-	return &output
-}
-
-func expandLinuxPatchSettingsModel(inputList []LinuxPatchSettingModel) *fleets.LinuxPatchSettings {
-	if len(inputList) == 0 {
-		return nil
-	}
 	input := &inputList[0]
-	output := fleets.LinuxPatchSettings{}
-	if input.PatchMode != "" {
-		output.PatchMode = pointer.To(fleets.LinuxVMGuestPatchMode(input.PatchMode))
-		if input.PatchMode == string(fleets.LinuxPatchAssessmentModeAutomaticByPlatform) {
-			// AutomaticByPlatformSettings cannot be set if the PatchMode is not 'AutomaticByPlatform'.
-			output.AutomaticByPlatformSettings = expandLinuxAutomaticByPlatformSettingModel(input.AutomaticByPlatformSetting)
+	if len(input.OsProfile[0].WindowsConfiguration) > 0 {
+		patchMode := input.OsProfile[0].WindowsConfiguration[0].PatchMode
+		patchAssessmentMode := input.OsProfile[0].WindowsConfiguration[0].PatchAssessmentMode
+		hotPatchingEnabled := input.OsProfile[0].WindowsConfiguration[0].HotPatchingEnabled
+		provisionVMAgentEnabled := input.OsProfile[0].WindowsConfiguration[0].ProvisionVMAgentEnabled
+
+		rebootSetting := input.OsProfile[0].WindowsConfiguration[0].RebootSetting
+		bypassPlatformSafetyChecksEnabledExist := d.GetRawConfig().AsValueMap()["virtual_machine_profile"].AsValueSlice()[0].AsValueMap()["os_profile"].AsValueSlice()[0].AsValueMap()["windows_configuration"].AsValueSlice()[0].AsValueMap()["bypass_platform_safety_checks_enabled"]
+		if !bypassPlatformSafetyChecksEnabledExist.IsNull() || rebootSetting != "" {
+			if patchMode != string(fleets.WindowsVMGuestPatchModeAutomaticByPlatform) {
+				return fmt.Errorf("`bypass_platform_safety_checks_enabled` and `reboot_setting` cannot be set if the `PatchMode` is not 'AutomaticByPlatform'")
+			}
+		}
+
+		if input.ExtensionOperationsEnabled && !provisionVMAgentEnabled {
+			return fmt.Errorf("`extension_operations_enabled` cannot be set to `true` when `provision_vm_agent_enabled` is set to `false`")
+		}
+
+		if patchAssessmentMode == string(fleets.WindowsPatchAssessmentModeAutomaticByPlatform) && !provisionVMAgentEnabled {
+			return fmt.Errorf("when the 'patch_assessment_mode' field is set to %q the 'provision_vm_agent_enabled' must always be set to 'true'", fleets.WindowsPatchAssessmentModeAutomaticByPlatform)
+		}
+
+		isHotPatchEnabledImage := isValidHotPatchSourceImageReference(input.ImageReference)
+		hasHealthExtension := false
+		if v := input.Extension; len(v) > 0 && (v[0].Type == "ApplicationHealthLinux" || v[0].Type == "ApplicationHealthWindows") {
+			hasHealthExtension = true
+		}
+
+		if isHotPatchEnabledImage {
+			// it is a hot patching enabled image, validate hot patching enabled settings
+			if patchMode != string(fleets.WindowsVMGuestPatchModeAutomaticByPlatform) {
+				return fmt.Errorf("when referencing a hot patching enabled image the 'patch_mode' field must always be set to %q", fleets.WindowsVMGuestPatchModeAutomaticByPlatform)
+			}
+			if !provisionVMAgentEnabled {
+				return fmt.Errorf("when referencing a hot patching enabled image the 'provision_vm_agent_enabled' field must always be set to 'true'")
+			}
+			if !hasHealthExtension {
+				return fmt.Errorf("when referencing a hot patching enabled image the 'extension' field must always contain a 'application health extension'")
+			}
+			if !hotPatchingEnabled {
+				return fmt.Errorf("when referencing a hot patching enabled image the 'hotpatching_enabled' field must always be set to 'true'")
+			}
+		} else {
+			// not a hot patching enabled image verify Automatic VM Guest Patching settings
+			if patchMode == string(fleets.WindowsVMGuestPatchModeAutomaticByPlatform) {
+				if !provisionVMAgentEnabled {
+					return fmt.Errorf("when 'patch_mode' is set to %q then 'provision_vm_agent_enabled' must be set to 'true'", patchMode)
+				}
+				if !hasHealthExtension {
+					return fmt.Errorf("when 'patch_mode' is set to %q then the 'extension' field must always contain a 'application health extension'", patchMode)
+				}
+			}
+
+			if hotPatchingEnabled {
+				return fmt.Errorf("'hot_patching_enabled' field is not supported unless you are using one of the following hot patching enable images, '2022-datacenter-azure-edition', '2022-datacenter-azure-edition-core-smalldisk', '2022-datacenter-azure-edition-hotpatch' or '2022-datacenter-azure-edition-hotpatch-smalldisk'")
+			}
 		}
 	}
-
-	if input.AssessmentMode != "" {
-		output.AssessmentMode = pointer.To(fleets.LinuxPatchAssessmentMode(input.AssessmentMode))
-	}
-	return &output
+	return nil
 }
 
-func expandLinuxAutomaticByPlatformSettingModel(inputList []AutomaticByPlatformSettingModel) *fleets.LinuxVMGuestPatchAutomaticByPlatformSettings {
-	if len(inputList) == 0 {
+func validateLinuxSetting(inputList []VirtualMachineProfileModel, d *schema.ResourceDiff) error {
+	if len(inputList) == 0 || len(inputList[0].OsProfile) == 0 {
 		return nil
 	}
+
 	input := &inputList[0]
-	output := fleets.LinuxVMGuestPatchAutomaticByPlatformSettings{
-		BypassPlatformSafetyChecksOnUserSchedule: pointer.To(input.BypassPlatformSafetyChecksEnabled),
-	}
+	if len(input.OsProfile[0].LinuxConfiguration) > 0 {
+		patchMode := input.OsProfile[0].LinuxConfiguration[0].PatchMode
+		patchAssessmentMode := input.OsProfile[0].LinuxConfiguration[0].PatchAssessmentMode
+		provisionVMAgentEnabled := input.OsProfile[0].LinuxConfiguration[0].ProvisionVMAgentEnabled
 
-	if input.RebootSetting != "" {
-		output.RebootSetting = pointer.To(fleets.LinuxVMGuestPatchAutomaticByPlatformRebootSetting(input.RebootSetting))
-	}
+		rebootSetting := input.OsProfile[0].LinuxConfiguration[0].RebootSetting
+		bypassPlatformSafetyChecksEnabledExist := d.GetRawConfig().AsValueMap()["virtual_machine_profile"].AsValueSlice()[0].AsValueMap()["os_profile"].AsValueSlice()[0].AsValueMap()["linux_configuration"].AsValueSlice()[0].AsValueMap()["bypass_platform_safety_checks_enabled"]
+		if !bypassPlatformSafetyChecksEnabledExist.IsNull() || rebootSetting != "" {
+			if patchMode != string(fleets.LinuxVMGuestPatchModeAutomaticByPlatform) {
+				return fmt.Errorf("`bypass_platform_safety_checks_enabled` and `reboot_setting` cannot be set if the `PatchMode` is not 'AutomaticByPlatform'")
+			}
+		}
 
-	return &output
+		if input.ExtensionOperationsEnabled && !provisionVMAgentEnabled {
+			return fmt.Errorf("`extension_operations_enabled` cannot be set to `true` when `provision_vm_agent_enabled` is set to `false`")
+		}
+
+		if patchAssessmentMode == string(fleets.WindowsPatchAssessmentModeAutomaticByPlatform) && !provisionVMAgentEnabled {
+			return fmt.Errorf("when the 'patch_assessment_mode' field is set to %q the 'provision_vm_agent_enabled' must always be set to 'true'", fleets.LinuxPatchAssessmentModeAutomaticByPlatform)
+		}
+
+		hasHealthExtension := false
+		if v := input.Extension; len(v) > 0 && (v[0].Type == "ApplicationHealthLinux" || v[0].Type == "ApplicationHealthWindows") {
+			hasHealthExtension = true
+		}
+
+		if patchMode == string(fleets.LinuxVMGuestPatchModeAutomaticByPlatform) {
+			if !provisionVMAgentEnabled {
+				return fmt.Errorf("when the 'patch_mode' field is set to %q the 'provision_vm_agent_enabled' field must always be set to 'true', got %q", patchMode, strconv.FormatBool(provisionVMAgentEnabled))
+			}
+
+			if !hasHealthExtension {
+				return fmt.Errorf("when the 'patch_mode' field is set to %q the 'extension' field must contain at least one 'application health extension', got 0", patchMode)
+			}
+		}
+	}
+	return nil
 }
 
-func expandSshConfigurationModel(inputList []SshKeyModel) *fleets.SshConfiguration {
+func isValidHotPatchSourceImageReference(referenceInput []ImageReferenceModel) bool {
+	if len(referenceInput) == 0 {
+		return false
+	}
+	raw := referenceInput[0]
+	pub := raw.Publisher
+	offer := raw.Offer
+	sku := raw.Sku
+
+	if pub == "MicrosoftWindowsServer" && offer == "WindowsServer" && (sku == "2022-datacenter-azure-edition-core" || sku == "2022-datacenter-azure-edition-core-smalldisk" || sku == "2022-datacenter-azure-edition-hotpatch" || sku == "2022-datacenter-azure-edition-hotpatch-smalldisk") {
+		return true
+	}
+
+	return false
+}
+
+func expandSshConfigurationModel(inputList []AdminSshKeyModel) *fleets.SshConfiguration {
 	if len(inputList) == 0 {
 		return nil
 	}
@@ -1809,23 +1957,18 @@ func expandSshConfigurationModel(inputList []SshKeyModel) *fleets.SshConfigurati
 	var publicKeys []fleets.SshPublicKey
 	for _, v := range inputList {
 		input := v
-
 		output := fleets.SshPublicKey{
 			Path: pointer.To(fmt.Sprintf("/home/%s/.ssh/authorized_keys", input.Username)),
 		}
-
 		if input.PublicKey != "" {
 			output.KeyData = pointer.To(input.PublicKey)
 		}
-
 		publicKeys = append(publicKeys, output)
 	}
 
-	output := fleets.SshConfiguration{
+	return &fleets.SshConfiguration{
 		PublicKeys: pointer.To(publicKeys),
 	}
-
-	return &output
 }
 
 func expandOsProfileSecretsModel(inputList []SecretModel) *[]fleets.VaultSecretGroup {
@@ -1862,57 +2005,6 @@ func expandVaultCertificateModel(inputList []CertificateModel) *[]fleets.VaultCe
 		outputList = append(outputList, output)
 	}
 	return &outputList
-}
-
-func expandWindowsConfigurationModel(inputList []WindowsConfigurationModel) *fleets.WindowsConfiguration {
-	if len(inputList) == 0 {
-		return nil
-	}
-
-	input := &inputList[0]
-	output := fleets.WindowsConfiguration{
-		AdditionalUnattendContent:    expandAdditionalUnattendContentModel(input.AdditionalUnattendContent),
-		EnableAutomaticUpdates:       pointer.To(input.AutomaticUpdatesEnabled),
-		EnableVMAgentPlatformUpdates: pointer.To(input.VMAgentPlatformUpdatesEnabled),
-		ProvisionVMAgent:             pointer.To(input.ProvisionVMAgentEnabled),
-		WinRM:                        expandWinRM(input.WinRM),
-	}
-	if input.TimeZone != "" {
-		output.TimeZone = pointer.To(input.TimeZone)
-	}
-
-	patchSettings := &fleets.PatchSettings{
-		AutomaticByPlatformSettings: expandAutomaticByPlatformSettingModel(input.AutomaticByPlatformSetting),
-		EnableHotpatching:           pointer.To(input.HotPatchingEnabled),
-	}
-
-	if input.AssessmentMode != "" {
-		output.PatchSettings.AssessmentMode = pointer.To(fleets.WindowsPatchAssessmentMode(input.AssessmentMode))
-	}
-
-	if input.PatchMode != "" {
-		output.PatchSettings.PatchMode = pointer.To(fleets.WindowsVMGuestPatchMode(input.PatchMode))
-	}
-	output.PatchSettings = patchSettings
-
-	return &output
-}
-
-func expandAutomaticByPlatformSettingModel(inputList []AutomaticByPlatformSettingModel) *fleets.WindowsVMGuestPatchAutomaticByPlatformSettings {
-	if len(inputList) == 0 {
-		return nil
-	}
-
-	input := &inputList[0]
-	output := fleets.WindowsVMGuestPatchAutomaticByPlatformSettings{
-		BypassPlatformSafetyChecksOnUserSchedule: pointer.To(input.BypassPlatformSafetyChecksEnabled),
-	}
-
-	if input.RebootSetting != "" {
-		output.RebootSetting = pointer.To(fleets.WindowsVMGuestPatchAutomaticByPlatformRebootSetting(input.RebootSetting))
-	}
-
-	return &output
 }
 
 func expandAdditionalUnattendContentModel(inputList []AdditionalUnattendContentModel) *[]fleets.AdditionalUnattendContent {
@@ -2036,15 +2128,13 @@ func expandProxyAgentModel(inputList []ProxyAgentModel) *fleets.ProxyAgentSettin
 	return &output
 }
 
-func expandDataDiskModel(inputList []DataDiskModel) *[]fleets.VirtualMachineScaleSetDataDisk {
+func expandDataDiskModel(inputList []DataDiskModel) (*[]fleets.VirtualMachineScaleSetDataDisk, error) {
 	var outputList []fleets.VirtualMachineScaleSetDataDisk
 	for _, v := range inputList {
 		input := v
 		output := fleets.VirtualMachineScaleSetDataDisk{
 			CreateOption:            fleets.DiskCreateOptionTypes(input.CreateOption),
 			DeleteOption:            pointer.To(fleets.DiskDeleteOptionTypes(input.DeleteOption)),
-			DiskIOPSReadWrite:       pointer.To(input.DiskIOPSReadWrite),
-			DiskMBpsReadWrite:       pointer.To(input.DiskMbpsReadWrite),
 			Lun:                     input.Lun,
 			WriteAcceleratorEnabled: pointer.To(input.WriteAcceleratorEnabled),
 		}
@@ -2054,8 +2144,8 @@ func expandDataDiskModel(inputList []DataDiskModel) *[]fleets.VirtualMachineScal
 		}
 
 		caching := string(fleets.CachingTypesNone)
-		if v := input.Caching; v != "" {
-			caching = v
+		if input.Caching != "" {
+			caching = input.Caching
 		}
 		output.Caching = pointer.To(fleets.CachingTypes(caching))
 
@@ -2067,26 +2157,37 @@ func expandDataDiskModel(inputList []DataDiskModel) *[]fleets.VirtualMachineScal
 			StorageAccountType: pointer.To(fleets.StorageAccountTypes(input.StorageAccountType)),
 		}
 		if input.DiskEncryptionSetId != "" {
-			managedDisk.DiskEncryptionSet = expandDiskEncryptionSetModel(input.DiskEncryptionSetId)
+			managedDisk.DiskEncryptionSet = &fleets.DiskEncryptionSetParameters{
+				Id: pointer.To(input.DiskEncryptionSetId),
+			}
 		}
 		if input.SecurityEncryptionType != "" && input.SecurityDiskEncryptionSetId != "" {
 			managedDisk.SecurityProfile = expandVMDiskSecurityProfileModel(input.SecurityEncryptionType, input.SecurityDiskEncryptionSetId)
 		}
 		output.ManagedDisk = managedDisk
 
+		// Property 'dataDisk.diskMBpsReadWrite' can be enabled only on VMs in a Virtual Machine Scale Set?
+		//if input.DiskIOPSReadWrite > 0 && !ultraSSDEnabled && input.StorageAccountType != string(fleets.StorageAccountTypesPremiumVTwoLRS) {
+		//	return nil, fmt.Errorf("`disk_iops_read_write` can only be set when `storage_account_type` is set to `PremiumV2_LRS` or `UltraSSD_LRS`")
+		//}
+		//
+		//// Do not set value unless value is greater than 0 - issue 15516
+		//if input.DiskIOPSReadWrite > 0 {
+		//	output.DiskIOPSReadWrite = pointer.To(input.DiskIOPSReadWrite)
+		//}
+		//
+		//if input.DiskMbpsReadWrite > 0 && !ultraSSDEnabled && input.StorageAccountType != string(fleets.StorageAccountTypesPremiumVTwoLRS) {
+		//	return nil, fmt.Errorf("`disk_mbps_read_write` can only be set when `storage_account_type` is set to `PremiumV2_LRS` or `UltraSSD_LRS`")
+		//}
+		//
+		//// Do not set value unless value is greater than 0 - issue 15516
+		//if input.DiskMbpsReadWrite > 0 {
+		//	output.DiskMBpsReadWrite = pointer.To(input.DiskMbpsReadWrite)
+		//}
+
 		outputList = append(outputList, output)
 	}
-	return &outputList
-}
-
-func expandDiskEncryptionSetModel(diskEncryptionSetId string) *fleets.DiskEncryptionSetParameters {
-	if diskEncryptionSetId == "" {
-		return nil
-	}
-
-	return &fleets.DiskEncryptionSetParameters{
-		Id: pointer.To(diskEncryptionSetId),
-	}
+	return &outputList, nil
 }
 
 func expandVMDiskSecurityProfileModel(securityEncryptionType string, securityDiskEncryptionSetId string) *fleets.VMDiskSecurityProfile {
@@ -2094,9 +2195,13 @@ func expandVMDiskSecurityProfileModel(securityEncryptionType string, securityDis
 		return nil
 	}
 
-	output := fleets.VMDiskSecurityProfile{
-		DiskEncryptionSet: expandDiskEncryptionSetModel(securityDiskEncryptionSetId),
+	output := fleets.VMDiskSecurityProfile{}
+	if securityDiskEncryptionSetId != "" {
+		output.DiskEncryptionSet = &fleets.DiskEncryptionSetParameters{
+			Id: pointer.To(securityDiskEncryptionSetId),
+		}
 	}
+
 	if securityEncryptionType != "" {
 		output.SecurityEncryptionType = pointer.To(fleets.SecurityEncryptionTypes(securityEncryptionType))
 	}
@@ -2159,7 +2264,9 @@ func expandOSDiskModel(inputList []OSDiskModel) *fleets.VirtualMachineScaleSetOS
 		StorageAccountType: pointer.To(fleets.StorageAccountTypes(input.StorageAccountType)),
 	}
 	if input.DiskEncryptionSetId != "" {
-		managedDisk.DiskEncryptionSet = expandDiskEncryptionSetModel(input.DiskEncryptionSetId)
+		managedDisk.DiskEncryptionSet = &fleets.DiskEncryptionSetParameters{
+			Id: pointer.To(input.DiskEncryptionSetId),
+		}
 	}
 	if input.SecurityEncryptionType != "" && input.SecurityDiskEncryptionSetId != "" {
 		managedDisk.SecurityProfile = expandVMDiskSecurityProfileModel(input.SecurityEncryptionType, input.SecurityDiskEncryptionSetId)
@@ -2228,11 +2335,15 @@ func flattenVirtualMachineProfileModel(input *fleets.BaseVirtualMachineProfile, 
 		SecurityPostureReference:  flattenSecurityPostureReferenceModel(input.SecurityPostureReference),
 		SecurityProfile:           flattenSecurityProfileModel(input.SecurityProfile),
 	}
-	osProfile, err := flattenOSProfileModel(input.OsProfile, metadata.ResourceData)
-	if err != nil {
-		return outputList, err
+
+	if v := input.OsProfile; v != nil {
+		osProfile, err := flattenOSProfileModel(v, metadata.ResourceData)
+		if err != nil {
+			return outputList, err
+		}
+		output.OsProfile = osProfile
+		output.ExtensionOperationsEnabled = pointer.From(v.AllowExtensionOperations)
 	}
-	output.OsProfile = osProfile
 
 	if v := input.ServiceArtifactReference; v != nil {
 		output.ServiceArtifactId = pointer.From(v.Id)
@@ -2279,7 +2390,7 @@ func flattenVirtualMachineProfileModel(input *fleets.BaseVirtualMachineProfile, 
 	if err != nil {
 		return nil, err
 	}
-	output.Extensions = extensionProfileValue
+	output.Extension = extensionProfileValue
 
 	if input.LicenseType != nil {
 		output.LicenseType = *input.LicenseType
@@ -2292,63 +2403,15 @@ func flattenVirtualMachineProfileModel(input *fleets.BaseVirtualMachineProfile, 
 	return append(outputList, output), nil
 }
 
-func flattenLinuxConfigurationModel(input *fleets.LinuxConfiguration) ([]LinuxConfigurationModel, error) {
-	var outputList []LinuxConfigurationModel
-	if input == nil {
-		return outputList, nil
-	}
-
-	output := LinuxConfigurationModel{}
-	output.PasswordAuthenticationEnabled = !pointer.From(input.DisablePasswordAuthentication)
-	output.VMAgentPlatformUpdatesEnabled = pointer.From(input.ProvisionVMAgent)
-	output.ProvisionVMAgentEnabled = pointer.From(input.ProvisionVMAgent)
-	output.PatchSetting = flattenLinuxPatchSettingModel(input.PatchSettings)
-
-	flattenedSSHKeys, err := flattenSshKeyModel(input.Ssh)
-	if err != nil {
-		return nil, fmt.Errorf("flattening `admin_ssh_key`: %+v", err)
-	}
-	output.SshKeys = flattenedSSHKeys
-
-	return append(outputList, output), nil
-}
-
-func flattenLinuxPatchSettingModel(input *fleets.LinuxPatchSettings) []LinuxPatchSettingModel {
-	var outputList []LinuxPatchSettingModel
-	if input == nil {
-		return outputList
-	}
-
-	output := LinuxPatchSettingModel{
-		AutomaticByPlatformSetting: flattenLinuxAutomaticByPlatformSettingModel(input.AutomaticByPlatformSettings),
-	}
-	output.AssessmentMode = string(pointer.From(input.AssessmentMode))
-	output.PatchMode = string(pointer.From(input.PatchMode))
-
-	return append(outputList, output)
-}
-
-func flattenLinuxAutomaticByPlatformSettingModel(input *fleets.LinuxVMGuestPatchAutomaticByPlatformSettings) []AutomaticByPlatformSettingModel {
-	var outputList []AutomaticByPlatformSettingModel
-	if input == nil {
-		return outputList
-	}
-	output := AutomaticByPlatformSettingModel{}
-	output.BypassPlatformSafetyChecksEnabled = pointer.From(input.BypassPlatformSafetyChecksOnUserSchedule)
-	output.RebootSetting = string(pointer.From(input.RebootSetting))
-
-	return append(outputList, output)
-}
-
-func flattenSshKeyModel(input *fleets.SshConfiguration) ([]SshKeyModel, error) {
-	var outputList []SshKeyModel
+func flattenAdminSshKeyModel(input *fleets.SshConfiguration) ([]AdminSshKeyModel, error) {
+	var outputList []AdminSshKeyModel
 	if input == nil || input.PublicKeys == nil {
 		return outputList, nil
 	}
 
 	for _, input := range *input.PublicKeys {
 
-		output := SshKeyModel{}
+		output := AdminSshKeyModel{}
 		username := parseUsernameFromAuthorizedKeysPath(*input.Path)
 		if username == nil {
 			return nil, fmt.Errorf("parsing username from %q", *input.Path)
@@ -2499,23 +2562,69 @@ func flattenOSProfileModel(input *fleets.VirtualMachineScaleSetOSProfile, d *sch
 	if input == nil {
 		return outputList, nil
 	}
-	output := OSProfileModel{
-		Secret:               flattenOsProfileSecretsModel(input.Secrets),
-		WindowsConfiguration: flattenWindowsConfigurationModel(input.WindowsConfiguration),
-	}
 
-	linuxConfiguration, err := flattenLinuxConfigurationModel(input.LinuxConfiguration)
-	if err != nil {
-		return nil, fmt.Errorf("flattening `linux_configuration`: %+v", err)
-	}
-	output.LinuxConfiguration = linuxConfiguration
-
-	output.AdminPassword = d.Get("virtual_machine_profile.0.os_profile.0.admin_password").(string)
-	output.AdminUsername = pointer.From(input.AdminUsername)
-	output.ExtensionOperationsEnabled = pointer.From(input.AllowExtensionOperations)
-	output.ComputerNamePrefix = pointer.From(input.ComputerNamePrefix)
+	output := OSProfileModel{}
 	output.CustomDataBase64 = pointer.From(input.CustomData)
-	output.RequireGuestProvisionSignalEnabled = pointer.From(input.RequireGuestProvisionSignal)
+
+	var windowsConfigs []WindowsConfigurationModel
+	if v := input.WindowsConfiguration; v != nil {
+		windowsConfig := WindowsConfigurationModel{
+			AdditionalUnattendContent:     flattenAdditionalUnattendContentModel(v.AdditionalUnattendContent),
+			WinRM:                         flattenWinRMModel(v.WinRM),
+			AdminUsername:                 pointer.From(input.AdminUsername),
+			AdminPassword:                 d.Get("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password").(string),
+			AutomaticUpdatesEnabled:       pointer.From(v.EnableAutomaticUpdates),
+			ComputerNamePrefix:            pointer.From(input.ComputerNamePrefix),
+			VMAgentPlatformUpdatesEnabled: pointer.From(v.ProvisionVMAgent),
+			ProvisionVMAgentEnabled:       pointer.From(v.ProvisionVMAgent),
+			TimeZone:                      pointer.From(v.TimeZone),
+			Secret:                        flattenOsProfileSecretsModel(input.Secrets),
+		}
+
+		if p := v.PatchSettings; p != nil {
+			windowsConfig.PatchMode = string(pointer.From(p.PatchMode))
+			windowsConfig.PatchAssessmentMode = string(pointer.From(p.AssessmentMode))
+			if a := p.AutomaticByPlatformSettings; a != nil {
+				windowsConfig.BypassPlatformSafetyChecksEnabled = pointer.From(a.BypassPlatformSafetyChecksOnUserSchedule)
+				windowsConfig.RebootSetting = string(pointer.From(a.RebootSetting))
+			}
+			windowsConfig.HotPatchingEnabled = pointer.From(p.EnableHotpatching)
+		}
+		windowsConfigs = append(windowsConfigs, windowsConfig)
+	}
+	output.WindowsConfiguration = windowsConfigs
+
+	var linuxConfigs []LinuxConfigurationModel
+	if v := input.LinuxConfiguration; v != nil {
+		linuxConfig := LinuxConfigurationModel{
+			AdminUsername:                 pointer.From(input.AdminUsername),
+			AdminPassword:                 d.Get("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password").(string),
+			ComputerNamePrefix:            pointer.From(input.ComputerNamePrefix),
+			PasswordAuthenticationEnabled: !pointer.From(v.DisablePasswordAuthentication),
+			VMAgentPlatformUpdatesEnabled: pointer.From(v.ProvisionVMAgent),
+			ProvisionVMAgentEnabled:       pointer.From(v.ProvisionVMAgent),
+			Secret:                        flattenOsProfileSecretsModel(input.Secrets),
+		}
+
+		if p := v.PatchSettings; p != nil {
+			linuxConfig.PatchAssessmentMode = string(pointer.From(p.AssessmentMode))
+			linuxConfig.PatchMode = string(pointer.From(p.PatchMode))
+			if a := p.AutomaticByPlatformSettings; a != nil {
+				linuxConfig.BypassPlatformSafetyChecksEnabled = pointer.From(a.BypassPlatformSafetyChecksOnUserSchedule)
+				linuxConfig.RebootSetting = string(pointer.From(a.RebootSetting))
+			}
+		}
+
+		flattenedSSHKeys, err := flattenAdminSshKeyModel(v.Ssh)
+		if err != nil {
+			return nil, fmt.Errorf("flattening `linux_configuration.0.admin_ssh_key`: %+v", err)
+		}
+		linuxConfig.AdminSshKeys = flattenedSSHKeys
+
+		linuxConfigs = append(linuxConfigs, linuxConfig)
+	}
+
+	output.LinuxConfiguration = linuxConfigs
 
 	return append(outputList, output), nil
 }
@@ -2535,53 +2644,6 @@ func flattenVaultCertificateModel(inputList *[]fleets.VaultCertificate) []Certif
 		outputList = append(outputList, output)
 	}
 	return outputList
-}
-
-func flattenWindowsConfigurationModel(input *fleets.WindowsConfiguration) []WindowsConfigurationModel {
-	var outputList []WindowsConfigurationModel
-	if input == nil {
-		return outputList
-	}
-	output := WindowsConfigurationModel{
-		AdditionalUnattendContent: flattenAdditionalUnattendContentModel(input.AdditionalUnattendContent),
-		WinRM:                     flattenWinRMModel(input.WinRM),
-	}
-
-	output.AutomaticUpdatesEnabled = !pointer.From(input.EnableAutomaticUpdates)
-	output.VMAgentPlatformUpdatesEnabled = pointer.From(input.ProvisionVMAgent)
-	output.ProvisionVMAgentEnabled = pointer.From(input.ProvisionVMAgent)
-	output.TimeZone = pointer.From(input.TimeZone)
-	output.PatchSetting = flattenWindowsPatchSettingModel(input.PatchSettings)
-
-	return append(outputList, output)
-}
-
-func flattenWindowsPatchSettingModel(input *fleets.PatchSettings) []WindowsPatchSettingModel {
-	var outputList []WindowsPatchSettingModel
-	if input == nil {
-		return outputList
-	}
-
-	output := WindowsPatchSettingModel{
-		AutomaticByPlatformSetting: flattenWindowsAutomaticByPlatformSettingModel(input.AutomaticByPlatformSettings),
-	}
-	output.AssessmentMode = string(pointer.From(input.AssessmentMode))
-	output.PatchMode = string(pointer.From(input.PatchMode))
-	output.HotPatchingEnabled = pointer.From(input.EnableHotpatching)
-
-	return append(outputList, output)
-}
-
-func flattenWindowsAutomaticByPlatformSettingModel(input *fleets.WindowsVMGuestPatchAutomaticByPlatformSettings) []AutomaticByPlatformSettingModel {
-	var outputList []AutomaticByPlatformSettingModel
-	if input == nil {
-		return outputList
-	}
-	output := AutomaticByPlatformSettingModel{}
-	output.BypassPlatformSafetyChecksEnabled = pointer.From(input.BypassPlatformSafetyChecksOnUserSchedule)
-	output.RebootSetting = string(pointer.From(input.RebootSetting))
-
-	return append(outputList, output)
 }
 
 func flattenAdditionalUnattendContentModel(inputList *[]fleets.AdditionalUnattendContent) []AdditionalUnattendContentModel {
@@ -2685,8 +2747,9 @@ func flattenDataDiskModel(inputList *[]fleets.VirtualMachineScaleSetDataDisk) []
 		output.Caching = caching
 
 		output.DeleteOption = string(pointer.From(input.DeleteOption))
-		output.DiskIOPSReadWrite = pointer.From(input.DiskIOPSReadWrite)
-		output.DiskMbpsReadWrite = pointer.From(input.DiskMBpsReadWrite)
+		// Property 'dataDisk.diskMBpsReadWrite' can be enabled only on VMs in a Virtual Machine Scale Set?
+		//output.DiskIOPSReadWrite = pointer.From(input.DiskIOPSReadWrite)
+		//output.DiskMbpsReadWrite = pointer.From(input.DiskMBpsReadWrite)
 		output.DiskSizeInGB = pointer.From(input.DiskSizeGB)
 		output.Name = pointer.From(input.Name)
 		output.WriteAcceleratorEnabled = pointer.From(input.WriteAcceleratorEnabled)
@@ -2695,12 +2758,12 @@ func flattenDataDiskModel(inputList *[]fleets.VirtualMachineScaleSetDataDisk) []
 			if v := v.DiskEncryptionSet; v != nil {
 				output.DiskEncryptionSetId = pointer.From(v.Id)
 			}
-			if sp := v.SecurityProfile; sp != nil {
-				if v := sp.DiskEncryptionSet; v != nil {
-					output.SecurityDiskEncryptionSetId = pointer.From(v.Id)
-				}
-				output.SecurityEncryptionType = string(pointer.From(sp.SecurityEncryptionType))
-			}
+			//if sp := v.SecurityProfile; sp != nil {
+			//	if v := sp.DiskEncryptionSet; v != nil {
+			//		output.SecurityDiskEncryptionSetId = pointer.From(v.Id)
+			//	}
+			//	output.SecurityEncryptionType = string(pointer.From(sp.SecurityEncryptionType))
+			//}
 			output.StorageAccountType = string(pointer.From(v.StorageAccountType))
 		}
 

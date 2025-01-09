@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	computeValidate "github.com/hashicorp/terraform-provider-azurerm/internal/services/compute/validate"
+	"github.com/hashicorp/terraform-provider-azurerm/utils"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -26,8 +28,8 @@ type AzureFleetResourceModel struct {
 	Location                                 string                                     `tfschema:"location"`
 	Plan                                     []PlanModel                                `tfschema:"plan"`
 	AdditionalLocationProfile                []AdditionalLocationProfileModel           `tfschema:"additional_location_profile"`
-	AdditionalCapabilitiesHibernationEnabled bool                                       `tfschema:"additional_capabilities_ultra_ssd_enabled"`
-	AdditionalCapabilitiesUltraSSDEnabled    bool                                       `tfschema:"additional_capabilities_hibernation_enabled"`
+	AdditionalCapabilitiesUltraSSDEnabled    bool                                       `tfschema:"additional_capabilities_ultra_ssd_enabled"`
+	AdditionalCapabilitiesHibernationEnabled bool                                       `tfschema:"additional_capabilities_hibernation_enabled"`
 	VirtualMachineProfile                    []VirtualMachineProfileModel               `tfschema:"virtual_machine_profile"`
 	ComputeApiVersion                        string                                     `tfschema:"compute_api_version"`
 	PlatformFaultDomainCount                 int64                                      `tfschema:"platform_fault_domain_count"`
@@ -50,7 +52,7 @@ type VirtualMachineProfileModel struct {
 	CapacityReservationGroupId           string                          `tfschema:"capacity_reservation_group_id"`
 	BootDiagnosticEnabled                bool                            `tfschema:"boot_diagnostic_enabled"`
 	BootDiagnosticStorageAccountEndpoint string                          `tfschema:"boot_diagnostic_storage_account_endpoint"`
-	Extensions                           []ExtensionsModel               `tfschema:"extensions"`
+	Extension                            []ExtensionModel                `tfschema:"extension"`
 	ExtensionsTimeBudget                 string                          `tfschema:"extensions_time_budget"`
 	VMSize                               []VMSizeModel                   `tfschema:"vm_size"`
 	LicenseType                          string                          `tfschema:"license_type"`
@@ -58,7 +60,6 @@ type VirtualMachineProfileModel struct {
 	NetworkInterface                     []NetworkInterfaceModel         `tfschema:"network_interface"`
 	OsProfile                            []OSProfileModel                `tfschema:"os_profile"`
 	ExtensionOperationsEnabled           bool                            `tfschema:"extension_operations_enabled"`
-	RequireGuestProvisionSignalEnabled   bool                            `tfschema:"require_guest_provision_signal_enabled"`
 	ScheduledEventTerminationEnabled     bool                            `tfschema:"scheduled_event_termination_enabled"`
 	ScheduledEventTerminationTimeout     string                          `tfschema:"scheduled_event_termination_timeout"`
 	ScheduledEventOsImageEnabled         bool                            `tfschema:"scheduled_event_os_image_enabled"`
@@ -82,24 +83,23 @@ type GalleryApplicationModel struct {
 	TreatFailureAsDeploymentFailureEnabled bool   `tfschema:"treat_failure_as_deployment_failure_enabled"`
 }
 
-type ExtensionsModel struct {
-	Name                           string                               `tfschema:"name"`
-	Publisher                      string                               `tfschema:"publisher"`
-	Type                           string                               `tfschema:"type"`
-	TypeHandlerVersion             string                               `tfschema:"type_handler_version"`
-	AutoUpgradeMinorVersionEnabled bool                                 `tfschema:"auto_upgrade_minor_version_enabled"`
-	AutomaticUpgradeEnabled        bool                                 `tfschema:"automatic_upgrade_enabled"`
-	ForceUpdateTag                 string                               `tfschema:"force_update_tag"`
-	ProtectedSettingsJson          string                               `tfschema:"protected_settings_json"`
-	ProtectedSettingsFromKeyVault  []ProtectedSettingsFromKeyVaultModel `tfschema:"protected_settings_from_key_vault"`
-	ProvisionAfterExtensions       []string                             `tfschema:"provision_after_extensions"`
-	SettingsJson                   string                               `tfschema:"settings_json"`
-	SuppressFailuresEnabled        bool                                 `tfschema:"suppress_failures_enabled"`
+type ExtensionModel struct {
+	Name                                 string                               `tfschema:"name"`
+	Publisher                            string                               `tfschema:"publisher"`
+	Type                                 string                               `tfschema:"type"`
+	TypeHandlerVersion                   string                               `tfschema:"type_handler_version"`
+	AutoUpgradeMinorVersionEnabled       bool                                 `tfschema:"auto_upgrade_minor_version_enabled"`
+	AutomaticUpgradeEnabled              bool                                 `tfschema:"automatic_upgrade_enabled"`
+	ForceExtensionExecutionOnChange      string                               `tfschema:"force_extension_execution_on_change"`
+	ProtectedSettingsJson                string                               `tfschema:"protected_settings_json"`
+	ProtectedSettingsFromKeyVault        []ProtectedSettingsFromKeyVaultModel `tfschema:"protected_settings_from_key_vault"`
+	ExtensionsToProvisionAfterVmCreation []string                             `tfschema:"extensions_to_provision_after_vm_creation"`
+	SettingsJson                         string                               `tfschema:"settings_json"`
 }
 
 type ProtectedSettingsFromKeyVaultModel struct {
 	SecretUrl     string `tfschema:"secret_url"`
-	SourceVaultId string `tfschema:"source_key_vault_id"`
+	SourceVaultId string `tfschema:"source_vault_id"`
 }
 
 type VMSizeModel struct {
@@ -163,29 +163,21 @@ type OSProfileModel struct {
 }
 
 type LinuxConfigurationModel struct {
-	AdminPassword                 string                   `tfschema:"admin_password"`
-	AdminUsername                 string                   `tfschema:"admin_username"`
-	ComputerNamePrefix            string                   `tfschema:"computer_name_prefix"`
-	Secret                        []SecretModel            `tfschema:"secret"`
-	PasswordAuthenticationEnabled bool                     `tfschema:"password_authentication_enabled"`
-	VMAgentPlatformUpdatesEnabled bool                     `tfschema:"vm_agent_platform_updates_enabled"`
-	PatchSetting                  []LinuxPatchSettingModel `tfschema:"patch_setting"`
-	ProvisionVMAgentEnabled       bool                     `tfschema:"provision_vm_agent_enabled"`
-	SshKeys                       []SshKeyModel            `tfschema:"ssh_keys"`
+	AdminPassword                     string             `tfschema:"admin_password"`
+	AdminUsername                     string             `tfschema:"admin_username"`
+	ComputerNamePrefix                string             `tfschema:"computer_name_prefix"`
+	Secret                            []SecretModel      `tfschema:"secret"`
+	PasswordAuthenticationEnabled     bool               `tfschema:"password_authentication_enabled"`
+	VMAgentPlatformUpdatesEnabled     bool               `tfschema:"vm_agent_platform_updates_enabled"`
+	PatchAssessmentMode               string             `tfschema:"patch_assessment_mode"`
+	PatchMode                         string             `tfschema:"patch_mode"`
+	BypassPlatformSafetyChecksEnabled bool               `tfschema:"bypass_platform_safety_checks_enabled"`
+	RebootSetting                     string             `tfschema:"reboot_setting"`
+	ProvisionVMAgentEnabled           bool               `tfschema:"provision_vm_agent_enabled"`
+	AdminSshKeys                      []AdminSshKeyModel `tfschema:"admin_ssh_key"`
 }
 
-type LinuxPatchSettingModel struct {
-	AssessmentMode             string                            `tfschema:"assessment_mode"`
-	PatchMode                  string                            `tfschema:"patch_mode"`
-	AutomaticByPlatformSetting []AutomaticByPlatformSettingModel `tfschema:"automatic_by_platform_setting"`
-}
-
-type AutomaticByPlatformSettingModel struct {
-	BypassPlatformSafetyChecksEnabled bool   `tfschema:"bypass_platform_safety_checks_enabled"`
-	RebootSetting                     string `tfschema:"reboot_setting"`
-}
-
-type SshKeyModel struct {
+type AdminSshKeyModel struct {
 	PublicKey string `tfschema:"public_key"`
 	Username  string `tfschema:"username"`
 }
@@ -201,20 +193,21 @@ type CertificateModel struct {
 }
 
 type WindowsConfigurationModel struct {
-	AdminPassword                 string                            `tfschema:"admin_password"`
-	AdminUsername                 string                            `tfschema:"admin_username"`
-	ComputerNamePrefix            string                            `tfschema:"computer_name_prefix"`
-	Secret                        []SecretModel                     `tfschema:"secret"`
-	AdditionalUnattendContent     []AdditionalUnattendContentModel  `tfschema:"additional_unattend_content"`
-	AutomaticUpdatesEnabled       bool                              `tfschema:"automatic_updates_enabled"`
-	VMAgentPlatformUpdatesEnabled bool                              `tfschema:"vm_agent_platform_updates_enabled"`
-	AssessmentMode                string                            `tfschema:"assessment_mode"`
-	PatchMode                     string                            `tfschema:"patch_mode"`
-	AutomaticByPlatformSetting    []AutomaticByPlatformSettingModel `tfschema:"automatic_by_platform_setting"`
-	HotPatchingEnabled            bool                              `tfschema:"hot_patching_enabled"`
-	ProvisionVMAgentEnabled       bool                              `tfschema:"provision_vm_agent_enabled"`
-	TimeZone                      string                            `tfschema:"time_zone"`
-	WinRM                         []WinRMModel                      `tfschema:"winrm_listener"`
+	AdminPassword                     string                           `tfschema:"admin_password"`
+	AdminUsername                     string                           `tfschema:"admin_username"`
+	ComputerNamePrefix                string                           `tfschema:"computer_name_prefix"`
+	Secret                            []SecretModel                    `tfschema:"secret"`
+	AdditionalUnattendContent         []AdditionalUnattendContentModel `tfschema:"additional_unattend_content"`
+	AutomaticUpdatesEnabled           bool                             `tfschema:"automatic_updates_enabled"`
+	VMAgentPlatformUpdatesEnabled     bool                             `tfschema:"vm_agent_platform_updates_enabled"`
+	PatchAssessmentMode               string                           `tfschema:"patch_assessment_mode"`
+	PatchMode                         string                           `tfschema:"patch_mode"`
+	BypassPlatformSafetyChecksEnabled bool                             `tfschema:"bypass_platform_safety_checks_enabled"`
+	RebootSetting                     string                           `tfschema:"reboot_setting"`
+	HotPatchingEnabled                bool                             `tfschema:"hot_patching_enabled"`
+	ProvisionVMAgentEnabled           bool                             `tfschema:"provision_vm_agent_enabled"`
+	TimeZone                          string                           `tfschema:"time_zone"`
+	WinRM                             []WinRMModel                     `tfschema:"winrm_listener"`
 }
 
 type AdditionalUnattendContentModel struct {
@@ -250,11 +243,12 @@ type ProxyAgentModel struct {
 }
 
 type DataDiskModel struct {
-	Caching                     string `tfschema:"caching"`
-	CreateOption                string `tfschema:"create_option"`
-	DeleteOption                string `tfschema:"delete_option"`
-	DiskIOPSReadWrite           int64  `tfschema:"disk_iops_read_write"`
-	DiskMbpsReadWrite           int64  `tfschema:"disk_mbps_read_write"`
+	Caching      string `tfschema:"caching"`
+	CreateOption string `tfschema:"create_option"`
+	DeleteOption string `tfschema:"delete_option"`
+	//Property 'dataDisk.diskMBpsReadWrite' can be enabled only on VMs in a Virtual Machine Scale Set?
+	//DiskIOPSReadWrite           int64  `tfschema:"disk_iops_read_write"`
+	//DiskMbpsReadWrite           int64  `tfschema:"disk_mbps_read_write"`
 	DiskSizeInGB                int64  `tfschema:"disk_size_in_gb"`
 	DiskEncryptionSetId         string `tfschema:"disk_encryption_set_id"`
 	SecurityDiskEncryptionSetId string `tfschema:"security_disk_encryption_set_id"`
@@ -296,7 +290,6 @@ type PlanModel struct {
 	Product       string `tfschema:"product"`
 	PromotionCode string `tfschema:"promotion_code"`
 	Publisher     string `tfschema:"publisher"`
-	Version       string `tfschema:"version"`
 }
 
 type RegularPriorityProfileModel struct {
@@ -323,7 +316,7 @@ type VMAttributesModel struct {
 	BurstableSupport          string                          `tfschema:"burstable_support"`
 	CpuManufacturers          []string                        `tfschema:"cpu_manufacturers"`
 	DataDiskCount             []VMAttributeMinMaxIntegerModel `tfschema:"data_disk_count"`
-	ExcludedVMSizes           []string                        `tfschema:"excluded_vm_sizes_profile"`
+	ExcludedVMSizes           []string                        `tfschema:"excluded_vm_sizes"`
 	LocalStorageDiskTypes     []string                        `tfschema:"local_storage_disk_types"`
 	LocalStorageInGib         []VMAttributeMinMaxDoubleModel  `tfschema:"local_storage_in_gib"`
 	LocalStorageSupport       string                          `tfschema:"local_storage_support"`
@@ -395,6 +388,7 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 		"additional_capabilities_hibernation_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
+			ForceNew: true,
 			Default:  false,
 		},
 
@@ -404,24 +398,14 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 		"additional_capabilities_ultra_ssd_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
+			ForceNew: true,
 			Default:  false,
-		},
-
-		"platform_fault_domain_count": {
-			Type:     pluginsdk.TypeInt,
-			Optional: true,
-			Default:  1,
-		},
-
-		"compute_api_version": {
-			Type:         pluginsdk.TypeString,
-			Optional:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"additional_location_profile": {
 			Type:     pluginsdk.TypeList,
 			Optional: true,
+			ForceNew: true,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"location": commonschema.LocationWithoutForceNew(),
@@ -431,33 +415,29 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 			},
 		},
 
-		"identity": commonschema.UserAssignedIdentityOptional(),
-
 		"plan": {
 			Type:     pluginsdk.TypeList,
 			Optional: true,
+			ForceNew: true,
 			MaxItems: 1,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"name": {
 						Type:     pluginsdk.TypeString,
+						ForceNew: true,
 						Required: true,
-						//ForceNew:     true,
-						ValidateFunc: validation.StringIsNotEmpty,
 					},
 
 					"product": {
 						Type:     pluginsdk.TypeString,
+						ForceNew: true,
 						Required: true,
-						//ForceNew:     true,
-						ValidateFunc: validation.StringIsNotEmpty,
 					},
 
 					"publisher": {
 						Type:     pluginsdk.TypeString,
+						ForceNew: true,
 						Required: true,
-						//ForceNew:     true,
-						ValidateFunc: validation.StringIsNotEmpty,
 					},
 
 					"promotion_code": {
@@ -465,15 +445,28 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 						Optional:     true,
 						ValidateFunc: validation.StringIsNotEmpty,
 					},
-
-					"version": {
-						Type:         pluginsdk.TypeString,
-						Optional:     true,
-						ValidateFunc: validation.StringIsNotEmpty,
-					},
 				},
 			},
 		},
+
+		"platform_fault_domain_count": {
+			Type:     pluginsdk.TypeInt,
+			Optional: true,
+			Default:  1,
+			ForceNew: true,
+		},
+
+		"vm_attributes": vmAttributesSchema(),
+
+		"zones": commonschema.ZonesMultipleOptionalForceNew(),
+
+		"compute_api_version": {
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.StringIsNotEmpty,
+		},
+
+		"identity": commonschema.SystemAssignedUserAssignedIdentityOptional(),
 
 		"regular_priority_profile": {
 			Type:         pluginsdk.TypeList,
@@ -571,8 +564,6 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 
 		"tags": commonschema.Tags(),
 
-		"vm_attributes": vmAttributesSchema(),
-
 		"vm_sizes_profile": {
 			Type:     pluginsdk.TypeList,
 			Optional: true,
@@ -591,11 +582,9 @@ func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
 					},
 				},
 			},
-			ConflictsWith: []string{"vm_attributes.0.excluded_vm_sizes_profile"},
+			ConflictsWith: []string{"vm_attributes.0.excluded_vm_sizes"},
 			AtLeastOneOf:  []string{"vm_sizes_profile", "vm_attributes"},
 		},
-
-		"zones": commonschema.ZonesMultipleOptionalForceNew(),
 	}
 }
 
@@ -603,6 +592,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
 		Type:         pluginsdk.TypeList,
 		Optional:     true,
+		ForceNew:     true,
 		MaxItems:     1,
 		AtLeastOneOf: []string{"vm_sizes_profile", "vm_attributes"},
 		Elem: &pluginsdk.Resource{
@@ -647,6 +637,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 				"accelerator_support": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
+					Default:  fleets.VMAttributeSupportExcluded,
 					ValidateFunc: validation.StringInSlice(
 						fleets.PossibleValuesForVMAttributeSupport(), false),
 				},
@@ -674,6 +665,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 				"burstable_support": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
+					Default:  fleets.VMAttributeSupportExcluded,
 					ValidateFunc: validation.StringInSlice(
 						fleets.PossibleValuesForVMAttributeSupport(), false),
 				},
@@ -697,8 +689,8 @@ func vmAttributesSchema() *pluginsdk.Schema {
 					},
 				},
 
-				"excluded_vm_sizes_profile": {
-					Type:     pluginsdk.TypeList,
+				"excluded_vm_sizes": {
+					Type:     pluginsdk.TypeSet,
 					Optional: true,
 					Elem: &pluginsdk.Schema{
 						Type:         pluginsdk.TypeString,
@@ -774,6 +766,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 				"rdma_support": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
+					Default:  fleets.VMAttributeSupportExcluded,
 					ValidateFunc: validation.StringInSlice(
 						fleets.PossibleValuesForVMAttributeSupport(), false),
 				},
@@ -867,6 +860,7 @@ func (r AzureFleetResource) Create() sdk.ResourceFunc {
 					RegularPriorityProfile: expandRegularPriorityProfileModel(model.RegularPriorityProfile, metadata.ResourceData),
 					SpotPriorityProfile:    expandSpotPriorityProfileModel(model.SpotPriorityProfile, metadata.ResourceData),
 					VMAttributes:           expandVMAttributesModel(model.VMAttributes),
+					VMSizesProfile:         pointer.From(expandVMSizeProfileModel(model.VMSizesProfile)),
 				},
 				Tags:  &model.Tags,
 				Zones: &model.Zones,
@@ -878,7 +872,7 @@ func (r AzureFleetResource) Create() sdk.ResourceFunc {
 			}
 			properties.Identity = expandedIdentity
 
-			additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, metadata.ResourceData)
+			additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, model.AdditionalCapabilitiesUltraSSDEnabled)
 			if err != nil {
 				return err
 			}
@@ -892,19 +886,16 @@ func (r AzureFleetResource) Create() sdk.ResourceFunc {
 				PlatformFaultDomainCount: pointer.To(model.PlatformFaultDomainCount),
 			}
 
-			baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData)
+			baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(model.VirtualMachineProfile)
 			if err != nil {
 				return err
 			}
 			computeProfile.BaseVirtualMachineProfile = pointer.From(baseVirtualMachineProfileValue)
-
 			properties.Properties.ComputeProfile = computeProfile
 
 			if model.ComputeApiVersion != "" {
 				computeProfile.ComputeApiVersion = pointer.To(model.ComputeApiVersion)
 			}
-
-			properties.Properties.VMSizesProfile = pointer.From(expandVMSizeProfileModel(model.VMSizesProfile))
 
 			if err := client.CreateOrUpdateThenPoll(ctx, id, properties); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
@@ -947,14 +938,15 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 			properties := existing.Model
 
 			// set `admin_password` as API requires 'osProfile.adminPassword' when updating but the GET API does not return the password
-			if v := properties.Properties.ComputeProfile.BaseVirtualMachineProfile.OsProfile; v != nil {
-				if v.LinuxConfiguration != nil {
-					v.AdminPassword = pointer.To(model.VirtualMachineProfile[0].OsProfile[0].LinuxConfiguration[0].AdminPassword)
+			if props := properties.Properties; props != nil {
+				if v := props.ComputeProfile.BaseVirtualMachineProfile.OsProfile; v != nil {
+					if len(model.VirtualMachineProfile[0].OsProfile[0].LinuxConfiguration) > 0 {
+						v.AdminPassword = pointer.To(model.VirtualMachineProfile[0].OsProfile[0].LinuxConfiguration[0].AdminPassword)
+					}
+					if len(model.VirtualMachineProfile[0].OsProfile[0].WindowsConfiguration) > 0 {
+						v.AdminPassword = pointer.To(model.VirtualMachineProfile[0].OsProfile[0].WindowsConfiguration[0].AdminPassword)
+					}
 				}
-				if v.WindowsConfiguration != nil {
-					v.AdminPassword = pointer.To(model.VirtualMachineProfile[0].OsProfile[0].WindowsConfiguration[0].AdminPassword)
-				}
-
 			}
 			if metadata.ResourceData.HasChange("identity") {
 				identityValue, err := identity.ExpandLegacySystemAndUserAssignedMapFromModel(model.Identity)
@@ -969,7 +961,7 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 			}
 
 			if metadata.ResourceData.HasChange("additional_location_profile") {
-				additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, metadata.ResourceData)
+				additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, model.AdditionalCapabilitiesUltraSSDEnabled)
 				if err != nil {
 					return err
 				}
@@ -977,27 +969,8 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 			}
 
 			computeProfile := properties.Properties.ComputeProfile
-			if metadata.ResourceData.HasChange("additional_capabilities_ultra_ssd_enabled") {
-				if computeProfile.AdditionalVirtualMachineCapabilities != nil {
-					computeProfile.AdditionalVirtualMachineCapabilities.UltraSSDEnabled = pointer.To(model.AdditionalCapabilitiesUltraSSDEnabled)
-				} else {
-					computeProfile.AdditionalVirtualMachineCapabilities = &fleets.AdditionalCapabilities{
-						UltraSSDEnabled: pointer.To(model.AdditionalCapabilitiesUltraSSDEnabled),
-					}
-				}
-			}
-			if metadata.ResourceData.HasChange("additional_capabilities_hibernation_enabled") {
-				if computeProfile.AdditionalVirtualMachineCapabilities != nil {
-					computeProfile.AdditionalVirtualMachineCapabilities.HibernationEnabled = pointer.To(model.AdditionalCapabilitiesHibernationEnabled)
-				} else {
-					computeProfile.AdditionalVirtualMachineCapabilities = &fleets.AdditionalCapabilities{
-						HibernationEnabled: pointer.To(model.AdditionalCapabilitiesHibernationEnabled),
-					}
-				}
-			}
 			if metadata.ResourceData.HasChange("virtual_machine_profile") {
-
-				baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData)
+				baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(model.VirtualMachineProfile)
 				if err != nil {
 					return err
 				}
@@ -1137,6 +1110,151 @@ func (r AzureFleetResource) Delete() sdk.ResourceFunc {
 		},
 	}
 }
+func customizeForVmAttributes(state AzureFleetResourceModel, d sdk.ResourceMetaData) error {
+	// Once the properties of vm_attributes are added, they can not be removed
+	old, new := d.ResourceDiff.GetChange("vm_attributes.0.accelerator_count")
+	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.accelerator_count"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.accelerator_manufacturers")
+	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.accelerator_manufacturers"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.accelerator_support")
+	if old.(string) != "" && new.(string) == "" {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.accelerator_support"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.accelerator_types")
+	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.accelerator_types"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.architecture_types")
+	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.architecture_types"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.burstable_support")
+	if old.(string) != "" && new.(string) == "" {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.burstable_support"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.cpu_manufacturers")
+	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.cpu_manufacturers"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.data_disk_count")
+	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.data_disk_count"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.excluded_vm_sizes")
+	if len(old.(*pluginsdk.Set).List()) > 0 && len(new.(*pluginsdk.Set).List()) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.excluded_vm_sizes"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.local_storage_disk_types")
+	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.local_storage_disk_types"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.local_storage_in_gib")
+	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.local_storage_in_gib"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.local_storage_support")
+	if old.(string) != "" && new.(string) == "" {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.local_storage_support"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.memory_in_gib_per_vcpu")
+	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.memory_in_gib_per_vcpu"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.network_bandwidth_in_mbps")
+	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.network_bandwidth_in_mbps"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.network_interface_count")
+	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.network_interface_count"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.rdma_network_interface_count")
+	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.rdma_network_interface_count"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.rdma_support")
+	if old.(string) != "" && new.(string) == "" {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.rdma_support"); err != nil {
+			return err
+		}
+	}
+	old, new = d.ResourceDiff.GetChange("vm_attributes.0.vm_categories")
+	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+		if err := d.ResourceDiff.ForceNew("vm_attributes.0.vm_categories"); err != nil {
+			return err
+		}
+	}
+
+	if v := state.VMAttributes; len(v) > 0 {
+		if v[0].AcceleratorSupport == string(fleets.VMAttributeSupportExcluded) {
+			if len(v[0].AcceleratorManufacturers) > 0 {
+				return fmt.Errorf("`accelerator_manufacturers` cannot be used when `accelerator_support` is specified as `Excluded`")
+			}
+			if len(v[0].AcceleratorTypes) > 0 {
+				return fmt.Errorf("`accelerator_types` cannot be used when `accelerator_support` is specified as `Excluded`")
+			}
+			if len(v[0].AcceleratorCount) > 0 {
+				return fmt.Errorf("`accelerator_count` cannot be used when `accelerator_support` is specified as `Excluded`")
+			}
+			if len(v[0].VMCategories) > 0 && utils.SliceContainsValue(v[0].VMCategories, string(fleets.VMCategoryGpuAccelerated)) {
+				return fmt.Errorf("`GpuAccelerated` cannot be used when `accelerator_support` is specified as `Excluded`")
+			}
+		}
+
+		if v[0].LocalStorageSupport == string(fleets.VMAttributeSupportExcluded) {
+			if len(v[0].LocalStorageInGib) > 0 {
+				return fmt.Errorf("`local_storage_in_gib` cannot be used when `local_storage_support` is specified as `Excluded`")
+			}
+			if len(v[0].LocalStorageDiskTypes) > 0 {
+				return fmt.Errorf("`local_storage_disk_types` cannot be used when `local_storage_support` is specified as `Excluded`")
+			}
+		}
+
+		if v[0].RdmaSupport == string(fleets.VMAttributeSupportExcluded) {
+			if len(v[0].RdmaNetworkInterfaceCount) > 0 {
+				return fmt.Errorf("`rdma_network_interface_count` cannot be used when `rdma_support` is specified as `Excluded`")
+			}
+		}
+	}
+
+	return nil
+}
 
 func (r AzureFleetResource) CustomizeDiff() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
@@ -1145,6 +1263,18 @@ func (r AzureFleetResource) CustomizeDiff() sdk.ResourceFunc {
 			var state AzureFleetResourceModel
 			if err := metadata.DecodeDiff(&state); err != nil {
 				return fmt.Errorf("DecodeDiff: %+v", err)
+			}
+
+			err := customizeForVmAttributes(state, metadata)
+			if err != nil {
+				return err
+			}
+
+			if v := state.Identity; len(v) > 0 {
+				// whilst the Swagger defines multiple at this time only UAI is supported
+				if v[0].Type != identity.TypeUserAssigned {
+					return fmt.Errorf("the type `%s` of `identity` is not supported currently", v[0].Type)
+				}
 			}
 
 			if len(state.SpotPriorityProfile) > 0 && len(state.RegularPriorityProfile) > 0 {
@@ -1168,11 +1298,11 @@ func (r AzureFleetResource) CustomizeDiff() sdk.ResourceFunc {
 					}
 				} else {
 					// You can update your Spot VM target capacity of the Compute Fleet while it's running, if the capacity preference is set to Maintain capacity.
-					if metadata.ResourceDiff.HasChange("spot_priority_profile.0.capacity") {
-						if err := metadata.ResourceDiff.ForceNew("spot_priority_profile.0.capacity"); err != nil {
-							return err
-						}
-					}
+					//if metadata.ResourceDiff.HasChange("spot_priority_profile.0.capacity") {
+					//	if err := metadata.ResourceDiff.ForceNew("spot_priority_profile.0.capacity"); err != nil {
+					//		return err
+					//	}
+					//}
 
 					if len(state.RegularPriorityProfile) == 0 {
 						// For Spot VMs, you may delete or replace existing VM sizes in your Compute Fleet configuration, if the capacity preference is set to Maintain capacity.
@@ -1201,51 +1331,41 @@ func (r AzureFleetResource) CustomizeDiff() sdk.ResourceFunc {
 			}
 
 			if v := state.VirtualMachineProfile[0].DataDisks; len(v) > 0 {
-				storageAccountType := state.VirtualMachineProfile[0].DataDisks[0].StorageAccountType
+				storageAccountType := v[0].StorageAccountType
 				ultraSSDEnabled := state.AdditionalCapabilitiesUltraSSDEnabled
 
 				if !ultraSSDEnabled && storageAccountType == string(fleets.StorageAccountTypesUltraSSDLRS) {
 					return fmt.Errorf("`UltraSSD_LRS` storage account type can be used only when AdditionalCapabilitiesUltraSSDEnabled is enalbed")
 				}
 
-				if storageAccountType == string(fleets.StorageAccountTypesPremiumVTwoLRS) {
-					if len(state.Zones) > 0 {
-						return fmt.Errorf("`PremiumV2_LRS` storage account type can be used only with Virtual Machines in an Availability Zone")
-					}
-					if v[0].Caching != "" {
-						return fmt.Errorf("`PremiumV2_LRS` storage account type is not supported with `caching` is specified")
+				//if storageAccountType == string(fleets.StorageAccountTypesPremiumVTwoLRS) {
+				//	if len(state.Zones) > 0 {
+				//		return fmt.Errorf("`PremiumV2_LRS` storage account type can be used only with Virtual Machines in an Availability Zone")
+				//	}
+				//	if v[0].Caching != "" {
+				//		return fmt.Errorf("`PremiumV2_LRS` storage account type is not supported with `caching` is specified")
+				//	}
+				//}
+			}
+
+			err = validateWindowsSetting(state.VirtualMachineProfile, metadata.ResourceDiff)
+			if err != nil {
+				return err
+			}
+
+			err = validateLinuxSetting(state.VirtualMachineProfile, metadata.ResourceDiff)
+			if err != nil {
+				return err
+			}
+
+			for _, v := range state.VirtualMachineProfile[0].Extension {
+				if v.ProtectedSettingsJson != "" {
+					if len(v.ProtectedSettingsFromKeyVault) > 0 {
+						return fmt.Errorf("`protected_settings_from_key_vault` cannot be used with `protected_settings_json`")
 					}
 				}
 			}
 
-			if v := state.VMAttributes; len(v) > 0 {
-				if v[0].AcceleratorSupport == string(fleets.VMAttributeSupportExcluded) {
-					if len(v[0].AcceleratorManufacturers) > 0 {
-						return fmt.Errorf("`accelerator_manufacturers` cannot be used when `accelerator_support` is specified as `Excluded`")
-					}
-					if len(v[0].AcceleratorTypes) > 0 {
-						return fmt.Errorf("`accelerator_types` cannot be used when `accelerator_support` is specified as `Excluded`")
-					}
-					if len(v[0].AcceleratorCount) > 0 {
-						return fmt.Errorf("`accelerator_count` cannot be used when `accelerator_support` is specified as `Excluded`")
-					}
-				}
-
-				if v[0].LocalStorageSupport == string(fleets.VMAttributeSupportExcluded) {
-					if len(v[0].LocalStorageInGib) > 0 {
-						return fmt.Errorf("`local_storage_in_gib` cannot be used when `local_storage_support` is specified as `Excluded`")
-					}
-					if len(v[0].LocalStorageDiskTypes) > 0 {
-						return fmt.Errorf("`local_storage_disk_types` cannot be used when `local_storage_support` is specified as `Excluded`")
-					}
-				}
-
-				if v[0].RdmaSupport == string(fleets.VMAttributeSupportExcluded) {
-					if len(v[0].RdmaNetworkInterfaceCount) > 0 {
-						return fmt.Errorf("`rdma_network_interface_count` cannot be used when `rdma_support` is specified as `Excluded`")
-					}
-				}
-			}
 			return nil
 		},
 	}
@@ -1265,10 +1385,6 @@ func expandPlanModel(inputList []PlanModel) *fleets.Plan {
 
 	if input.PromotionCode != "" {
 		output.PromotionCode = pointer.To(input.PromotionCode)
-	}
-
-	if input.Version != "" {
-		output.Version = pointer.To(input.Version)
 	}
 
 	return &output
@@ -1322,7 +1438,6 @@ func expandVMAttributesModel(inputList []VMAttributesModel) *fleets.VMAttributes
 		BurstableSupport:          pointer.To(fleets.VMAttributeSupport(input.BurstableSupport)),
 		CpuManufacturers:          expandCPUManufacturers(input.CpuManufacturers),
 		DataDiskCount:             expandVMAttributeMinMaxIntegerModel(input.DataDiskCount),
-		ExcludedVMSizes:           pointer.To(input.ExcludedVMSizes),
 		LocalStorageDiskTypes:     expandLocalStorageDiskTypes(input.LocalStorageDiskTypes),
 		LocalStorageInGiB:         expandVMAttributeMinMaxDoubleModel(input.LocalStorageInGib),
 		LocalStorageSupport:       pointer.To(fleets.VMAttributeSupport(input.LocalStorageSupport)),
@@ -1334,6 +1449,9 @@ func expandVMAttributesModel(inputList []VMAttributesModel) *fleets.VMAttributes
 		VMCategories:              expandVMCategorys(input.VMCategories),
 	}
 
+	if len(input.ExcludedVMSizes) > 0 {
+		output.ExcludedVMSizes = pointer.To(input.ExcludedVMSizes)
+	}
 	output.MemoryInGiB = pointer.From(expandVMAttributeMinMaxDoubleModel(input.MemoryInGib))
 
 	output.VCPUCount = pointer.From(expandVMAttributeMinMaxIntegerModel(input.VCPUCount))
@@ -1473,7 +1591,7 @@ func expandVMSizeProfileModel(inputList []VMSizeProfileModel) *[]fleets.VMSizePr
 	return &outputList
 }
 
-func expandAdditionalLocationProfileModel(inputList []AdditionalLocationProfileModel, d *schema.ResourceData) (*fleets.AdditionalLocationsProfile, error) {
+func expandAdditionalLocationProfileModel(inputList []AdditionalLocationProfileModel, ultraSSDEnabled bool) (*fleets.AdditionalLocationsProfile, error) {
 	if len(inputList) == 0 {
 		return nil, nil
 	}
@@ -1486,7 +1604,7 @@ func expandAdditionalLocationProfileModel(inputList []AdditionalLocationProfileM
 			Location: input.Location,
 		}
 
-		virtualMachineProfileOverrideValue, err := expandBaseVirtualMachineProfileModel(input.VirtualMachineProfileOverride, d)
+		virtualMachineProfileOverrideValue, err := expandBaseVirtualMachineProfileModel(input.VirtualMachineProfileOverride)
 		if err != nil {
 			return nil, err
 		}
@@ -1513,7 +1631,6 @@ func flattenPlanModel(input *fleets.Plan) []PlanModel {
 	}
 
 	output.PromotionCode = pointer.From(input.PromotionCode)
-	output.Version = pointer.From(input.Version)
 
 	return append(outputList, output)
 }
@@ -1540,15 +1657,14 @@ func flattenAdditionalLocationProfileModel(input *fleets.AdditionalLocationsProf
 	return outputList, nil
 }
 
-func flattenExtensionModel(input *fleets.VirtualMachineScaleSetExtensionProfile, metadata sdk.ResourceMetaData) ([]ExtensionsModel, error) {
-	var outputList []ExtensionsModel
+func flattenExtensionModel(input *fleets.VirtualMachineScaleSetExtensionProfile, metadata sdk.ResourceMetaData) ([]ExtensionModel, error) {
+	var outputList []ExtensionModel
 	if input == nil || input.Extensions == nil {
 		return outputList, nil
 	}
 
-	output := ExtensionsModel{}
-	for _, input := range *input.Extensions {
-		output := ExtensionsModel{}
+	for i, input := range *input.Extensions {
+		output := ExtensionModel{}
 		if input.Name != nil {
 			output.Name = pointer.From(input.Name)
 		}
@@ -1557,35 +1673,21 @@ func flattenExtensionModel(input *fleets.VirtualMachineScaleSetExtensionProfile,
 			output.Publisher = pointer.From(props.Publisher)
 			output.Type = pointer.From(props.Type)
 			output.TypeHandlerVersion = pointer.From(props.TypeHandlerVersion)
-			output.AutoUpgradeMinorVersionEnabled = pointer.From(props.EnableAutomaticUpgrade)
+			output.AutoUpgradeMinorVersionEnabled = pointer.From(props.AutoUpgradeMinorVersion)
 			output.AutomaticUpgradeEnabled = pointer.From(props.EnableAutomaticUpgrade)
-			output.ForceUpdateTag = pointer.From(props.ForceUpdateTag)
-			// protected_settings_json isn't returned, so we get it from state otherwise set to empty string
-			var model ExtensionsModel
-			err := metadata.Decode(&model)
-			if err != nil {
-				return nil, err
-			}
-			if model.ProtectedSettingsJson != "" {
-				output.ProtectedSettingsJson = model.ProtectedSettingsJson
-			}
+			output.ForceExtensionExecutionOnChange = pointer.From(props.ForceUpdateTag)
+			// Sensitive data isn't returned, so we get it from config
+			output.ProtectedSettingsJson = metadata.ResourceData.Get("virtual_machine_profile.0.extension." + strconv.Itoa(i) + ".protected_settings_json").(string)
 			output.ProtectedSettingsFromKeyVault = flattenProtectedSettingsFromKeyVaultModel(props.ProtectedSettingsFromKeyVault)
-			output.ProvisionAfterExtensions = pointer.From(props.ProvisionAfterExtensions)
-			var setting string
-			if props.Settings != nil {
-				setting, err = pluginsdk.FlattenJsonToString(*props.Settings)
-				if err != nil {
-					return nil, fmt.Errorf("flatenning `settings`: %+v", err)
-				}
-			}
-			output.SettingsJson = setting
-			output.SuppressFailuresEnabled = pointer.From(props.SuppressFailures)
+			output.ExtensionsToProvisionAfterVmCreation = pointer.From(props.ProvisionAfterExtensions)
+			// Sensitive data isn't returned, so we get it from config
+			output.SettingsJson = metadata.ResourceData.Get("virtual_machine_profile.0.extension." + strconv.Itoa(i) + ".settings_json").(string)
 		}
 
 		outputList = append(outputList, output)
 	}
 
-	return append(outputList, output), nil
+	return outputList, nil
 }
 
 func flattenProtectedSettingsFromKeyVaultModel(input *fleets.KeyVaultSecretReference) []ProtectedSettingsFromKeyVaultModel {
