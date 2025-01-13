@@ -32,7 +32,7 @@ func TestAccAzureFleetVirtualMachineProfileOsDisk_storageAccountTypePremiumLRS(t
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.osDiskStorageAccountType(data, data.Locations.Primary, "Premium_LRS"),
+			Config: r.storageAccountType(data, data.Locations.Primary, "Premium_LRS"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -47,7 +47,7 @@ func TestAccAzureFleetVirtualMachineProfileOsDisk_storageAccountTypePremiumZRS(t
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.osDiskStorageAccountType(data, "westeurope", "Premium_ZRS"),
+			Config: r.storageAccountType(data, "westeurope", "Premium_ZRS"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -62,7 +62,7 @@ func TestAccAzureFleetVirtualMachineProfileOsDisk_storageAccountTypeStandardLRS(
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.osDiskStorageAccountType(data, data.Locations.Primary, "Standard_LRS"),
+			Config: r.storageAccountType(data, data.Locations.Primary, "Standard_LRS"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -77,7 +77,7 @@ func TestAccAzureFleetVirtualMachineProfileOsDisk_storageAccountTypeStandardSSDL
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.osDiskStorageAccountType(data, data.Locations.Primary, "StandardSSD_LRS"),
+			Config: r.storageAccountType(data, data.Locations.Primary, "StandardSSD_LRS"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -92,7 +92,7 @@ func TestAccAzureFleetVirtualMachineProfileOsDisk_storageAccountTypeStandardSSDZ
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.osDiskStorageAccountType(data, "westeurope", "StandardSSD_ZRS"),
+			Config: r.storageAccountType(data, "westeurope", "StandardSSD_ZRS"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -105,12 +105,11 @@ func (r AzureFleetResource) ephemeral(data acceptance.TestData, location string,
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -152,10 +151,10 @@ resource "azurerm_azure_fleet" "test" {
       storage_account_type = "Standard_LRS"
       caching              = "ReadOnly"
       diff_disk_option     = "Local"
-      diff_disk_placement  = "%[5]s"
+      diff_disk_placement  = "%[4]s"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -163,19 +162,18 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location, placement)
+`, r.template(data, location), data.RandomInteger, location, placement)
 }
 
-func (r AzureFleetResource) osDiskStorageAccountType(data acceptance.TestData, location string, storageAccountType string) string {
+func (r AzureFleetResource) storageAccountType(data acceptance.TestData, location string, storageAccountType string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
 
   platform_fault_domain_count = 2
   zones = ["1", "2", "3"]
@@ -217,11 +215,11 @@ resource "azurerm_azure_fleet" "test" {
     }
 
     os_disk {
-      storage_account_type = "%[5]s"
+      storage_account_type = "%[4]s"
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -229,5 +227,5 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location, storageAccountType)
+`, r.template(data, location), data.RandomInteger, location, storageAccountType)
 }

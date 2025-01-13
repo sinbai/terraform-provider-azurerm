@@ -215,12 +215,10 @@ func (r AzureFleetResource) multiple(data acceptance.TestData, location string) 
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
-
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -270,13 +268,12 @@ resource "azurerm_azure_fleet" "test" {
       }
     }
 
-
     os_disk {
       storage_account_type = "Standard_LRS"
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -284,19 +281,17 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) acceleratedNetworking(data acceptance.TestData, location string, enabled bool) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
-
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -321,7 +316,7 @@ resource "azurerm_azure_fleet" "test" {
     network_interface {
       name    = "primary-networkProTest"
       primary = true
-      enable_accelerated_networking = %[5]t
+      enable_accelerated_networking = %[4]t
 
       ip_configuration {
         name      = "primary"
@@ -341,7 +336,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -349,26 +344,25 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location, enabled)
+`, r.template(data, location), data.RandomInteger, location, enabled)
 }
 
 func (r AzureFleetResource) networkSecurityGroup(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_network_security_group" "test" {
-  name                = "acceptanceTestSecurityGroup-%[3]d"
+  name                = "acceptanceTestSecurityGroup-%[2]d"
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
 }
 
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
 
   platform_fault_domain_count = 2
 
@@ -414,7 +408,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -422,19 +416,18 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) dnsNameLabel(data acceptance.TestData, location string, domainNamelabel string, scope string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -467,8 +460,8 @@ resource "azurerm_azure_fleet" "test" {
 
         public_ip_address {
           name                    = "TestPublicIPConfiguration"
-          domain_name_label       = "%[5]s"
-          domain_name_label_scope = "%[6]s"
+          domain_name_label       = "%[4]s"
+          domain_name_label_scope = "%[5]s"
           idle_timeout_in_minutes = 4
         }
       }
@@ -479,7 +472,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -487,19 +480,19 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location, domainNamelabel, scope)
+`, r.template(data, location), data.RandomInteger, location, domainNamelabel, scope)
 }
 
 func (r AzureFleetResource) ipForwarding(data acceptance.TestData, location string, enabled bool) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
+
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -524,7 +517,7 @@ resource "azurerm_azure_fleet" "test" {
     network_interface {
       name    = "primary-networkProTest"
       primary = true
-      ip_forwarding_enabled = "%[5]t"
+      ip_forwarding_enabled = "%[4]t"
 
       ip_configuration {
         name      = "primary"
@@ -544,7 +537,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -552,19 +545,19 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location, enabled)
+`, r.template(data, location), data.RandomInteger, location, enabled)
 }
 
 func (r AzureFleetResource) basicPublicIP(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
+
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -608,7 +601,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -616,19 +609,18 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) publicIPSku(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -677,7 +669,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -685,19 +677,18 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) publicIPVersion(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -751,7 +742,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -759,19 +750,18 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) dNSSettings(data acceptance.TestData, location string, dnsServers string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -796,7 +786,7 @@ resource "azurerm_azure_fleet" "test" {
     network_interface {
       name    = "primary-networkProTest"
       primary = true
-      dns_servers = [%[5]s]
+      dns_servers = [%[4]s]
       ip_configuration {
         name      = "primary"
         primary   = true
@@ -815,7 +805,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -823,19 +813,18 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location, dnsServers)
+`, r.template(data, location), data.RandomInteger, location, dnsServers)
 }
 
 func (r AzureFleetResource) loadBalancer(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -875,7 +864,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -883,5 +872,5 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }

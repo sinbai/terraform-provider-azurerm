@@ -199,12 +199,11 @@ func (r AzureFleetResource) basicManagedDisk(data acceptance.TestData, location 
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
 
   regular_priority_profile {
     capacity     = 1
@@ -216,7 +215,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -261,7 +260,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) diskEncryptionSet(data acceptance.TestData, location string) string {
@@ -270,12 +269,10 @@ func (r AzureFleetResource) diskEncryptionSet(data acceptance.TestData, location
 
 %[2]s
 
-%[3]s
-
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[4]d"
+  name                = "acctest-fleet-%[3]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[5]s"
+  location            = "%[4]s"
 
   regular_priority_profile {
     capacity     = 1
@@ -287,7 +284,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -340,19 +337,18 @@ resource "azurerm_azure_fleet" "test" {
       "azurerm_key_vault_access_policy.disk-encryption",
   ]
 }
-`, r.diskEncryptionSetResourceDependencies(data), r.linuxPublicKeyTemplate(), r.templateWithOutProvider(data, location), data.RandomInteger, location)
+`, r.diskEncryptionSetResourceDependencies(data), r.templateWithOutProvider(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) basicManagedDiskWithZones(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
 
   zones = ["1", "2", "3"]
 
@@ -366,7 +362,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -411,19 +407,18 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) loadBalancerManagedDataDisks(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
 
   zones = ["1", "2", "3"]
 
@@ -437,7 +432,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -475,19 +470,17 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) dataDiskStorageAccountType(data acceptance.TestData, location string, storageAccountType string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
-
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
 
   zones = ["1", "2", "3"]
 
@@ -501,7 +494,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -518,7 +511,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
       create_option        = "Empty"
       disk_size_in_gb      = 10
-      storage_account_type = "%[5]s"
+      storage_account_type = "%[4]s"
     }
     os_profile {
       linux_configuration {
@@ -540,19 +533,18 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location, storageAccountType)
+`, r.template(data, location), data.RandomInteger, location, storageAccountType)
 }
 
 func (r AzureFleetResource) dataDiskStorageAccountTypePremiumV2LRS(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
 
   zones = ["1"]
 
@@ -566,7 +558,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -606,19 +598,18 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) dataDiskMarketPlaceImage(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
 
   regular_priority_profile {
     capacity     = 1
@@ -636,7 +627,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
-    image_reference {
+    source_image_reference {
       publisher = "micro-focus"
       offer     = "arcsight-logger"
       sku       = "arcsight_logger_72_byol"
@@ -676,19 +667,17 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) dataDiskStorageAccountTypeUltraSSDLRS(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
-
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[3]d"
+  name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[4]s"
+  location            = "%[3]s"
 
   regular_priority_profile {
     capacity     = 1
@@ -703,7 +692,7 @@ resource "azurerm_azure_fleet" "test" {
   zones = ["1"]
 
   virtual_machine_profile {
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -747,7 +736,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.linuxTemplate(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) diskEncryptionSetResourceDependencies(data acceptance.TestData) string {

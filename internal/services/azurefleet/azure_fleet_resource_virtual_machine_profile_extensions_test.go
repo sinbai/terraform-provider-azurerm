@@ -23,20 +23,6 @@ func TestAccAzureFleetVirtualMachineProfileExtensions_basic(t *testing.T) {
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-		{
-			Config: r.extensionsUpdate(data, data.Locations.Primary),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-		{
-			Config: r.basicExtensions(data, data.Locations.Primary),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -67,6 +53,20 @@ func TestAccAzureFleetVirtualMachineProfileExtensions_extensions(t *testing.T) {
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password", "virtual_machine_profile.0.extension.0.protected_settings_json", "virtual_machine_profile.0.extension.0.settings_json"),
+		{
+			Config: r.extensionsUpdate(data, data.Locations.Primary),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		{
+			Config: r.extensions(data, data.Locations.Primary),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -134,12 +134,10 @@ func (r AzureFleetResource) extensionsAutomaticUpgrade(data acceptance.TestData,
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
-
 resource "azurerm_azure_fleet" "test" {
-  name                        = "acctest-fleet-%[3]d"
+  name                        = "acctest-fleet-%[2]d"
   resource_group_name         = azurerm_resource_group.test.name
-  location                    = "%[4]s"
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -186,7 +184,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -203,19 +201,18 @@ resource "azurerm_azure_fleet" "test" {
   	}
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.linuxTemplate(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) extensionsOperationsEnabled(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                        = "acctest-fleet-%[3]d"
+  name                        = "acctest-fleet-%[2]d"
   resource_group_name         = azurerm_resource_group.test.name
-  location                    = "%[4]s"
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -261,7 +258,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -286,19 +283,18 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.linuxTemplate(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) extensionsOperationsDisabled(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                         = "acctest-fleet-%[3]d"
+  name                         = "acctest-fleet-%[2]d"
   resource_group_name          = azurerm_resource_group.test.name
-  location                     = "%[4]s"
+  location                     = "%[3]s"
   platform_fault_domain_count  = 2
   extension_operations_enabled = false
 
@@ -346,7 +342,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -354,7 +350,7 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.linuxTemplate(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) extensionsProtectedSettingsFromKeyVault(data acceptance.TestData, location string) string {
@@ -451,7 +447,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -478,12 +474,10 @@ func (r AzureFleetResource) basicExtensions(data acceptance.TestData, location s
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
-
 resource "azurerm_azure_fleet" "test" {
-  name                        = "acctest-fleet-%[3]d"
+  name                        = "acctest-fleet-%[2]d"
   resource_group_name         = azurerm_resource_group.test.name
-  location                    = "%[4]s"
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -529,7 +523,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -544,102 +538,17 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
-}
-
-func (r AzureFleetResource) extensionsUpdate(data acceptance.TestData, location string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-%[2]s
-
-resource "azurerm_azure_fleet" "test" {
-  name                        = "acctest-fleet-%[3]d"
-  resource_group_name         = azurerm_resource_group.test.name
-  location                    = "%[4]s"
-  platform_fault_domain_count = 2
-
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
-  }
-
-  vm_sizes_profile {
-    name = "Standard_D1_v2"
-  }
-
-  virtual_machine_profile {
-    os_profile {
-      linux_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
-
-        admin_ssh_key {
-          username   = "azureuser"
-          public_key = local.first_public_key
-        }
-      }
-    }
-    network_interface {
-      name    = "networkProTest"
-      primary = true
-
-      ip_configuration {
-        name      = "TestIPConfiguration"
-        primary   = true
-        subnet_id = azurerm_subnet.test.id
-
-        public_ip_address {
-          name                    = "TestPublicIPConfiguration"
-          domain_name_label       = "test-domain-label"
-          idle_timeout_in_minutes = 4
-        }
-      }
-    }
-
-    os_disk {
-      storage_account_type = "Standard_LRS"
-      caching              = "ReadWrite"
-    }
-
-    image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts"
-      version   = "latest"
-    }
-
-    extension {
-      name                               = "CustomScript"
-      publisher                          = "Microsoft.Azure.Extensions"
-      type                               = "CustomScript"
-      type_handler_version               = "2.0"
-      auto_upgrade_minor_version_enabled = true
-      force_extension_execution_on_change = "test"
-
-      settings_json = jsonencode({
-        "commandToExecute" = "echo $HOSTNAME"
-      })
-
-      protected_settings_json = jsonencode({
-        "managedIdentity" = {}
-      })
-    }
-  }
-}
-`, r.linuxPublicKeyTemplate(), r.templateWithOutProvider(data, location), data.RandomInteger, location)
+`, r.linuxTemplate(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) extensions(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
-
 resource "azurerm_azure_fleet" "test" {
-  name                        = "acctest-fleet-%[3]d"
+  name                        = "acctest-fleet-%[2]d"
   resource_group_name         = azurerm_resource_group.test.name
-  location                    = "%[4]s"
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -685,13 +594,14 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
       version   = "latest"
     }
 
+    extensions_time_budget = "PT30M"
     extension {
       name                               = "CustomScript"
       publisher                          = "Microsoft.Azure.Extensions"
@@ -710,19 +620,17 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.linuxTemplate(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) multipleExtensions(data acceptance.TestData, location string) string {
+func (r AzureFleetResource) extensionsUpdate(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
-
 resource "azurerm_azure_fleet" "test" {
-  name                        = "acctest-fleet-%[3]d"
+  name                        = "acctest-fleet-%[2]d"
   resource_group_name         = azurerm_resource_group.test.name
-  location                    = "%[4]s"
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -768,7 +676,90 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts"
+      version   = "latest"
+    }
+
+    extensions_time_budget = "PT1H"
+    extension {
+      name                               = "CustomScript"
+      publisher                          = "Microsoft.Azure.Extensions"
+      type                               = "CustomScript"
+      type_handler_version               = "2.0"
+      auto_upgrade_minor_version_enabled = true
+      force_extension_execution_on_change = "test"
+
+      settings_json = jsonencode({
+        "commandToExecute" = "echo $HOSTNAME"
+      })
+
+      protected_settings_json = jsonencode({
+        "managedIdentity" = {}
+      })
+    }
+  }
+}
+`, r.linuxTemplate(data, location), data.RandomInteger, location)
+}
+
+func (r AzureFleetResource) multipleExtensions(data acceptance.TestData, location string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+
+resource "azurerm_azure_fleet" "test" {
+  name                        = "acctest-fleet-%[2]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[3]s"
+  platform_fault_domain_count = 2
+
+  regular_priority_profile {
+    capacity     = 0
+    min_capacity = 0
+  }
+
+  vm_sizes_profile {
+    name = "Standard_D1_v2"
+  }
+
+  virtual_machine_profile {
+    os_profile {
+      linux_configuration {
+        computer_name_prefix = "prefix"
+        admin_username       = "azureuser"
+
+        admin_ssh_key {
+          username   = "azureuser"
+          public_key = local.first_public_key
+        }
+      }
+    }
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        primary   = true
+        subnet_id = azurerm_subnet.test.id
+
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+
+    os_disk {
+      storage_account_type = "Standard_LRS"
+      caching              = "ReadWrite"
+    }
+
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -801,19 +792,17 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.linuxTemplate(data, location), data.RandomInteger, location)
 }
 
 func (r AzureFleetResource) multipleExtensionsProvisionMultipleExtensionOnExistingVMSS(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-%[2]s
-
 resource "azurerm_azure_fleet" "test" {
-  name                        = "acctest-fleet-%[3]d"
+  name                        = "acctest-fleet-%[2]d"
   resource_group_name         = azurerm_resource_group.test.name
-  location                    = "%[4]s"
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -856,7 +845,7 @@ resource "azurerm_azure_fleet" "test" {
       caching              = "ReadWrite"
     }
 
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -889,5 +878,5 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.template(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }

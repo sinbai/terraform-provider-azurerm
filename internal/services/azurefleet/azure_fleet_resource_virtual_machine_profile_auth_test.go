@@ -22,7 +22,7 @@ func TestAccAzureFleetVirtualMachineProfileAuth_authPassword(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -67,7 +67,7 @@ func TestAccAzureFleetVirtualMachineProfileAuth_authSSHKeyAndPassword(t *testing
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.admin_password"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -105,7 +105,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -159,7 +159,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -194,12 +194,13 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
+`, r.linuxTemplate(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
 }
 
 func (r AzureFleetResource) authMultipleSSHKeys(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
+%[4]s
 
 resource "azurerm_azure_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
@@ -216,7 +217,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -254,11 +255,13 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
+`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.linuxPublicKeyTemplate())
 }
+
 func (r AzureFleetResource) authSSHKeyAndPassword(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
+%[4]s
 
 resource "azurerm_azure_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
@@ -275,7 +278,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -311,12 +314,14 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
+`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.linuxPublicKeyTemplate())
 }
 
 func (r AzureFleetResource) authEd25519SSHKeys(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
+
+%[4]s
 
 resource "azurerm_azure_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
@@ -333,7 +338,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
-    image_reference {
+    source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
@@ -369,5 +374,5 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
+`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.linuxPublicKeyTemplate())
 }

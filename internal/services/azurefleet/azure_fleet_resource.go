@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	computeValidate "github.com/hashicorp/terraform-provider-azurerm/internal/services/compute/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/utils"
+	"log"
 	"regexp"
 	"strconv"
 	"time"
@@ -48,30 +49,25 @@ type AdditionalLocationProfileModel struct {
 }
 
 type VirtualMachineProfileModel struct {
-	GalleryApplicationProfile            []GalleryApplicationModel       `tfschema:"gallery_application"`
-	CapacityReservationGroupId           string                          `tfschema:"capacity_reservation_group_id"`
-	BootDiagnosticEnabled                bool                            `tfschema:"boot_diagnostic_enabled"`
-	BootDiagnosticStorageAccountEndpoint string                          `tfschema:"boot_diagnostic_storage_account_endpoint"`
-	Extension                            []ExtensionModel                `tfschema:"extension"`
-	ExtensionsTimeBudget                 string                          `tfschema:"extensions_time_budget"`
-	VMSize                               []VMSizeModel                   `tfschema:"vm_size"`
-	LicenseType                          string                          `tfschema:"license_type"`
-	NetworkHealthProbeId                 string                          `tfschema:"network_health_probe_id"`
-	NetworkInterface                     []NetworkInterfaceModel         `tfschema:"network_interface"`
-	OsProfile                            []OSProfileModel                `tfschema:"os_profile"`
-	ExtensionOperationsEnabled           bool                            `tfschema:"extension_operations_enabled"`
-	ScheduledEventTerminationEnabled     bool                            `tfschema:"scheduled_event_termination_enabled"`
-	ScheduledEventTerminationTimeout     string                          `tfschema:"scheduled_event_termination_timeout"`
-	ScheduledEventOsImageEnabled         bool                            `tfschema:"scheduled_event_os_image_enabled"`
-	ScheduledEventOsImageTimeout         string                          `tfschema:"scheduled_event_os_image_timeout"`
-	SecurityPostureReference             []SecurityPostureReferenceModel `tfschema:"security_posture_reference"`
-	SecurityProfile                      []SecurityProfileModel          `tfschema:"security_profile"`
-	ServiceArtifactId                    string                          `tfschema:"service_artifact_id"`
-	DataDisks                            []DataDiskModel                 `tfschema:"data_disk"`
-	OsDisk                               []OSDiskModel                   `tfschema:"os_disk"`
-	DiskControllerType                   string                          `tfschema:"disk_controller_type"`
-	ImageReference                       []ImageReferenceModel           `tfschema:"image_reference"`
-	UserDataBase64                       string                          `tfschema:"user_data_base64"`
+	GalleryApplicationProfile            []GalleryApplicationModel   `tfschema:"gallery_application"`
+	CapacityReservationGroupId           string                      `tfschema:"capacity_reservation_group_id"`
+	BootDiagnosticEnabled                bool                        `tfschema:"boot_diagnostic_enabled"`
+	BootDiagnosticStorageAccountEndpoint string                      `tfschema:"boot_diagnostic_storage_account_endpoint"`
+	Extension                            []ExtensionModel            `tfschema:"extension"`
+	ExtensionsTimeBudget                 string                      `tfschema:"extensions_time_budget"`
+	LicenseType                          string                      `tfschema:"license_type"`
+	NetworkInterface                     []NetworkInterfaceModel     `tfschema:"network_interface"`
+	OsProfile                            []OSProfileModel            `tfschema:"os_profile"`
+	ExtensionOperationsEnabled           bool                        `tfschema:"extension_operations_enabled"`
+	ScheduledEventTerminationTimeout     string                      `tfschema:"scheduled_event_termination_timeout"`
+	ScheduledEventOsImageTimeout         string                      `tfschema:"scheduled_event_os_image_timeout"`
+	SecurityProfile                      []SecurityProfileModel      `tfschema:"security_profile"`
+	ServiceArtifactId                    string                      `tfschema:"service_artifact_id"`
+	DataDisks                            []DataDiskModel             `tfschema:"data_disk"`
+	OsDisk                               []OSDiskModel               `tfschema:"os_disk"`
+	SourceImageReference                 []SourceImageReferenceModel `tfschema:"source_image_reference"`
+	SourceImageId                        string                      `tfschema:"source_image_id"`
+	UserDataBase64                       string                      `tfschema:"user_data_base64"`
 }
 
 type GalleryApplicationModel struct {
@@ -79,7 +75,7 @@ type GalleryApplicationModel struct {
 	AutomaticUpgradeEnabled                bool   `tfschema:"automatic_upgrade_enabled"`
 	Order                                  int64  `tfschema:"order"`
 	VersionId                              string `tfschema:"version_id"`
-	Tags                                   string `tfschema:"tags"`
+	Tag                                    string `tfschema:"tag"`
 	TreatFailureAsDeploymentFailureEnabled bool   `tfschema:"treat_failure_as_deployment_failure_enabled"`
 }
 
@@ -102,11 +98,6 @@ type ProtectedSettingsFromKeyVaultModel struct {
 	SourceVaultId string `tfschema:"source_vault_id"`
 }
 
-type VMSizeModel struct {
-	VCPUAvailableCount int64 `tfschema:"vcpu_available_count"`
-	VCPUPerCoreCount   int64 `tfschema:"vcpu_per_core_count"`
-}
-
 type NetworkInterfaceModel struct {
 	Name                         string                 `tfschema:"name"`
 	AuxiliaryMode                string                 `tfschema:"auxiliary_mode"`
@@ -127,7 +118,6 @@ type IPConfigurationModel struct {
 	ApplicationGatewayBackendAddressPoolIds []string               `tfschema:"application_gateway_backend_address_pool_ids"`
 	ApplicationSecurityGroupIds             []string               `tfschema:"application_security_group_ids"`
 	LoadBalancerBackendAddressPoolIds       []string               `tfschema:"load_balancer_backend_address_pool_ids"`
-	LoadBalancerInboundNatPoolIds           []string               `tfschema:"load_balancer_inbound_nat_rules_ids"`
 	Primary                                 bool                   `tfschema:"primary"`
 	Version                                 string                 `tfschema:"version"`
 	PublicIPAddress                         []PublicIPAddressModel `tfschema:"public_ip_address"`
@@ -243,30 +233,22 @@ type ProxyAgentModel struct {
 }
 
 type DataDiskModel struct {
-	Caching      string `tfschema:"caching"`
-	CreateOption string `tfschema:"create_option"`
-	DeleteOption string `tfschema:"delete_option"`
-	//Property 'dataDisk.diskMBpsReadWrite' can be enabled only on VMs in a Virtual Machine Scale Set?
-	//DiskIOPSReadWrite           int64  `tfschema:"disk_iops_read_write"`
-	//DiskMbpsReadWrite           int64  `tfschema:"disk_mbps_read_write"`
-	DiskSizeInGB                int64  `tfschema:"disk_size_in_gb"`
-	DiskEncryptionSetId         string `tfschema:"disk_encryption_set_id"`
-	SecurityDiskEncryptionSetId string `tfschema:"security_disk_encryption_set_id"`
-	SecurityEncryptionType      string `tfschema:"security_encryption_type"`
-	StorageAccountType          string `tfschema:"storage_account_type"`
-	Lun                         int64  `tfschema:"lun"`
-	Name                        string `tfschema:"name"`
-	WriteAcceleratorEnabled     bool   `tfschema:"write_accelerator_enabled"`
+	Caching                 string `tfschema:"caching"`
+	CreateOption            string `tfschema:"create_option"`
+	DeleteOption            string `tfschema:"delete_option"`
+	DiskSizeInGB            int64  `tfschema:"disk_size_in_gb"`
+	DiskEncryptionSetId     string `tfschema:"disk_encryption_set_id"`
+	StorageAccountType      string `tfschema:"storage_account_type"`
+	Lun                     int64  `tfschema:"lun"`
+	Name                    string `tfschema:"name"`
+	WriteAcceleratorEnabled bool   `tfschema:"write_accelerator_enabled"`
 }
 
-type ImageReferenceModel struct {
-	CommunityGalleryImageId string `tfschema:"community_gallery_image_id"`
-	Id                      string `tfschema:"id"`
-	Offer                   string `tfschema:"offer"`
-	Publisher               string `tfschema:"publisher"`
-	SharedGalleryImageId    string `tfschema:"shared_gallery_image_id"`
-	Sku                     string `tfschema:"sku"`
-	Version                 string `tfschema:"version"`
+type SourceImageReferenceModel struct {
+	Offer     string `tfschema:"offer"`
+	Publisher string `tfschema:"publisher"`
+	Sku       string `tfschema:"sku"`
+	Version   string `tfschema:"version"`
 }
 
 type OSDiskModel struct {
@@ -913,6 +895,7 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.AzureFleet.FleetsClient
 
+			log.Printf("enter udpate func?")
 			id, err := fleets.ParseFleetID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
@@ -961,6 +944,7 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 			}
 
 			if metadata.ResourceData.HasChange("additional_location_profile") {
+				// all properties of `virtual_machine_profile_override` can be updated, and changing means deleting and recreating.
 				additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, model.AdditionalCapabilitiesUltraSSDEnabled)
 				if err != nil {
 					return err
@@ -968,19 +952,21 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 				properties.Properties.AdditionalLocationsProfile = additionalLocationsProfileValue
 			}
 
-			computeProfile := properties.Properties.ComputeProfile
+			// all properties of `virtual_machine_profile` can be updated, and changing means deleting and recreating.
 			if metadata.ResourceData.HasChange("virtual_machine_profile") {
+				log.Printf("virtual_machine_profile HasChange")
 				baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(model.VirtualMachineProfile)
 				if err != nil {
 					return err
 				}
-				computeProfile.BaseVirtualMachineProfile = pointer.From(baseVirtualMachineProfileValue)
+				properties.Properties.ComputeProfile.BaseVirtualMachineProfile = pointer.From(baseVirtualMachineProfileValue)
 			}
+
 			if metadata.ResourceData.HasChange("platform_fault_domain_count") {
-				computeProfile.PlatformFaultDomainCount = pointer.To(model.PlatformFaultDomainCount)
+				properties.Properties.ComputeProfile.PlatformFaultDomainCount = pointer.To(model.PlatformFaultDomainCount)
 			}
 			if metadata.ResourceData.HasChange("compute_api_version") {
-				computeProfile.ComputeApiVersion = pointer.To(model.ComputeApiVersion)
+				properties.Properties.ComputeProfile.ComputeApiVersion = pointer.To(model.ComputeApiVersion)
 			}
 
 			if metadata.ResourceData.HasChange("regular_priority_profile") {

@@ -35,26 +35,39 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 	vmProfile := &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
 		Required: required,
+		ForceNew: true,
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"os_profile": osProfileSchema(),
 
-				"image_reference": storageProfileImageReferenceSchema(),
+				"source_image_reference": storageProfileSourceImageReferenceSchema(),
+
+				"source_image_id": {
+					Type:     pluginsdk.TypeString,
+					Optional: true,
+					ValidateFunc: validation.Any(
+						images.ValidateImageID,
+						validate.SharedImageID,
+						validate.SharedImageVersionID,
+						validate.CommunityGalleryImageID,
+						validate.CommunityGalleryImageVersionID,
+						validate.SharedGalleryImageID,
+						validate.SharedGalleryImageVersionID,
+					),
+					ConflictsWith: []string{
+						"virtual_machine_profile.0.source_image_reference",
+					},
+				},
 
 				"os_disk": storageProfileOsDiskSchema(),
-
-				"disk_controller_type": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskControllerTypes(), false),
-				},
 
 				"data_disk": storageProfileDataDiskSchema(),
 
 				"boot_diagnostic_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
+					Default:  false,
 				},
 
 				"boot_diagnostic_storage_account_endpoint": {
@@ -89,77 +102,29 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 				"license_type": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
-					// "None" need to handle in create and update
 					ValidateFunc: validation.StringInSlice([]string{
+						"RHEL_BYOS",
+						"SLES_BYOS",
 						"Windows_Client",
 						"Windows_Server",
 					}, false),
 				},
 
-				"network_health_probe_id": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: azure.ValidateResourceID,
-				},
-
 				"network_interface": networkInterfaceSchema(),
-
-				// if it is specified os_image_notification_profile enable is set to true.
-				"scheduled_event_os_image_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-				},
 
 				"scheduled_event_os_image_timeout": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
-					Default:  "PT5M",
-					ValidateFunc: validation.StringInSlice([]string{
-						"PT5M",
-					}, false),
-				},
-
-				"scheduled_event_termination_enabled": {
-					Type:     pluginsdk.TypeBool,
-					Optional: true,
-				},
-
-				// if it is specified terminate_notification_profile enable is set to true.
-				"scheduled_event_termination_timeout": {
-					Type:     pluginsdk.TypeString,
-					Optional: true,
 					Default:  "PT15M",
 					ValidateFunc: validation.StringInSlice([]string{
-						"PT15M",
+						"P1T5M",
 					}, false),
 				},
 
-				"security_posture_reference": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &pluginsdk.Resource{
-						Schema: map[string]*pluginsdk.Schema{
-							"exclude_extensions": {
-								Type:     pluginsdk.TypeList,
-								Optional: true,
-								Elem: &pluginsdk.Schema{
-									Type: pluginsdk.TypeString,
-								},
-							},
-
-							"id": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringIsNotEmpty,
-							},
-
-							"override_enabled": {
-								Type:     pluginsdk.TypeBool,
-								Optional: true,
-							},
-						},
-					},
+				"scheduled_event_termination_timeout": {
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
+					ValidateFunc: azValidate.ISO8601DurationBetween("PT5M", "PT15M"),
 				},
 
 				"security_profile": securityProfileSchema(),
@@ -174,25 +139,6 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsBase64,
-				},
-
-				"vm_size": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &pluginsdk.Resource{
-						Schema: map[string]*pluginsdk.Schema{
-							"vcpu_available_count": {
-								Type:     pluginsdk.TypeInt,
-								Optional: true,
-							},
-
-							"vcpu_per_core_count": {
-								Type:     pluginsdk.TypeInt,
-								Optional: true,
-							},
-						},
-					},
 				},
 			},
 		},
@@ -211,44 +157,42 @@ func galleryApplicationSchema() *pluginsdk.Schema {
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"version_id": {
-					Type:     pluginsdk.TypeString,
-					Required: true,
-
+					Type:         pluginsdk.TypeString,
+					Required:     true,
 					ValidateFunc: galleryapplicationversions.ValidateApplicationVersionID,
 				},
 
 				// Example: https://mystorageaccount.blob.core.windows.net/configurations/settings_json.config
 				"configuration_blob_uri": {
-					Type:     pluginsdk.TypeString,
-					Optional: true,
-
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
 					ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 				},
 
 				"order": {
-					Type:     pluginsdk.TypeInt,
-					Optional: true,
-					Default:  0,
-
+					Type:         pluginsdk.TypeInt,
+					Optional:     true,
+					Default:      0,
 					ValidateFunc: validation.IntBetween(0, 2147483647),
 				},
 
 				// NOTE: Per the service team, "this is a pass through value that we just add to the model but don't depend on. It can be any string."
 				"tag": {
-					Type:     pluginsdk.TypeString,
-					Optional: true,
-
+					Type:         pluginsdk.TypeString,
+					Optional:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
 				"automatic_upgrade_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
+					Default:  false,
 				},
 
 				"treat_failure_as_deployment_failure_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
+					Default:  false,
 				},
 			},
 		},
@@ -415,6 +359,7 @@ func networkInterfaceSchema() *pluginsdk.Schema {
 				"fpga_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
+					Default:  false,
 				},
 
 				"network_security_group_id": {
@@ -488,13 +433,6 @@ func ipConfigurationSchema() *pluginsdk.Schema {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ValidateFunc: commonids.ValidateSubnetID,
-				},
-
-				"load_balancer_inbound_nat_rules_ids": {
-					Type:     pluginsdk.TypeSet,
-					Optional: true,
-					Elem:     &pluginsdk.Schema{Type: pluginsdk.TypeString},
-					Set:      pluginsdk.HashString,
 				},
 
 				"version": {
@@ -626,16 +564,23 @@ func osProfileSchema() *pluginsdk.Schema {
 				},
 
 				"linux_configuration": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					Default:  nil,
-					MaxItems: 1,
+					Type:          pluginsdk.TypeList,
+					Optional:      true,
+					ForceNew:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"virtual_machine_profile.0.os_profile.0.windows_configuration"},
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
 							"admin_username": {
 								Type:         pluginsdk.TypeString,
 								Required:     true,
 								ValidateFunc: validateAdminUsernameLinux,
+							},
+
+							"computer_name_prefix": {
+								Type:         pluginsdk.TypeString,
+								Required:     true,
+								ValidateFunc: validate.LinuxComputerNamePrefix,
 							},
 
 							"admin_password": {
@@ -663,12 +608,6 @@ func osProfileSchema() *pluginsdk.Schema {
 										},
 									},
 								},
-							},
-
-							"computer_name_prefix": {
-								Type:         pluginsdk.TypeString,
-								Required:     true,
-								ValidateFunc: validate.LinuxComputerNamePrefix,
 							},
 
 							"password_authentication_enabled": {
@@ -746,9 +685,11 @@ func osProfileSchema() *pluginsdk.Schema {
 				},
 
 				"windows_configuration": {
-					Type:     pluginsdk.TypeList,
-					Optional: true,
-					MaxItems: 1,
+					Type:          pluginsdk.TypeList,
+					Optional:      true,
+					ForceNew:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"virtual_machine_profile.0.os_profile.0.linux_configuration"},
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
 							"admin_username": {
@@ -765,10 +706,8 @@ func osProfileSchema() *pluginsdk.Schema {
 							},
 
 							"computer_name_prefix": {
-								Type:     pluginsdk.TypeString,
-								Optional: true,
-								// Computed since we reuse the VM name if one's not specified
-								Computed:     true,
+								Type:         pluginsdk.TypeString,
+								Required:     true,
 								ValidateFunc: validate.WindowsComputerNamePrefix,
 							},
 
@@ -787,13 +726,13 @@ func osProfileSchema() *pluginsdk.Schema {
 											Required:     true,
 											ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForSettingNames(), false),
 										},
-										// It is not supported in vmss. need to confirm whether it needs to be exposed.
+
 										"pass_name": {
 											Type:         pluginsdk.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForPassName(), false),
 										},
-										// It is not supported in vmss. need to confirm whether it needs to be exposed.
+
 										"component_name": {
 											Type:         pluginsdk.TypeString,
 											Required:     true,
@@ -923,38 +862,31 @@ func securityProfileSchema() *pluginsdk.Schema {
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
-				"proxy_agent_key_incarnation_value": {
-					Type:     pluginsdk.TypeInt,
-					Required: true,
-				},
 				"encryption_at_host_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
+					Default:  false,
 				},
-
 				"user_assigned_identity_id": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
-				"proxy_agent_mode": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					Default:      string(fleets.ModeEnforce),
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForMode(), false),
-				},
+
 				"proxy_agent": {
 					Type:     pluginsdk.TypeList,
 					Optional: true,
 					MaxItems: 1,
 					Elem: &pluginsdk.Resource{
 						Schema: map[string]*pluginsdk.Schema{
+
+							// remove this property as it is not supported!!!202501113
 							// there is another property `enable` exists
 							// need to confirm whether the following properties should be set when this feature is enable?
 							// key_incarnation_value is required?
 							"key_incarnation_value": {
 								Type:     pluginsdk.TypeInt,
-								Required: true,
+								Optional: true,
 							},
 							"mode": {
 								Type:         pluginsdk.TypeString,
@@ -975,11 +907,13 @@ func securityProfileSchema() *pluginsdk.Schema {
 				"uefi_secure_boot_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
+					Default:  false,
 				},
 
 				"uefi_vtpm_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
+					Default:  false,
 				},
 			},
 		},
@@ -1019,20 +953,6 @@ func storageProfileDataDiskSchema() *pluginsdk.Schema {
 					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskDeleteOptionTypes(), false),
 				},
 
-				// Property 'dataDisk.diskIOPSReadWrite' can be enabled only on VMs in a Virtual Machine Scale Set.
-				//"disk_iops_read_write": {
-				//	Type:         pluginsdk.TypeInt,
-				//	Optional:     true,
-				//	ValidateFunc: validation.IntAtLeast(1),
-				//},
-				//
-				// Property 'dataDisk.diskMBpsReadWrite' can be enabled only on VMs in a Virtual Machine Scale Set.
-				//"disk_mbps_read_write": {
-				//	Type:         pluginsdk.TypeInt,
-				//	Optional:     true,
-				//	ValidateFunc: validation.IntAtLeast(1),
-				//},
-
 				"disk_encryption_set_id": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
@@ -1055,18 +975,6 @@ func storageProfileDataDiskSchema() *pluginsdk.Schema {
 					Type:         pluginsdk.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForStorageAccountTypes(), false),
-				},
-
-				"security_disk_encryption_set_id": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: validate.DiskEncryptionSetID,
-				},
-
-				"security_encryption_type": {
-					Type:         pluginsdk.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForSecurityTypes(), false),
 				},
 
 				"name": {
@@ -1092,6 +1000,22 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
+				"storage_account_type": {
+					Type:     pluginsdk.TypeString,
+					Required: true,
+					// whilst this appears in the Update block the API returns this when changing:
+					// Changing property 'osDisk.managedDisk.storageAccountType' is not allowed
+					ForceNew: true,
+					// NOTE: OS Disks don't support Ultra SSDs or PremiumV2_LRS
+					ValidateFunc: validation.StringInSlice([]string{
+						string(fleets.StorageAccountTypesPremiumLRS),
+						string(fleets.StorageAccountTypesPremiumZRS),
+						string(fleets.StorageAccountTypesStandardLRS),
+						string(fleets.StorageAccountTypesStandardSSDLRS),
+						string(fleets.StorageAccountTypesStandardSSDZRS),
+					}, false),
+				},
+
 				"caching": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
@@ -1101,6 +1025,7 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 						string(fleets.CachingTypesReadWrite),
 					}, false),
 				},
+
 				"disk_encryption_set_id": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
@@ -1116,20 +1041,7 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 				"security_encryption_type": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForSecurityTypes(), false),
-				},
-
-				"storage_account_type": {
-					Type:     pluginsdk.TypeString,
-					Required: true,
-					// `PremiumV2_LRS` and `UltraSSD_LRS` is not supported OS Disk
-					ValidateFunc: validation.StringInSlice([]string{
-						string(fleets.StorageAccountTypesPremiumLRS),
-						string(fleets.StorageAccountTypesPremiumZRS),
-						string(fleets.StorageAccountTypesStandardLRS),
-						string(fleets.StorageAccountTypesStandardSSDLRS),
-						string(fleets.StorageAccountTypesStandardSSDZRS),
-					}, false),
+					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForSecurityEncryptionTypes(), false),
 				},
 
 				"delete_option": {
@@ -1178,30 +1090,32 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 				"write_accelerator_enabled": {
 					Type:     pluginsdk.TypeBool,
 					Optional: true,
+					Default:  false,
 				},
 			},
 		},
 	}
 }
 
-func storageProfileImageReferenceSchema() *pluginsdk.Schema {
+func storageProfileSourceImageReferenceSchema() *pluginsdk.Schema {
 	return &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
-		Required: true,
+		Optional: true,
 		MaxItems: 1,
+		ConflictsWith: []string{
+			"virtual_machine_profile.0.source_image_id",
+		},
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
 				"publisher": {
-					Type:     pluginsdk.TypeString,
-					Required: true,
-
+					Type:         pluginsdk.TypeString,
+					Required:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
 				"offer": {
-					Type:     pluginsdk.TypeString,
-					Required: true,
-
+					Type:         pluginsdk.TypeString,
+					Required:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
@@ -1215,36 +1129,6 @@ func storageProfileImageReferenceSchema() *pluginsdk.Schema {
 					Type:         pluginsdk.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
-				},
-
-				"id": {
-					Type:     pluginsdk.TypeString,
-					Optional: true,
-					ValidateFunc: validation.Any(
-						images.ValidateImageID,
-						validate.SharedImageID,
-						validate.SharedImageVersionID,
-					),
-				},
-
-				"community_gallery_image_id": {
-					Type:     pluginsdk.TypeString,
-					Optional: true,
-					ValidateFunc: validation.Any(
-						images.ValidateImageID,
-						validate.CommunityGalleryImageID,
-						validate.CommunityGalleryImageVersionID,
-					),
-				},
-
-				"shared_gallery_image_id": {
-					Type:     pluginsdk.TypeString,
-					Optional: true,
-					ValidateFunc: validation.Any(
-						images.ValidateImageID,
-						validate.SharedGalleryImageID,
-						validate.SharedGalleryImageVersionID,
-					),
 				},
 			},
 		},
@@ -1291,10 +1175,8 @@ func expandBaseVirtualMachineProfileModel(inputList []VirtualMachineProfileModel
 		ApplicationProfile:       expandApplicationProfile(input.GalleryApplicationProfile),
 		CapacityReservation:      expandCapacityReservation(input.CapacityReservationGroupId),
 		DiagnosticsProfile:       expandDiagnosticsProfile(input.BootDiagnosticEnabled, input.BootDiagnosticStorageAccountEndpoint),
-		HardwareProfile:          expandHardwareProfile(input.VMSize),
-		NetworkProfile:           expandNetworkProfile(input.NetworkInterface, input.NetworkHealthProbeId),
+		NetworkProfile:           expandNetworkProfile(input.NetworkInterface),
 		ScheduledEventsProfile:   expandScheduledEventsProfile(input),
-		SecurityPostureReference: expandSecurityPostureReferenceModel(input.SecurityPostureReference),
 		SecurityProfile:          expandSecurityProfileModel(input.SecurityProfile),
 		ServiceArtifactReference: expandServiceArtifactReference(input.ServiceArtifactId),
 	}
@@ -1305,6 +1187,7 @@ func expandBaseVirtualMachineProfileModel(inputList []VirtualMachineProfileModel
 	}
 	output.ExtensionProfile = extensionProfileValue
 
+	output.LicenseType = pointer.To("None")
 	if input.LicenseType != "" {
 		output.LicenseType = pointer.To(input.LicenseType)
 	}
@@ -1314,9 +1197,8 @@ func expandBaseVirtualMachineProfileModel(inputList []VirtualMachineProfileModel
 	}
 
 	storageProfile := &fleets.VirtualMachineScaleSetStorageProfile{
-		DiskControllerType: pointer.To(fleets.DiskControllerTypes(input.DiskControllerType)),
-		ImageReference:     expandImageReferenceModel(input.ImageReference),
-		OsDisk:             expandOSDiskModel(input.OsDisk),
+		ImageReference: expandImageReference(input.SourceImageReference, input.SourceImageId),
+		OsDisk:         expandOSDiskModel(input.OsDisk),
 	}
 
 	dataDisks, err := expandDataDiskModel(input.DataDisks)
@@ -1364,17 +1246,15 @@ func expandApplicationProfile(inputList []GalleryApplicationModel) *fleets.Appli
 			output.ConfigurationReference = pointer.To(input.ConfigurationBlobUri)
 		}
 
-		if input.Tags != "" {
-			output.Tags = pointer.To(input.Tags)
+		if input.Tag != "" {
+			output.Tags = pointer.To(input.Tag)
 		}
 		outputList = append(outputList, output)
 	}
 
-	output := fleets.ApplicationProfile{
+	return &fleets.ApplicationProfile{
 		GalleryApplications: &outputList,
 	}
-
-	return &output
 }
 
 func expandCapacityReservation(input string) *fleets.CapacityReservationProfile {
@@ -1531,29 +1411,12 @@ func expandKeyVaultSecretReferenceModel(inputList []ProtectedSettingsFromKeyVaul
 	return &output
 }
 
-func expandHardwareProfile(inputList []VMSizeModel) *fleets.VirtualMachineScaleSetHardwareProfile {
-	if len(inputList) == 0 {
-		return nil
-	}
-
-	input := &inputList[0]
-	vmSize := fleets.VMSizeProperties{
-		VCPUsAvailable: pointer.To(input.VCPUAvailableCount),
-		VCPUsPerCore:   pointer.To(input.VCPUPerCoreCount),
-	}
-
-	return &fleets.VirtualMachineScaleSetHardwareProfile{
-		VMSizeProperties: pointer.To(vmSize),
-	}
-}
-
-func expandNetworkProfile(inputList []NetworkInterfaceModel, healthProbe string) *fleets.VirtualMachineScaleSetNetworkProfile {
+func expandNetworkProfile(inputList []NetworkInterfaceModel) *fleets.VirtualMachineScaleSetNetworkProfile {
 	if len(inputList) == 0 {
 		return nil
 	}
 
 	output := fleets.VirtualMachineScaleSetNetworkProfile{
-		HealthProbe: expandApiEntityReferenceModel(healthProbe),
 		// 2020-11-01 is the only valid value for this value and is only valid for VMSS in Orchestration Mode flex
 		NetworkApiVersion:              pointer.To(fleets.NetworkApiVersionTwoZeroTwoZeroNegativeOneOneNegativeZeroOne),
 		NetworkInterfaceConfigurations: expandNetworkInterfaceModel(inputList),
@@ -1635,7 +1498,6 @@ func expandIPConfigurationModel(inputList []IPConfigurationModel) *[]fleets.Virt
 				ApplicationGatewayBackendAddressPools: expandSubResources(input.ApplicationGatewayBackendAddressPoolIds),
 				ApplicationSecurityGroups:             expandSubResources(input.ApplicationSecurityGroupIds),
 				LoadBalancerBackendAddressPools:       expandSubResources(input.LoadBalancerBackendAddressPoolIds),
-				LoadBalancerInboundNatPools:           expandSubResources(input.LoadBalancerInboundNatPoolIds),
 				Primary:                               pointer.To(input.Primary),
 				PublicIPAddressConfiguration:          expandPublicIPAddressModel(input.PublicIPAddress),
 				Subnet:                                expandApiEntityReferenceModel(input.SubnetId),
@@ -1849,7 +1711,7 @@ func validateWindowsSetting(inputList []VirtualMachineProfileModel, d *schema.Re
 			return fmt.Errorf("when the 'patch_assessment_mode' field is set to %q the 'provision_vm_agent_enabled' must always be set to 'true'", fleets.WindowsPatchAssessmentModeAutomaticByPlatform)
 		}
 
-		isHotPatchEnabledImage := isValidHotPatchSourceImageReference(input.ImageReference)
+		isHotPatchEnabledImage := isValidHotPatchSourceImageReference(input.SourceImageReference)
 		hasHealthExtension := false
 		if v := input.Extension; len(v) > 0 && (v[0].Type == "ApplicationHealthLinux" || v[0].Type == "ApplicationHealthWindows") {
 			hasHealthExtension = true
@@ -1933,7 +1795,7 @@ func validateLinuxSetting(inputList []VirtualMachineProfileModel, d *schema.Reso
 	return nil
 }
 
-func isValidHotPatchSourceImageReference(referenceInput []ImageReferenceModel) bool {
+func isValidHotPatchSourceImageReference(referenceInput []SourceImageReferenceModel) bool {
 	if len(referenceInput) == 0 {
 		return false
 	}
@@ -2050,37 +1912,26 @@ func expandWinRM(inputList []WinRMModel) *fleets.WinRMConfiguration {
 }
 
 func expandScheduledEventsProfile(input *VirtualMachineProfileModel) *fleets.ScheduledEventsProfile {
-	if input == nil {
+	if input == nil || (input.ScheduledEventTerminationTimeout == "" && input.ScheduledEventOsImageTimeout == "") {
 		return nil
 	}
-	return &fleets.ScheduledEventsProfile{
-		OsImageNotificationProfile: &fleets.OSImageNotificationProfile{
-			Enable:           pointer.To(input.ScheduledEventOsImageEnabled),
-			NotBeforeTimeout: pointer.To(input.ScheduledEventOsImageTimeout),
-		},
 
-		TerminateNotificationProfile: &fleets.TerminateNotificationProfile{
-			Enable:           pointer.To(input.ScheduledEventTerminationEnabled),
+	outPut := &fleets.ScheduledEventsProfile{}
+	if input.ScheduledEventTerminationTimeout != "" {
+		outPut.TerminateNotificationProfile = &fleets.TerminateNotificationProfile{
+			Enable:           pointer.To(true),
 			NotBeforeTimeout: pointer.To(input.ScheduledEventTerminationTimeout),
-		},
-	}
-}
-
-func expandSecurityPostureReferenceModel(inputList []SecurityPostureReferenceModel) *fleets.SecurityPostureReference {
-	if len(inputList) == 0 {
-		return nil
+		}
 	}
 
-	input := &inputList[0]
-	output := fleets.SecurityPostureReference{
-		ExcludeExtensions: pointer.To(input.ExcludeExtensions),
-		IsOverridable:     pointer.To(input.OverrideEnabled),
-	}
-	if input.Id != "" {
-		output.Id = pointer.To(input.Id)
+	if input.ScheduledEventOsImageTimeout != "" {
+		outPut.OsImageNotificationProfile = &fleets.OSImageNotificationProfile{
+			Enable:           pointer.To(true),
+			NotBeforeTimeout: pointer.To(input.ScheduledEventOsImageTimeout),
+		}
 	}
 
-	return &output
+	return outPut
 }
 
 func expandSecurityProfileModel(inputList []SecurityProfileModel) *fleets.SecurityProfile {
@@ -2161,29 +2012,7 @@ func expandDataDiskModel(inputList []DataDiskModel) (*[]fleets.VirtualMachineSca
 				Id: pointer.To(input.DiskEncryptionSetId),
 			}
 		}
-		if input.SecurityEncryptionType != "" && input.SecurityDiskEncryptionSetId != "" {
-			managedDisk.SecurityProfile = expandVMDiskSecurityProfileModel(input.SecurityEncryptionType, input.SecurityDiskEncryptionSetId)
-		}
 		output.ManagedDisk = managedDisk
-
-		// Property 'dataDisk.diskMBpsReadWrite' can be enabled only on VMs in a Virtual Machine Scale Set?
-		//if input.DiskIOPSReadWrite > 0 && !ultraSSDEnabled && input.StorageAccountType != string(fleets.StorageAccountTypesPremiumVTwoLRS) {
-		//	return nil, fmt.Errorf("`disk_iops_read_write` can only be set when `storage_account_type` is set to `PremiumV2_LRS` or `UltraSSD_LRS`")
-		//}
-		//
-		//// Do not set value unless value is greater than 0 - issue 15516
-		//if input.DiskIOPSReadWrite > 0 {
-		//	output.DiskIOPSReadWrite = pointer.To(input.DiskIOPSReadWrite)
-		//}
-		//
-		//if input.DiskMbpsReadWrite > 0 && !ultraSSDEnabled && input.StorageAccountType != string(fleets.StorageAccountTypesPremiumVTwoLRS) {
-		//	return nil, fmt.Errorf("`disk_mbps_read_write` can only be set when `storage_account_type` is set to `PremiumV2_LRS` or `UltraSSD_LRS`")
-		//}
-		//
-		//// Do not set value unless value is greater than 0 - issue 15516
-		//if input.DiskMbpsReadWrite > 0 {
-		//	output.DiskMBpsReadWrite = pointer.To(input.DiskMbpsReadWrite)
-		//}
 
 		outputList = append(outputList, output)
 	}
@@ -2209,43 +2038,40 @@ func expandVMDiskSecurityProfileModel(securityEncryptionType string, securityDis
 	return &output
 }
 
-func expandImageReferenceModel(inputList []ImageReferenceModel) *fleets.ImageReference {
+func expandImageReference(inputList []SourceImageReferenceModel, imageId string) *fleets.ImageReference {
+	if imageId != "" {
+		// With Version            : "/communityGalleries/publicGalleryName/images/myGalleryImageName/versions/(major.minor.patch | latest)"
+		// Versionless(e.g. latest): "/communityGalleries/publicGalleryName/images/myGalleryImageName"
+		if _, errors := validation.Any(validate.CommunityGalleryImageID, validate.CommunityGalleryImageVersionID)(imageId, "source_image_id"); len(errors) == 0 {
+			return &fleets.ImageReference{
+				CommunityGalleryImageId: pointer.To(imageId),
+			}
+		}
+
+		// With Version            : "/sharedGalleries/galleryUniqueName/images/myGalleryImageName/versions/(major.minor.patch | latest)"
+		// Versionless(e.g. latest): "/sharedGalleries/galleryUniqueName/images/myGalleryImageName"
+		if _, errors := validation.Any(validate.SharedGalleryImageID, validate.SharedGalleryImageVersionID)(imageId, "source_image_id"); len(errors) == 0 {
+			return &fleets.ImageReference{
+				SharedGalleryImageId: pointer.To(imageId),
+			}
+		}
+
+		return &fleets.ImageReference{
+			Id: pointer.To(imageId),
+		}
+	}
+
 	if len(inputList) == 0 {
 		return nil
 	}
 
 	input := &inputList[0]
-	output := fleets.ImageReference{}
-
-	if input.CommunityGalleryImageId != "" {
-		output.CommunityGalleryImageId = pointer.To(input.CommunityGalleryImageId)
+	return &fleets.ImageReference{
+		Publisher: pointer.To(input.Publisher),
+		Offer:     pointer.To(input.Offer),
+		Sku:       pointer.To(input.Sku),
+		Version:   pointer.To(input.Version),
 	}
-
-	if input.Id != "" {
-		output.Id = pointer.To(input.Id)
-	}
-
-	if input.Offer != "" {
-		output.Offer = pointer.To(input.Offer)
-	}
-
-	if input.Publisher != "" {
-		output.Publisher = pointer.To(input.Publisher)
-	}
-
-	if input.SharedGalleryImageId != "" {
-		output.SharedGalleryImageId = pointer.To(input.SharedGalleryImageId)
-	}
-
-	if input.Sku != "" {
-		output.Sku = pointer.To(input.Sku)
-	}
-
-	if input.Version != "" {
-		output.Version = pointer.To(input.Version)
-	}
-
-	return &output
 }
 
 func expandOSDiskModel(inputList []OSDiskModel) *fleets.VirtualMachineScaleSetOSDisk {
@@ -2330,9 +2156,7 @@ func flattenVirtualMachineProfileModel(input *fleets.BaseVirtualMachineProfile, 
 	}
 	output := VirtualMachineProfileModel{
 		GalleryApplicationProfile: flattenApplicationProfileModel(input.ApplicationProfile),
-		VMSize:                    flattenVMSizeModel(input.HardwareProfile),
 		NetworkInterface:          flattenNetworkInterfaceModel(input.NetworkProfile),
-		SecurityPostureReference:  flattenSecurityPostureReferenceModel(input.SecurityPostureReference),
 		SecurityProfile:           flattenSecurityProfileModel(input.SecurityProfile),
 	}
 
@@ -2351,18 +2175,26 @@ func flattenVirtualMachineProfileModel(input *fleets.BaseVirtualMachineProfile, 
 
 	if v := input.StorageProfile; v != nil {
 		output.DataDisks = flattenDataDiskModel(v.DataDisks)
-		output.ImageReference = flattenImageReferenceModel(v.ImageReference)
+		var storageImageId string
+		if v.ImageReference != nil && v.ImageReference.Id != nil {
+			storageImageId = *v.ImageReference.Id
+		}
+		if v.ImageReference != nil && v.ImageReference.CommunityGalleryImageId != nil {
+			storageImageId = *v.ImageReference.CommunityGalleryImageId
+		}
+		if v.ImageReference != nil && v.ImageReference.SharedGalleryImageId != nil {
+			storageImageId = *v.ImageReference.SharedGalleryImageId
+		}
+		output.SourceImageId = storageImageId
+		output.SourceImageReference = flattenImageReference(v.ImageReference, storageImageId != "")
 		output.OsDisk = flattenOSDiskModel(v.OsDisk)
-		output.DiskControllerType = string(pointer.From(v.DiskControllerType))
 	}
 
 	if se := input.ScheduledEventsProfile; se != nil {
 		if v := se.TerminateNotificationProfile; v != nil {
-			output.ScheduledEventTerminationEnabled = pointer.From(v.Enable)
 			output.ScheduledEventTerminationTimeout = pointer.From(v.NotBeforeTimeout)
 		}
 		if v := se.OsImageNotificationProfile; v != nil {
-			output.ScheduledEventOsImageEnabled = pointer.From(v.Enable)
 			output.ScheduledEventOsImageTimeout = pointer.From(v.NotBeforeTimeout)
 		}
 	}
@@ -2380,21 +2212,17 @@ func flattenVirtualMachineProfileModel(input *fleets.BaseVirtualMachineProfile, 
 		}
 	}
 
-	if np := input.NetworkProfile; np != nil {
-		if v := np.HealthProbe; v != nil {
-			output.NetworkHealthProbeId = pointer.From(v.Id)
-		}
-	}
-
 	extensionProfileValue, err := flattenExtensionModel(input.ExtensionProfile, metadata)
 	if err != nil {
 		return nil, err
 	}
 	output.Extension = extensionProfileValue
 
-	if input.LicenseType != nil {
-		output.LicenseType = *input.LicenseType
+	licenseType := ""
+	if v := pointer.From(input.LicenseType); v != "None" {
+		licenseType = v
 	}
+	output.LicenseType = licenseType
 
 	if input.UserData != nil {
 		output.UserDataBase64 = *input.UserData
@@ -2460,28 +2288,13 @@ func flattenApplicationProfileModel(input *fleets.ApplicationProfile) []GalleryA
 		output.ConfigurationBlobUri = pointer.From(input.ConfigurationReference)
 		output.AutomaticUpgradeEnabled = pointer.From(input.EnableAutomaticUpgrade)
 		output.Order = pointer.From(input.Order)
-		output.Tags = pointer.From(input.Tags)
+		output.Tag = pointer.From(input.Tags)
 		output.TreatFailureAsDeploymentFailureEnabled = pointer.From(input.TreatFailureAsDeploymentFailure)
 
 		outputList = append(outputList, output)
 	}
 
 	return outputList
-}
-
-func flattenVMSizeModel(input *fleets.VirtualMachineScaleSetHardwareProfile) []VMSizeModel {
-	var outputList []VMSizeModel
-	if input == nil {
-		return outputList
-	}
-
-	output := VMSizeModel{}
-	if props := input.VMSizeProperties; props != nil {
-		output.VCPUAvailableCount = pointer.From(props.VCPUsAvailable)
-		output.VCPUPerCoreCount = pointer.From(props.VCPUsPerCore)
-	}
-
-	return append(outputList, output)
 }
 
 func flattenNetworkInterfaceModel(input *fleets.VirtualMachineScaleSetNetworkProfile) []NetworkInterfaceModel {
@@ -2678,19 +2491,6 @@ func flattenWinRMModel(input *fleets.WinRMConfiguration) []WinRMModel {
 	return outputList
 }
 
-func flattenSecurityPostureReferenceModel(input *fleets.SecurityPostureReference) []SecurityPostureReferenceModel {
-	var outputList []SecurityPostureReferenceModel
-	if input == nil {
-		return outputList
-	}
-	output := SecurityPostureReferenceModel{}
-	output.ExcludeExtensions = pointer.From(input.ExcludeExtensions)
-	output.Id = pointer.From(input.Id)
-	output.OverrideEnabled = pointer.From(input.IsOverridable)
-
-	return append(outputList, output)
-}
-
 func flattenSecurityProfileModel(input *fleets.SecurityProfile) []SecurityProfileModel {
 	var outputList []SecurityProfileModel
 	if input == nil {
@@ -2772,19 +2572,15 @@ func flattenDataDiskModel(inputList *[]fleets.VirtualMachineScaleSetDataDisk) []
 	return outputList
 }
 
-func flattenImageReferenceModel(input *fleets.ImageReference) []ImageReferenceModel {
-	var outputList []ImageReferenceModel
-	if input == nil {
+func flattenImageReference(input *fleets.ImageReference, hasImageId bool) []SourceImageReferenceModel {
+	var outputList []SourceImageReferenceModel
+	if input == nil || hasImageId {
 		return outputList
 	}
-
-	output := ImageReferenceModel{}
-	output.CommunityGalleryImageId = pointer.From(input.CommunityGalleryImageId)
+	output := SourceImageReferenceModel{}
 	output.Version = pointer.From(input.ExactVersion)
-	output.Id = pointer.From(input.Id)
 	output.Offer = pointer.From(input.Offer)
 	output.Publisher = pointer.From(input.Publisher)
-	output.SharedGalleryImageId = pointer.From(input.SharedGalleryImageId)
 	output.Sku = pointer.From(input.Sku)
 	output.Version = pointer.From(input.Version)
 
@@ -2867,12 +2663,6 @@ func flattenIPConfigurationModel(inputList []fleets.VirtualMachineScaleSetIPConf
 				groupIds = flattenSubResourceId(*v)
 			}
 			output.ApplicationSecurityGroupIds = groupIds
-
-			natPools := make([]string, 0)
-			if v := props.LoadBalancerInboundNatPools; v != nil {
-				natPools = flattenSubResourceId(*v)
-			}
-			output.LoadBalancerInboundNatPoolIds = natPools
 
 			if v := props.PublicIPAddressConfiguration; v != nil {
 				output.PublicIPAddress = flattenPublicIPAddressModel(v)
