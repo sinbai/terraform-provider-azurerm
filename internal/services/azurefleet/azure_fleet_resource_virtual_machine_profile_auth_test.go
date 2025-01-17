@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 )
 
-func TestAccAzureFleetVirtualMachineProfileAuth_authPassword(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileAuth_authPassword(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -26,9 +26,9 @@ func TestAccAzureFleetVirtualMachineProfileAuth_authPassword(t *testing.T) {
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileAuth_authSSHKey(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileAuth_authSSHKey(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -41,9 +41,9 @@ func TestAccAzureFleetVirtualMachineProfileAuth_authSSHKey(t *testing.T) {
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileAuth_authMultipleSSHKeys(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileAuth_authMultipleSSHKeys(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -56,9 +56,9 @@ func TestAccAzureFleetVirtualMachineProfileAuth_authMultipleSSHKeys(t *testing.T
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileAuth_authSSHKeyAndPassword(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileAuth_authSSHKeyAndPassword(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -71,9 +71,9 @@ func TestAccAzureFleetVirtualMachineProfileAuth_authSSHKeyAndPassword(t *testing
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileAuth_authEd25519SSHKeys(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileAuth_authEd25519SSHKeys(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -86,7 +86,7 @@ func TestAccAzureFleetVirtualMachineProfileAuth_authEd25519SSHKeys(t *testing.T)
 	})
 }
 
-func (r AzureFleetResource) authPassword(data acceptance.TestData) string {
+func (r AzureFleetTestResource) authPassword(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -118,8 +118,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -140,7 +140,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r AzureFleetResource) authSSHKey(data acceptance.TestData) string {
+func (r AzureFleetTestResource) authSSHKey(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -172,9 +172,9 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
+        admin_username       = local.admin_username
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.first_public_key
         }
       }
@@ -194,13 +194,12 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxTemplate(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
+`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r AzureFleetResource) authMultipleSSHKeys(data acceptance.TestData) string {
+func (r AzureFleetTestResource) authMultipleSSHKeys(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
-%[4]s
 
 resource "azurerm_azure_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
@@ -230,13 +229,13 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
+        admin_username       = local.admin_username
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.first_public_key
         }
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.second_public_key
         }
       }
@@ -255,13 +254,12 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.linuxPublicKeyTemplate())
+`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r AzureFleetResource) authSSHKeyAndPassword(data acceptance.TestData) string {
+func (r AzureFleetTestResource) authSSHKeyAndPassword(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
-%[4]s
 
 resource "azurerm_azure_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
@@ -291,10 +289,10 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
-        admin_password       = "P@ssw0rd1234!"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.first_public_key
         }
       }
@@ -314,14 +312,12 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.linuxPublicKeyTemplate())
+`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r AzureFleetResource) authEd25519SSHKeys(data acceptance.TestData) string {
+func (r AzureFleetTestResource) authEd25519SSHKeys(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
-
-%[4]s
 
 resource "azurerm_azure_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
@@ -352,9 +348,9 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
+        admin_username       = local.admin_username
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.ed25519_public_key
         }
       }
@@ -374,5 +370,5 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.linuxPublicKeyTemplate())
+`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
 }

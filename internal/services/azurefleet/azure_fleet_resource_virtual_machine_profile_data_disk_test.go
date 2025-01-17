@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 )
 
-func TestAccAzureFleetVirtualMachineProfileDataDisk_basicManagedDisk(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileDataDisk_basicManagedDisk(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -26,9 +26,9 @@ func TestAccAzureFleetVirtualMachineProfileDataDisk_basicManagedDisk(t *testing.
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileDataDisk_basicManagedDiskWithZones(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileDataDisk_basicManagedDiskWithZones(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -41,9 +41,9 @@ func TestAccAzureFleetVirtualMachineProfileDataDisk_basicManagedDiskWithZones(t 
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileDataDisk_loadBalancerManagedDataDisks(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileDataDisk_loadBalancerManagedDataDisks(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -56,9 +56,9 @@ func TestAccAzureFleetVirtualMachineProfileDataDisk_loadBalancerManagedDataDisks
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileDataDisk_diskEncryptionSet(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileDataDisk_diskEncryptionSet(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -71,9 +71,9 @@ func TestAccAzureFleetVirtualMachineProfileDataDisk_diskEncryptionSet(t *testing
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypePremiumLRS(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypePremiumLRS(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -86,9 +86,9 @@ func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypePremiumLRS
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypePremiumV2LRS(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypePremiumV2LRS(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -103,9 +103,9 @@ func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypePremiumV2L
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypePremiumZRS(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypePremiumZRS(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -118,9 +118,9 @@ func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypePremiumZRS
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypeStandardLRS(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypeStandardLRS(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -133,9 +133,9 @@ func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypeStandardLR
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypeStandardSSDLRS(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypeStandardSSDLRS(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -148,9 +148,9 @@ func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypeStandardSS
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypeStandardSSDZRS(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypeStandardSSDZRS(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -163,9 +163,9 @@ func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypeStandardSS
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypeUltraSSDLRS(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypeUltraSSDLRS(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -180,9 +180,9 @@ func TestAccAzureFleetVirtualMachineProfileDataDisk_storageAccountTypeUltraSSDLR
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileDataDisk_MarketPlaceImage(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileDataDisk_MarketPlaceImage(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -195,7 +195,7 @@ func TestAccAzureFleetVirtualMachineProfileDataDisk_MarketPlaceImage(t *testing.
 	})
 }
 
-func (r AzureFleetResource) basicManagedDisk(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) basicManagedDisk(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -238,8 +238,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -263,7 +263,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) diskEncryptionSet(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) diskEncryptionSet(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -301,17 +301,15 @@ resource "azurerm_azure_fleet" "test" {
       caching                = "ReadWrite"
       create_option          = "Empty"
       disk_size_in_gb        = 10
-      disk_encryption_set_id = azurerm_disk_encryption_set.test.id
       storage_account_type   = "Standard_LRS"
-      security_encryption_type         = "DiskWithVMGuestState"
-      security_disk_encryption_set_id = azurerm_disk_encryption_set.test.id
+      disk_encryption_set_id = azurerm_disk_encryption_set.test.id
     }
 
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -340,7 +338,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.diskEncryptionSetResourceDependencies(data), r.templateWithOutProvider(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) basicManagedDiskWithZones(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) basicManagedDiskWithZones(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -385,8 +383,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -410,7 +408,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) loadBalancerManagedDataDisks(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) loadBalancerManagedDataDisks(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -453,8 +451,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -473,7 +471,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) dataDiskStorageAccountType(data acceptance.TestData, location string, storageAccountType string) string {
+func (r AzureFleetTestResource) dataDiskStorageAccountType(data acceptance.TestData, location string, storageAccountType string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -516,8 +514,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -536,7 +534,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location, storageAccountType)
 }
 
-func (r AzureFleetResource) dataDiskStorageAccountTypePremiumV2LRS(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) dataDiskStorageAccountTypePremiumV2LRS(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -580,8 +578,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -601,7 +599,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) dataDiskMarketPlaceImage(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) dataDiskMarketPlaceImage(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -649,8 +647,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -670,7 +668,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) dataDiskStorageAccountTypeUltraSSDLRS(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) dataDiskStorageAccountTypeUltraSSDLRS(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -714,11 +712,11 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.first_public_key
         }
       }
@@ -736,10 +734,10 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxTemplate(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) diskEncryptionSetResourceDependencies(data acceptance.TestData) string {
+func (r AzureFleetTestResource) diskEncryptionSetResourceDependencies(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {

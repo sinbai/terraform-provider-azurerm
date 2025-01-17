@@ -61,8 +61,9 @@ type VirtualMachineProfileModel struct {
 	ExtensionOperationsEnabled           bool                        `tfschema:"extension_operations_enabled"`
 	ScheduledEventTerminationTimeout     string                      `tfschema:"scheduled_event_termination_timeout"`
 	ScheduledEventOsImageTimeout         string                      `tfschema:"scheduled_event_os_image_timeout"`
-	SecurityProfile                      []SecurityProfileModel      `tfschema:"security_profile"`
-	ServiceArtifactId                    string                      `tfschema:"service_artifact_id"`
+	EncryptionAtHostEnabled              bool                        `tfschema:"encryption_at_host_enabled"`
+	SecureBootEnabled                    bool                        `tfschema:"secure_boot_enabled"`
+	VTpmEnabled                          bool                        `tfschema:"vtpm_enabled"`
 	DataDisks                            []DataDiskModel             `tfschema:"data_disk"`
 	OsDisk                               []OSDiskModel               `tfschema:"os_disk"`
 	SourceImageReference                 []SourceImageReferenceModel `tfschema:"source_image_reference"`
@@ -212,26 +213,6 @@ type WinRMModel struct {
 	Protocol       string `tfschema:"protocol"`
 }
 
-type SecurityPostureReferenceModel struct {
-	ExcludeExtensions []string `tfschema:"exclude_extensions"`
-	Id                string   `tfschema:"id"`
-	OverrideEnabled   bool     `tfschema:"override_enabled"`
-}
-
-type SecurityProfileModel struct {
-	EncryptionAtHostEnabled bool              `tfschema:"encryption_at_host_enabled"`
-	UserAssignedIdentityId  string            `tfschema:"user_assigned_identity_id"`
-	ProxyAgent              []ProxyAgentModel `tfschema:"proxy_agent"`
-	SecurityType            string            `tfschema:"security_type"`
-	UefiSecureBootEnabled   bool              `tfschema:"uefi_secure_boot_enabled"`
-	UefiVTpmEnabled         bool              `tfschema:"uefi_vtpm_enabled"`
-}
-
-type ProxyAgentModel struct {
-	KeyIncarnationValue int64  `tfschema:"key_incarnation_value"`
-	mode                string `tfschema:"mode"`
-}
-
 type DataDiskModel struct {
 	Caching                 string `tfschema:"caching"`
 	CreateOption            string `tfschema:"create_option"`
@@ -240,7 +221,6 @@ type DataDiskModel struct {
 	DiskEncryptionSetId     string `tfschema:"disk_encryption_set_id"`
 	StorageAccountType      string `tfschema:"storage_account_type"`
 	Lun                     int64  `tfschema:"lun"`
-	Name                    string `tfschema:"name"`
 	WriteAcceleratorEnabled bool   `tfschema:"write_accelerator_enabled"`
 }
 
@@ -252,19 +232,15 @@ type SourceImageReferenceModel struct {
 }
 
 type OSDiskModel struct {
-	Caching                     string   `tfschema:"caching"`
-	DeleteOption                string   `tfschema:"delete_option"`
-	DiffDiskOption              string   `tfschema:"diff_disk_option"`
-	DiffDiskPlacement           string   `tfschema:"diff_disk_placement"`
-	DiskSizeInGB                int64    `tfschema:"disk_size_in_gb"`
-	ImageUri                    string   `tfschema:"image_uri"`
-	DiskEncryptionSetId         string   `tfschema:"disk_encryption_set_id"`
-	SecurityDiskEncryptionSetId string   `tfschema:"security_disk_encryption_set_id"`
-	SecurityEncryptionType      string   `tfschema:"security_encryption_type"`
-	StorageAccountType          string   `tfschema:"storage_account_type"`
-	Name                        string   `tfschema:"name"`
-	VhdContainers               []string `tfschema:"vhd_containers"`
-	WriteAcceleratorEnabled     bool     `tfschema:"write_accelerator_enabled"`
+	Caching                 string `tfschema:"caching"`
+	DeleteOption            string `tfschema:"delete_option"`
+	DiffDiskOption          string `tfschema:"diff_disk_option"`
+	DiffDiskPlacement       string `tfschema:"diff_disk_placement"`
+	DiskSizeInGB            int64  `tfschema:"disk_size_in_gb"`
+	DiskEncryptionSetId     string `tfschema:"disk_encryption_set_id"`
+	SecurityEncryptionType  string `tfschema:"security_encryption_type"`
+	StorageAccountType      string `tfschema:"storage_account_type"`
+	WriteAcceleratorEnabled bool   `tfschema:"write_accelerator_enabled"`
 }
 
 type PlanModel struct {
@@ -854,7 +830,7 @@ func (r AzureFleetResource) Create() sdk.ResourceFunc {
 			}
 			properties.Identity = expandedIdentity
 
-			additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, model.AdditionalCapabilitiesUltraSSDEnabled)
+			additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, model.AdditionalCapabilitiesUltraSSDEnabled, metadata.ResourceData)
 			if err != nil {
 				return err
 			}
@@ -868,7 +844,7 @@ func (r AzureFleetResource) Create() sdk.ResourceFunc {
 				PlatformFaultDomainCount: pointer.To(model.PlatformFaultDomainCount),
 			}
 
-			baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(model.VirtualMachineProfile)
+			baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData, false)
 			if err != nil {
 				return err
 			}
@@ -945,7 +921,7 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 
 			if metadata.ResourceData.HasChange("additional_location_profile") {
 				// all properties of `virtual_machine_profile_override` can be updated, and changing means deleting and recreating.
-				additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, model.AdditionalCapabilitiesUltraSSDEnabled)
+				additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, model.AdditionalCapabilitiesUltraSSDEnabled, metadata.ResourceData)
 				if err != nil {
 					return err
 				}
@@ -955,7 +931,7 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 			// all properties of `virtual_machine_profile` can be updated, and changing means deleting and recreating.
 			if metadata.ResourceData.HasChange("virtual_machine_profile") {
 				log.Printf("virtual_machine_profile HasChange")
-				baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(model.VirtualMachineProfile)
+				baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData, false)
 				if err != nil {
 					return err
 				}
@@ -1052,7 +1028,7 @@ func (r AzureFleetResource) Read() sdk.ResourceFunc {
 						state.AdditionalCapabilitiesUltraSSDEnabled = pointer.From(v.UltraSSDEnabled)
 					}
 
-					baseVirtualMachineProfileValue, err := flattenVirtualMachineProfileModel(&props.ComputeProfile.BaseVirtualMachineProfile, metadata)
+					baseVirtualMachineProfileValue, err := flattenVirtualMachineProfileModel(&props.ComputeProfile.BaseVirtualMachineProfile, metadata, false)
 					if err != nil {
 						return err
 					}
@@ -1283,13 +1259,6 @@ func (r AzureFleetResource) CustomizeDiff() sdk.ResourceFunc {
 						return fmt.Errorf("enabling `spot_priority_profile.0.maintain_enabled` requires all qualified availability zones in the region to be supported")
 					}
 				} else {
-					// You can update your Spot VM target capacity of the Compute Fleet while it's running, if the capacity preference is set to Maintain capacity.
-					//if metadata.ResourceDiff.HasChange("spot_priority_profile.0.capacity") {
-					//	if err := metadata.ResourceDiff.ForceNew("spot_priority_profile.0.capacity"); err != nil {
-					//		return err
-					//	}
-					//}
-
 					if len(state.RegularPriorityProfile) == 0 {
 						// For Spot VMs, you may delete or replace existing VM sizes in your Compute Fleet configuration, if the capacity preference is set to Maintain capacity.
 						// In all other scenarios requiring a modification to the running Compute Fleet, you may have to delete the existing Compute Fleet and create a new one.
@@ -1321,17 +1290,31 @@ func (r AzureFleetResource) CustomizeDiff() sdk.ResourceFunc {
 				ultraSSDEnabled := state.AdditionalCapabilitiesUltraSSDEnabled
 
 				if !ultraSSDEnabled && storageAccountType == string(fleets.StorageAccountTypesUltraSSDLRS) {
-					return fmt.Errorf("`UltraSSD_LRS` storage account type can be used only when AdditionalCapabilitiesUltraSSDEnabled is enalbed")
+					return fmt.Errorf("`UltraSSD_LRS` storage account type can be used only when `additional_capabilities_ultra_ssd_enabled` is enalbed")
 				}
+			}
 
-				//if storageAccountType == string(fleets.StorageAccountTypesPremiumVTwoLRS) {
-				//	if len(state.Zones) > 0 {
-				//		return fmt.Errorf("`PremiumV2_LRS` storage account type can be used only with Virtual Machines in an Availability Zone")
-				//	}
-				//	if v[0].Caching != "" {
-				//		return fmt.Errorf("`PremiumV2_LRS` storage account type is not supported with `caching` is specified")
-				//	}
-				//}
+			vmProfile := state.VirtualMachineProfile[0]
+			osProfile := vmProfile.OsProfile[0]
+			if len(osProfile.WindowsConfiguration) > 0 && len(osProfile.LinuxConfiguration) > 0 ||
+				len(osProfile.WindowsConfiguration) == 0 && len(osProfile.LinuxConfiguration) == 0 {
+				return fmt.Errorf("only one of `linux_configuration` and `windows_configuration` in `virtual_machine_profile` must be specified")
+			}
+			if vmProfile.SourceImageId != "" && len(vmProfile.SourceImageReference) > 0 {
+				return fmt.Errorf("only one of `source_image_id` and `source_image_reference` in `virtual_machine_profile` must be specified")
+			}
+
+			if v := state.AdditionalLocationProfile; len(v) > 0 && len(v[0].VirtualMachineProfileOverride) > 0 {
+				osProfile = state.AdditionalLocationProfile[0].VirtualMachineProfileOverride[0].OsProfile[0]
+				if len(osProfile.WindowsConfiguration) > 0 && len(osProfile.LinuxConfiguration) > 0 ||
+					len(osProfile.WindowsConfiguration) == 0 && len(osProfile.LinuxConfiguration) == 0 {
+					return fmt.Errorf("only one of `linux_configuration` and `windows_configuration` in `virtual_machine_profile_override` must be specified")
+				}
+			}
+
+			err = validateSecuritySetting(state.VirtualMachineProfile)
+			if err != nil {
+				return err
 			}
 
 			err = validateWindowsSetting(state.VirtualMachineProfile, metadata.ResourceDiff)
@@ -1577,7 +1560,7 @@ func expandVMSizeProfileModel(inputList []VMSizeProfileModel) *[]fleets.VMSizePr
 	return &outputList
 }
 
-func expandAdditionalLocationProfileModel(inputList []AdditionalLocationProfileModel, ultraSSDEnabled bool) (*fleets.AdditionalLocationsProfile, error) {
+func expandAdditionalLocationProfileModel(inputList []AdditionalLocationProfileModel, ultraSSDEnabled bool, d *schema.ResourceData) (*fleets.AdditionalLocationsProfile, error) {
 	if len(inputList) == 0 {
 		return nil, nil
 	}
@@ -1590,11 +1573,23 @@ func expandAdditionalLocationProfileModel(inputList []AdditionalLocationProfileM
 			Location: input.Location,
 		}
 
-		virtualMachineProfileOverrideValue, err := expandBaseVirtualMachineProfileModel(input.VirtualMachineProfileOverride)
+		virtualMachineProfileOverrideValue, err := expandBaseVirtualMachineProfileModel(input.VirtualMachineProfileOverride, d, true)
 		if err != nil {
 			return nil, err
 		}
 
+		// TODO: waiting for service team to reply whether `linux_configuration:{}` is supported
+		// `additional_location_profile` has `virtual_machine_profile_override` which implicitly means that all the values from `virtual_machine_profile` will be copied over if they are not specified.
+		// When `windows_configuration` in additional regions, the `linux_configuration` gets copied over and VMSS does not allow users to specify both for a region.
+		// API requires users to specify `linux_configuration` to `null`/`{}` in the `virtual_machine_profile_override` to prevent this.
+		if virtualMachineProfileOverrideValue != nil {
+			if virtualMachineProfileOverrideValue.OsProfile.LinuxConfiguration != nil {
+				virtualMachineProfileOverrideValue.OsProfile.WindowsConfiguration = &fleets.WindowsConfiguration{}
+			}
+			if virtualMachineProfileOverrideValue.OsProfile.WindowsConfiguration != nil {
+				virtualMachineProfileOverrideValue.OsProfile.LinuxConfiguration = &fleets.LinuxConfiguration{}
+			}
+		}
 		output.VirtualMachineProfileOverride = virtualMachineProfileOverrideValue
 
 		outputList = append(outputList, output)
@@ -1631,7 +1626,7 @@ func flattenAdditionalLocationProfileModel(input *fleets.AdditionalLocationsProf
 		output := AdditionalLocationProfileModel{
 			Location: input.Location,
 		}
-		virtualMachineProfileOverrideValue, err := flattenVirtualMachineProfileModel(input.VirtualMachineProfileOverride, metadata)
+		virtualMachineProfileOverrideValue, err := flattenVirtualMachineProfileModel(input.VirtualMachineProfileOverride, metadata, true)
 		if err != nil {
 			return nil, err
 		}

@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 )
 
-func TestAccAzureFleetVirtualMachineProfileNetwork_multiple(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileNetwork_multiple(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -26,9 +26,9 @@ func TestAccAzureFleetVirtualMachineProfileNetwork_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileNetwork_networkSecurityGroup(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileNetwork_networkSecurityGroup(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -41,9 +41,9 @@ func TestAccAzureFleetVirtualMachineProfileNetwork_networkSecurityGroup(t *testi
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileNetwork_acceleratedNetworking(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileNetwork_acceleratedNetworking(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -71,9 +71,9 @@ func TestAccAzureFleetVirtualMachineProfileNetwork_acceleratedNetworking(t *test
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileNetwork_dnsNameLabel(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileNetwork_dnsNameLabel(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -93,9 +93,9 @@ func TestAccAzureFleetVirtualMachineProfileNetwork_dnsNameLabel(t *testing.T) {
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileNetwork_ipForwarding(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileNetwork_ipForwarding(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -122,9 +122,9 @@ func TestAccAzureFleetVirtualMachineProfileNetwork_ipForwarding(t *testing.T) {
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileNetwork_basicPublicIP(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileNetwork_publicIP(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -137,9 +137,9 @@ func TestAccAzureFleetVirtualMachineProfileNetwork_basicPublicIP(t *testing.T) {
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileNetwork_publicIPSku(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileNetwork_publicIPSku(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -152,9 +152,9 @@ func TestAccAzureFleetVirtualMachineProfileNetwork_publicIPSku(t *testing.T) {
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileNetwork_publicIPVersion(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileNetwork_publicIPVersion(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -167,9 +167,9 @@ func TestAccAzureFleetVirtualMachineProfileNetwork_publicIPVersion(t *testing.T)
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileNetwork_basicDNSSettings(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileNetwork_basicDNSSettings(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -196,9 +196,9 @@ func TestAccAzureFleetVirtualMachineProfileNetwork_basicDNSSettings(t *testing.T
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileNetwork_loadBalancer(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileNetwork_loadBalancer(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -211,7 +211,107 @@ func TestAccAzureFleetVirtualMachineProfileNetwork_loadBalancer(t *testing.T) {
 	})
 }
 
-func (r AzureFleetResource) multiple(data acceptance.TestData, location string) string {
+//func TestAccAzureFleet_virtualMachineProfileNetwork_fpga(t *testing.T) {
+//	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
+//	r := AzureFleetTestResource{}
+//
+//	data.ResourceTest(t, r, []acceptance.TestStep{
+//		{
+//			Config: r.fpga(data, data.Locations.Primary, true),
+//			Check: acceptance.ComposeTestCheckFunc(
+//				check.That(data.ResourceName).ExistsInAzure(r),
+//			),
+//		},
+//		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+//		{
+//			Config: r.fpga(data, data.Locations.Primary, false),
+//			Check: acceptance.ComposeTestCheckFunc(
+//				check.That(data.ResourceName).ExistsInAzure(r),
+//			),
+//		},
+//		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+//	})
+//}
+
+//func (r AzureFleetTestResource) fpga(data acceptance.TestData, location string, enabled bool) string {
+//	return fmt.Sprintf(`
+//%[1]s
+//
+//resource "azurerm_subnet" "test1" {
+//	name                 = "acctestSubnet1"
+//	resource_group_name  = azurerm_resource_group.test.name
+//	virtual_network_name = azurerm_virtual_network.test.name
+//	address_prefixes     = ["10.0.1.0/24"]
+//
+//	delegation {
+//		name = "acctestdelegation"
+//		service_delegation {
+//			name    = "Microsoft.Network/fpgaNetworkInterfaces"
+//			actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+//		}
+//	}
+//}
+//
+//resource "azurerm_azure_fleet" "test" {
+//  name                = "acctest-fleet-%[2]d"
+//  resource_group_name = azurerm_resource_group.test.name
+//  location            = "%[3]s"
+//  platform_fault_domain_count = 2
+//
+//  regular_priority_profile {
+//    capacity     = 2
+//    min_capacity = 0
+//  }
+//
+//  vm_sizes_profile {
+//    name = "Standard_D2s_v3"
+//  }
+//
+//  virtual_machine_profile {
+//    os_profile {
+//      linux_configuration {
+//        computer_name_prefix            = "prefix"
+//        admin_username                  = local.admin_username
+//        admin_password                  = local.admin_password
+//        password_authentication_enabled = true
+//      }
+//    }
+//
+//    network_interface {
+//      name    = "primary-networkProTest"
+//      primary = true
+//      fpga_enabled = %[4]t
+//
+//      ip_configuration {
+//        name      = "primary"
+//        primary   = true
+//        subnet_id = azurerm_subnet.test1.id
+//
+//        public_ip_address {
+//          name                    = "TestPublicIPConfiguration"
+//          domain_name_label       = "test-domain-label"
+//          idle_timeout_in_minutes = 4
+//        }
+//      }
+//    }
+//
+//    os_disk {
+//      storage_account_type = "Standard_LRS"
+//      caching              = "ReadWrite"
+//    }
+//
+//    source_image_reference {
+//      publisher = "Canonical"
+//      offer     = "0001-com-ubuntu-server-jammy"
+//      sku       = "22_04-lts"
+//      version   = "latest"
+//    }
+//  }
+//}
+//`, r.template(data, location), data.RandomInteger, location, enabled)
+//}
+
+func (r AzureFleetTestResource) multiple(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -234,8 +334,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -284,7 +384,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) acceleratedNetworking(data acceptance.TestData, location string, enabled bool) string {
+func (r AzureFleetTestResource) acceleratedNetworking(data acceptance.TestData, location string, enabled bool) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -307,8 +407,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -347,7 +447,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location, enabled)
 }
 
-func (r AzureFleetResource) networkSecurityGroup(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) networkSecurityGroup(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -379,8 +479,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -419,7 +519,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) dnsNameLabel(data acceptance.TestData, location string, domainNamelabel string, scope string) string {
+func (r AzureFleetTestResource) dnsNameLabel(data acceptance.TestData, location string, domainNamelabel string, scope string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -443,8 +543,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -483,11 +583,9 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location, domainNamelabel, scope)
 }
 
-func (r AzureFleetResource) ipForwarding(data acceptance.TestData, location string, enabled bool) string {
+func (r AzureFleetTestResource) ipForwarding(data acceptance.TestData, location string, enabled bool) string {
 	return fmt.Sprintf(`
 %[1]s
-
-
 
 resource "azurerm_azure_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
@@ -508,8 +606,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -548,11 +646,9 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location, enabled)
 }
 
-func (r AzureFleetResource) basicPublicIP(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) basicPublicIP(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
-
-
 
 resource "azurerm_azure_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
@@ -573,8 +669,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -612,7 +708,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) publicIPSku(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) publicIPSku(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -636,8 +732,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -680,7 +776,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) publicIPVersion(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) publicIPVersion(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -704,8 +800,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -753,7 +849,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) dNSSettings(data acceptance.TestData, location string, dnsServers string) string {
+func (r AzureFleetTestResource) dNSSettings(data acceptance.TestData, location string, dnsServers string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -777,8 +873,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -816,7 +912,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location, dnsServers)
 }
 
-func (r AzureFleetResource) loadBalancer(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) loadBalancer(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -840,8 +936,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }

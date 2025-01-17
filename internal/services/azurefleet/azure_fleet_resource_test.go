@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 )
 
-type AzureFleetResource struct{}
+type AzureFleetTestResource struct{}
 
 func TestAccAzureFleet_basicWindows(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basicWindows(data),
@@ -32,9 +32,23 @@ func TestAccAzureFleet_basicWindows(t *testing.T) {
 	})
 }
 
+func TestAccAzureFleet_basicWindowstest(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
+	r := AzureFleetTestResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.basicWindowstttets(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password"),
+	})
+}
+
 func TestAccAzureFleet_basicLinux(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basicLinux(data),
@@ -48,7 +62,7 @@ func TestAccAzureFleet_basicLinux(t *testing.T) {
 
 func TestAccAzureFleet_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basicLinux(data),
@@ -62,7 +76,7 @@ func TestAccAzureFleet_requiresImport(t *testing.T) {
 
 func TestAccAzureFleet_vmAttributes(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basicVmAttributes(data),
@@ -90,7 +104,7 @@ func TestAccAzureFleet_vmAttributes(t *testing.T) {
 
 func TestAccAzureFleet_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basicLinux(data),
@@ -119,7 +133,7 @@ func TestAccAzureFleet_update(t *testing.T) {
 
 func TestAccAzureFleet_updateVMSS(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		//{
 		//	Config: r.basicLinux(data),
@@ -147,7 +161,7 @@ func TestAccAzureFleet_updateVMSS(t *testing.T) {
 
 func TestAccAzureFleet_spotPriorityProfile(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.spotPriorityProfile(data),
@@ -175,7 +189,7 @@ func TestAccAzureFleet_spotPriorityProfile(t *testing.T) {
 
 func TestAccAzureFleet_spotAndRegulaPriorityProfile(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.spotAndRegulaPriorityProfile(data),
@@ -203,7 +217,7 @@ func TestAccAzureFleet_spotAndRegulaPriorityProfile(t *testing.T) {
 
 func TestAccAzureFleet_zones(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.zones(data),
@@ -217,7 +231,7 @@ func TestAccAzureFleet_zones(t *testing.T) {
 
 func TestAccAzureFleet_plan(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.plan(data),
@@ -231,7 +245,7 @@ func TestAccAzureFleet_plan(t *testing.T) {
 
 func TestAccAzureFleet_identity(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.identityNone(data),
@@ -264,24 +278,56 @@ func TestAccAzureFleet_identity(t *testing.T) {
 	})
 }
 
-//func TestAccAzureFleet_linuxAndWindows(t *testing.T) {
-//	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-//	r := AzureFleetResource{}
-//	data.ResourceTest(t, r, []acceptance.TestStep{
-//		{
-//			Config: r.linuxAndWindows(data),
-//			Check: acceptance.ComposeTestCheckFunc(
-//				check.That(data.ResourceName).ExistsInAzure(r),
-//			),
-//		},
-//		data.ImportStep(
-//			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.windows_configuration.0.admin_password",
-//			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
-//		),
-//	})
-//}
+func TestAccAzureFleet_additionalLocation(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
+	r := AzureFleetTestResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.additionalLocation(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(
+			//"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password",
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+		),
+	})
+}
 
-func (r AzureFleetResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
+func TestAccAzureFleet_additionalLocationLinux(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
+	r := AzureFleetTestResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.additionalLocationLinux(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password",
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+		),
+	})
+}
+func TestAccAzureFleet_additionalLocationWindows(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
+	r := AzureFleetTestResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.additionalLocationWindows(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.windows_configuration.0.admin_password",
+			"virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password",
+		),
+	})
+}
+func (r AzureFleetTestResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	id, err := fleets.ParseFleetID(state.ID)
 	if err != nil {
 		return nil, err
@@ -294,7 +340,64 @@ func (r AzureFleetResource) Exists(ctx context.Context, clients *clients.Client,
 	return pointer.To(resp.Model != nil), nil
 }
 
-func (r AzureFleetResource) basicWindows(data acceptance.TestData) string {
+func (r AzureFleetTestResource) basicWindowstttets(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_azure_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+
+  virtual_machine_profile {
+		source_image_reference {
+			publisher = "MicrosoftWindowsServer"
+			offer     = "WindowsServer"
+			sku       = "2016-Datacenter-Server-Core"
+			version   = "latest"
+		}
+		
+		os_profile {
+			windows_configuration {
+				computer_name_prefix = "testvm"
+				admin_username       = local.admin_username
+				admin_password       = local.admin_password
+	
+				#automatic_updates_enabled  = true
+			#	provision_vm_agent_enabled = true
+			#	time_zone                   = "W. Europe Standard Time"
+	
+			#	winrm_listener {
+				#	protocol = "Http"
+			#	}
+			}
+		}
+	
+		network_interface {
+			name                            = "networkProTest"
+			ip_configuration {
+				name      = "TestIPConfiguration"
+				subnet_id = azurerm_subnet.test.id
+				public_ip_address {
+					name                    = "TestPublicIPConfiguration"
+			 }
+			}
+		}
+	}
+}
+`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
+}
+
+func (r AzureFleetTestResource) basicWindows(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -317,7 +420,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseWindowsVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) basicLinux(data acceptance.TestData) string {
+func (r AzureFleetTestResource) basicLinux(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -340,7 +443,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) update(data acceptance.TestData) string {
+func (r AzureFleetTestResource) update(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -373,7 +476,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) baseVirtualMachineProfileUpdate(data acceptance.TestData) string {
+func (r AzureFleetTestResource) baseVirtualMachineProfileUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -404,7 +507,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfileUpdate(), data.RandomString)
 }
 
-func (r AzureFleetResource) identityNone(data acceptance.TestData) string {
+func (r AzureFleetTestResource) identityNone(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -428,7 +531,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) identity(data acceptance.TestData) string {
+func (r AzureFleetTestResource) identity(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -468,7 +571,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile()) // need to update location after the bug mentioned in email is fixed after two weeks.
 }
 
-func (r AzureFleetResource) identityUpdate(data acceptance.TestData) string {
+func (r AzureFleetTestResource) identityUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -508,7 +611,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) spotPriorityProfile(data acceptance.TestData) string {
+func (r AzureFleetTestResource) spotPriorityProfile(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -540,7 +643,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) spotPriorityProfileUpdate(data acceptance.TestData) string {
+func (r AzureFleetTestResource) spotPriorityProfileUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -574,7 +677,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) spotAndRegulaPriorityProfile(data acceptance.TestData) string {
+func (r AzureFleetTestResource) spotAndRegulaPriorityProfile(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -612,7 +715,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) spotAndRegulaPriorityProfileUpdate(data acceptance.TestData) string {
+func (r AzureFleetTestResource) spotAndRegulaPriorityProfileUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -651,7 +754,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) zones(data acceptance.TestData) string {
+func (r AzureFleetTestResource) zones(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -676,7 +779,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) zonesUpdate(data acceptance.TestData) string {
+func (r AzureFleetTestResource) zonesUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -701,7 +804,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) plan(data acceptance.TestData) string {
+func (r AzureFleetTestResource) plan(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 	%[1]s
 
@@ -749,8 +852,8 @@ func (r AzureFleetResource) plan(data acceptance.TestData) string {
 	    os_profile {
 	      linux_configuration {
 	        computer_name_prefix            = "prefix"
-	        admin_username                  = "azureuser"
-	        admin_password                  = "P@ssw0rd1234!"
+	        admin_username                  = local.admin_username
+	        admin_password                  = local.admin_password
 	        password_authentication_enabled = true
 	      }
 	    }
@@ -770,7 +873,7 @@ func (r AzureFleetResource) plan(data acceptance.TestData) string {
 	`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r AzureFleetResource) vmSizeProfile(data acceptance.TestData) string {
+func (r AzureFleetTestResource) vmSizeProfile(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -799,7 +902,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) vmSizeProfileUpdate(data acceptance.TestData) string {
+func (r AzureFleetTestResource) vmSizeProfileUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -834,7 +937,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) requiresImport(data acceptance.TestData) string {
+func (r AzureFleetTestResource) requiresImport(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %s
 
@@ -857,7 +960,36 @@ resource "azurerm_azure_fleet" "import" {
 `, r.basicLinux(data), r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) linuxAndWindows(data acceptance.TestData) string {
+func (r AzureFleetTestResource) additionalLocation(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_azure_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  %[4]s
+
+  additional_location_profile {
+    location = "%[5]s"
+  }
+
+  spot_priority_profile {
+    allocation_strategy = "LowestPrice"
+    maintain_enabled    = false
+    min_capacity        = 0
+    capacity            = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+}
+`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile(), data.Locations.Secondary)
+}
+
+func (r AzureFleetTestResource) additionalLocationLinux(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 %[2]s
@@ -885,10 +1017,41 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DS1_v2"
   }
 }
-`, r.template(data, data.Locations.Primary), r.additionalWindowsTemplate(data, data.Locations.Secondary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile(), data.Locations.Secondary, r.additionalWindowsVirtualMachineProfile())
+`, r.template(data, data.Locations.Primary), r.additionalLinuxTemplate(data, data.Locations.Secondary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile(), data.Locations.Secondary, r.additionalLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) basicVmAttributes(data acceptance.TestData) string {
+func (r AzureFleetTestResource) additionalLocationWindows(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+%[2]s
+
+resource "azurerm_azure_fleet" "test" {
+  name                = "acctest-fleet-%[3]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[4]s"
+
+  %[5]s
+
+  additional_location_profile {
+    location = "%[6]s"
+    %[7]s
+  }
+
+  spot_priority_profile {
+    allocation_strategy = "LowestPrice"
+    maintain_enabled    = false
+    min_capacity        = 0
+    capacity            = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+}
+`, r.template(data, data.Locations.Primary), r.additionalWindowsTemplate(data, data.Locations.Secondary), data.RandomInteger, data.Locations.Primary, r.baseWindowsVirtualMachineProfile(), data.Locations.Secondary, r.additionalWindowsVirtualMachineProfile())
+}
+
+func (r AzureFleetTestResource) basicVmAttributes(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -921,7 +1084,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) vmAttributesAppend(data acceptance.TestData) string {
+func (r AzureFleetTestResource) vmAttributesAppend(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -991,7 +1154,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) vmAttributesUpdate(data acceptance.TestData) string {
+func (r AzureFleetTestResource) vmAttributesUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1061,7 +1224,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetResource) baseLinuxVirtualMachineProfile() string {
+func (r AzureFleetTestResource) baseLinuxVirtualMachineProfile() string {
 	return fmt.Sprintf(`
 virtual_machine_profile {
 	source_image_reference {
@@ -1079,8 +1242,8 @@ virtual_machine_profile {
 	os_profile {
 		linux_configuration {
 			computer_name_prefix = "prefix"
-			admin_username       = "azureuser"
-			admin_password       = "TestPassword$0"
+			admin_username       = local.admin_username
+			admin_password       = local.admin_password
 			password_authentication_enabled = true
 		}
 	}
@@ -1101,7 +1264,7 @@ virtual_machine_profile {
 `)
 }
 
-func (r AzureFleetResource) baseLinuxVirtualMachineProfileUpdate() string {
+func (r AzureFleetTestResource) baseLinuxVirtualMachineProfileUpdate() string {
 	return fmt.Sprintf(`
 virtual_machine_profile {
   scheduled_event_os_image_enabled = true
@@ -1160,7 +1323,7 @@ virtual_machine_profile {
 `)
 }
 
-func (r AzureFleetResource) baseWindowsVirtualMachineProfile() string {
+func (r AzureFleetTestResource) baseWindowsVirtualMachineProfile() string {
 	return fmt.Sprintf(`
 virtual_machine_profile {
 	source_image_reference {
@@ -1178,8 +1341,8 @@ virtual_machine_profile {
 	os_profile {
 		windows_configuration {
 			computer_name_prefix = "testvm"
-      admin_username       = "myadmin"
-      admin_password       = "Passwword1234"
+      admin_username       = local.admin_username
+      admin_password       = local.admin_password
 
       automatic_updates_enabled  = true
       provision_vm_agent_enabled = true
@@ -1211,7 +1374,7 @@ virtual_machine_profile {
 `)
 }
 
-func (r AzureFleetResource) additionalLinuxVirtualMachineProfile() string {
+func (r AzureFleetTestResource) additionalLinuxVirtualMachineProfile() string {
 	return fmt.Sprintf(`
 virtual_machine_profile_override {
 	source_image_reference {
@@ -1229,8 +1392,8 @@ virtual_machine_profile_override {
 	os_profile {
 		linux_configuration {
 			computer_name_prefix = "prefix"
-			admin_username       = "azureuser"
-			admin_password       = "TestPassword$0"
+			admin_username       = local.admin_username
+			admin_password       = local.admin_password
 			password_authentication_enabled = true
 		}
 	}
@@ -1253,7 +1416,7 @@ virtual_machine_profile_override {
 `)
 }
 
-func (r AzureFleetResource) additionalbaseLinuxVirtualMachineProfileUpdate() string {
+func (r AzureFleetTestResource) additionalBaseLinuxVirtualMachineProfileUpdate() string {
 	return fmt.Sprintf(`
 virtual_machine_profile_override {
 	source_image_reference {
@@ -1295,7 +1458,7 @@ virtual_machine_profile_override {
 `)
 }
 
-func (r AzureFleetResource) additionalWindowsVirtualMachineProfile() string {
+func (r AzureFleetTestResource) additionalWindowsVirtualMachineProfile() string {
 	return fmt.Sprintf(`
 virtual_machine_profile_override {
 	source_image_reference {
@@ -1313,8 +1476,8 @@ virtual_machine_profile_override {
 	os_profile {
 		windows_configuration {
 			computer_name_prefix = "testvm"
-      admin_username       = "myadmin"
-      admin_password       = "Passwword1234"
+      admin_username       = local.admin_username
+      admin_password       = local.admin_password
 
       automatic_updates_enabled  = true
       provision_vm_agent_enabled = true
@@ -1340,18 +1503,7 @@ virtual_machine_profile_override {
 `)
 }
 
-func (AzureFleetResource) linuxPublicKeyTemplate() string {
-	return `
-# note: whilst these aren't used in all tests, it saves us redefining these everywhere
-locals {
-  first_public_key   = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+wWK73dCr+jgQOAxNsHAnNNNMEMWOHYEccp6wJm2gotpr9katuF/ZAdou5AaW1C61slRkHRkpRRX9FA9CYBiitZgvCCz+3nWNN7l/Up54Zps/pHWGZLHNJZRYyAB6j5yVLMVHIHriY49d/GZTZVNB8GoJv9Gakwc/fuEZYYl4YDFiGMBP///TzlI4jhiJzjKnEvqPFki5p2ZRJqcbCiF4pJrxUQR/RXqVFQdbRLZgYfJ8xGB878RENq3yQ39d8dVOkq4edbkzwcUmwwwkYVPIoDGsYLaRHnG+To7FvMeyO7xDVQkMKzopTQV8AuKpyvpqu0a9pWOMaiCyDytO7GGN you@me.com"
-  second_public_key  = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0/NDMj2wG6bSa6jbn6E3LYlUsYiWMp1CQ2sGAijPALW6OrSu30lz7nKpoh8Qdw7/A4nAJgweI5Oiiw5/BOaGENM70Go+VM8LQMSxJ4S7/8MIJEZQp5HcJZ7XDTcEwruknrd8mllEfGyFzPvJOx6QAQocFhXBW6+AlhM3gn/dvV5vdrO8ihjET2GoDUqXPYC57ZuY+/Fz6W3KV8V97BvNUhpY5yQrP5VpnyvvXNFQtzDfClTvZFPuoHQi3/KYPi6O0FSD74vo8JOBZZY09boInPejkm9fvHQqfh0bnN7B6XJoUwC1Qprrx+XIy7ust5AEn5XL7d4lOvcR14MxDDKEp you@me.com"
-  ed25519_public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDqzSi9IHoYnbE3YQ+B2fQEVT8iGFemyPovpEtPziIVB you@me.com"
-}
-`
-}
-
-func (r AzureFleetResource) template(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) template(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
@@ -1362,8 +1514,16 @@ provider "azurerm" {
 `, r.templateWithOutProvider(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) templateWithOutProvider(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) templateWithOutProvider(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
+locals {
+  first_public_key   = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+wWK73dCr+jgQOAxNsHAnNNNMEMWOHYEccp6wJm2gotpr9katuF/ZAdou5AaW1C61slRkHRkpRRX9FA9CYBiitZgvCCz+3nWNN7l/Up54Zps/pHWGZLHNJZRYyAB6j5yVLMVHIHriY49d/GZTZVNB8GoJv9Gakwc/fuEZYYl4YDFiGMBP///TzlI4jhiJzjKnEvqPFki5p2ZRJqcbCiF4pJrxUQR/RXqVFQdbRLZgYfJ8xGB878RENq3yQ39d8dVOkq4edbkzwcUmwwwkYVPIoDGsYLaRHnG+To7FvMeyO7xDVQkMKzopTQV8AuKpyvpqu0a9pWOMaiCyDytO7GGN you@me.com"
+  second_public_key  = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0/NDMj2wG6bSa6jbn6E3LYlUsYiWMp1CQ2sGAijPALW6OrSu30lz7nKpoh8Qdw7/A4nAJgweI5Oiiw5/BOaGENM70Go+VM8LQMSxJ4S7/8MIJEZQp5HcJZ7XDTcEwruknrd8mllEfGyFzPvJOx6QAQocFhXBW6+AlhM3gn/dvV5vdrO8ihjET2GoDUqXPYC57ZuY+/Fz6W3KV8V97BvNUhpY5yQrP5VpnyvvXNFQtzDfClTvZFPuoHQi3/KYPi6O0FSD74vo8JOBZZY09boInPejkm9fvHQqfh0bnN7B6XJoUwC1Qprrx+XIy7ust5AEn5XL7d4lOvcR14MxDDKEp you@me.com"
+  ed25519_public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDqzSi9IHoYnbE3YQ+B2fQEVT8iGFemyPovpEtPziIVB you@me.com"
+  admin_username     = "testadmin1234"
+  admin_password     = "Password1234!"
+}
+
 resource "azurerm_resource_group" "test" {
   name     = "acctest-rg-fleet-%[1]d"
   location = "%[2]s"
@@ -1412,16 +1572,7 @@ resource "azurerm_lb_backend_address_pool" "test" {
 `, data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) linuxTemplate(data acceptance.TestData, location string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-%[2]s
-
-`, r.linuxPublicKeyTemplate(), r.template(data, location))
-}
-
-func (r AzureFleetResource) additionalLinuxTemplate(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) additionalLinuxTemplate(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 
 resource "azurerm_resource_group" "linux_test" {
@@ -1471,7 +1622,7 @@ loadbalancer_id = azurerm_lb.linux_test.id
 `, data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) additionalWindowsTemplate(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) additionalWindowsTemplate(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 resource "azurerm_resource_group" "windows_test" {
   name     = "acctest-rg-fleet-al-win-%[1]d"

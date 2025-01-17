@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 )
 
-func TestAccAzureFleetVirtualMachineProfileExtensions_basic(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileExtensions_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -26,9 +26,9 @@ func TestAccAzureFleetVirtualMachineProfileExtensions_basic(t *testing.T) {
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileExtensions_automaticUpgrade(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileExtensions_automaticUpgrade(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -41,9 +41,9 @@ func TestAccAzureFleetVirtualMachineProfileExtensions_automaticUpgrade(t *testin
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileExtensions_extensions(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileExtensions_extensions(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -70,9 +70,9 @@ func TestAccAzureFleetVirtualMachineProfileExtensions_extensions(t *testing.T) {
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileExtensions_extensionsMultiple(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileExtensions_extensionsMultiple(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -85,9 +85,9 @@ func TestAccAzureFleetVirtualMachineProfileExtensions_extensionsMultiple(t *test
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileExtensions_extensionsMultipleOnExistingOVMSS(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileExtensions_extensionsMultipleOnExistingOVMSS(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -100,9 +100,9 @@ func TestAccAzureFleetVirtualMachineProfileExtensions_extensionsMultipleOnExisti
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileExtensions_operations(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileExtensions_operations(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -115,9 +115,9 @@ func TestAccAzureFleetVirtualMachineProfileExtensions_operations(t *testing.T) {
 	})
 }
 
-func TestAccAzureFleetVirtualMachineProfileExtensions_protectedSettingsFromKeyVault(t *testing.T) {
+func TestAccAzureFleet_virtualMachineProfileExtensions_protectedSettingsFromKeyVault(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetResource{}
+	r := AzureFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -130,7 +130,7 @@ func TestAccAzureFleetVirtualMachineProfileExtensions_protectedSettingsFromKeyVa
 	})
 }
 
-func (r AzureFleetResource) extensionsAutomaticUpgrade(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) extensionsAutomaticUpgrade(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -153,11 +153,11 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
+        admin_username       = local.admin_username
         password_authentication_enabled = true
 
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.first_public_key
         }
       }
@@ -201,10 +201,10 @@ resource "azurerm_azure_fleet" "test" {
   	}
   }
 }
-`, r.linuxTemplate(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) extensionsOperationsEnabled(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) extensionsOperationsEnabled(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -228,10 +228,10 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
+        admin_username       = local.admin_username
 
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.first_public_key
         }
       }
@@ -283,10 +283,10 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxTemplate(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) extensionsOperationsDisabled(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) extensionsOperationsDisabled(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -312,10 +312,10 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
+        admin_username       = local.admin_username
 
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.first_public_key
         }
       }
@@ -350,10 +350,10 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxTemplate(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) extensionsProtectedSettingsFromKeyVault(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) extensionsProtectedSettingsFromKeyVault(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {
@@ -368,12 +368,11 @@ provider "azurerm" {
 
 data "azurerm_client_config" "current" {}
 
+
 %[1]s
 
-%[2]s
-
 resource "azurerm_key_vault" "test" {
-  name                   = "acctestkv%[3]s"
+  name                   = "acctestkv%[2]s"
   location               = azurerm_resource_group.test.location
   resource_group_name    = azurerm_resource_group.test.name
   tenant_id              = data.azurerm_client_config.current.tenant_id
@@ -399,9 +398,9 @@ resource "azurerm_key_vault_secret" "test" {
 }
 
 resource "azurerm_azure_fleet" "test" {
-  name                        = "acctest-fleet-%[4]d"
+  name                        = "acctest-fleet-%[3]d"
   resource_group_name         = azurerm_resource_group.test.name
-  location                    = "%[5]s"
+  location                    = "%[4]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -417,10 +416,10 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
+        admin_username       = local.admin_username
 
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.first_public_key
         }
       }
@@ -467,10 +466,10 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxPublicKeyTemplate(), r.templateWithOutProvider(data, location), data.RandomString, data.RandomInteger, location)
+`, r.templateWithOutProvider(data, location), data.RandomString, data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) basicExtensions(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) basicExtensions(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -493,10 +492,10 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
+        admin_username       = local.admin_username
 
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.first_public_key
         }
       }
@@ -538,10 +537,10 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxTemplate(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) extensions(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) extensions(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -564,10 +563,10 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
+        admin_username       = local.admin_username
 
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.first_public_key
         }
       }
@@ -620,10 +619,10 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxTemplate(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) extensionsUpdate(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) extensionsUpdate(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -646,10 +645,10 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
+        admin_username       = local.admin_username
 
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.first_public_key
         }
       }
@@ -702,10 +701,10 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxTemplate(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) multipleExtensions(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) multipleExtensions(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -729,10 +728,10 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
-        admin_username       = "azureuser"
+        admin_username       = local.admin_username
 
         admin_ssh_key {
-          username   = "azureuser"
+          username   = local.admin_username
           public_key = local.first_public_key
         }
       }
@@ -792,10 +791,10 @@ resource "azurerm_azure_fleet" "test" {
     }
   }
 }
-`, r.linuxTemplate(data, location), data.RandomInteger, location)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetResource) multipleExtensionsProvisionMultipleExtensionOnExistingVMSS(data acceptance.TestData, location string) string {
+func (r AzureFleetTestResource) multipleExtensionsProvisionMultipleExtensionOnExistingVMSS(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -818,8 +817,8 @@ resource "azurerm_azure_fleet" "test" {
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
-        admin_username                  = "azureuser"
-        admin_password                  = "P@ssw0rd1234!"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
