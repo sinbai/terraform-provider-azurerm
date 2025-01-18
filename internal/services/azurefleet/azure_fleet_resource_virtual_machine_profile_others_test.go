@@ -224,6 +224,98 @@ func TestAccAzureFleet_virtualMachineProfileOthers_securityProfile(t *testing.T)
 	})
 }
 
+func TestAccAzureFleet_virtualMachineProfileOthers_bypassPlatformSafetyCheck(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
+	r := AzureFleetTestResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.bypassPlatformSafetyCheck(data, data.Locations.Primary, true),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		{
+			Config: r.bypassPlatformSafetyCheck(data, data.Locations.Primary, false),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+	})
+}
+
+func TestAccAzureFleet_virtualMachineProfileOthers_rebootSetting(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
+	r := AzureFleetTestResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.rebootSetting(data, data.Locations.Primary, "Always"),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		{
+			Config: r.rebootSetting(data, data.Locations.Primary, "IfRequired"),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+	})
+}
+
+func TestAccAzureFleet_virtualMachineProfileOthers_vmAgentPlatformUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
+	r := AzureFleetTestResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.vmAgentPlatformUpdate(data, data.Locations.Primary, true),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		{
+			Config: r.vmAgentPlatformUpdate(data, data.Locations.Primary, false),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+	})
+}
+
+func TestAccAzureFleet_virtualMachineProfileOthers_additionalUnAttendContent(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
+	r := AzureFleetTestResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.additionalUnAttendContent(data, data.Locations.Primary),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password",
+			"virtual_machine_profile.0.os_profile.0.windows_configuration.0.additional_unattend_content.0.content"),
+		{
+			Config: r.additionalUnAttendContentUpdate(data, data.Locations.Primary),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password",
+			"virtual_machine_profile.0.os_profile.0.windows_configuration.0.additional_unattend_content.0.content"),
+	})
+}
+
 func (r AzureFleetTestResource) linuxVMGuestPatching(data acceptance.TestData, location string, patchMode string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -270,7 +362,7 @@ resource "azurerm_azure_fleet" "test" {
         admin_password                  = local.admin_password
         password_authentication_enabled = true
 
-        patch_mode = "%[4]s"
+        patch_mode            = "%[4]s"
         patch_assessment_mode = "%[4]s"
       }
     }
@@ -291,18 +383,18 @@ resource "azurerm_azure_fleet" "test" {
       }
     }
 
- extension {
-    name                               = "HealthExtension"
-    publisher                          = "Microsoft.ManagedServices"
-    type                               = "ApplicationHealthLinux"
-    type_handler_version               = "1.0"
+    extension {
+      name                 = "HealthExtension"
+      publisher            = "Microsoft.ManagedServices"
+      type                 = "ApplicationHealthLinux"
+      type_handler_version = "1.0"
 
-    settings_json = jsonencode({
-      "protocol"    = "http"
-      "port"        = 80
-      "requestPath" = "/healthEndpoint"
-    })
-  }
+      settings_json = jsonencode({
+        "protocol"    = "http"
+        "port"        = 80
+        "requestPath" = "/healthEndpoint"
+      })
+    }
   }
 }
 `, r.template(data, location), data.RandomInteger, location, patchMode)
@@ -329,9 +421,9 @@ resource "azurerm_azure_fleet" "test" {
   virtual_machine_profile {
     source_image_reference {
       publisher = "MicrosoftWindowsServer"
-       offer     = "WindowsServer"
-    sku       = "2016-Datacenter"
-    version   = "latest"
+      offer     = "WindowsServer"
+      sku       = "2016-Datacenter"
+      version   = "latest"
     }
 
     os_disk {
@@ -349,12 +441,12 @@ resource "azurerm_azure_fleet" "test" {
 
     os_profile {
       windows_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        admin_password                  = local.admin_password
+        computer_name_prefix = "prefix"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
 
-        patch_mode = "AutomaticByPlatform"
-				hot_patching_enabled = %[4]t
+        patch_mode           = "AutomaticByPlatform"
+        hot_patching_enabled = %[4]t
       }
     }
 
@@ -374,18 +466,18 @@ resource "azurerm_azure_fleet" "test" {
       }
     }
 
- extension {
-    name                               = "HealthExtension"
-    publisher                          = "Microsoft.ManagedServices"
-    type                               = "ApplicationHealthLinux"
-    type_handler_version               = "1.0"
+    extension {
+      name                 = "HealthExtension"
+      publisher            = "Microsoft.ManagedServices"
+      type                 = "ApplicationHealthLinux"
+      type_handler_version = "1.0"
 
-    settings_json = jsonencode({
-      "protocol"    = "http"
-      "port"        = 80
-      "requestPath" = "/healthEndpoint"
-    })
-  }
+      settings_json = jsonencode({
+        "protocol"    = "http"
+        "port"        = 80
+        "requestPath" = "/healthEndpoint"
+      })
+    }
   }
 }
 `, r.template(data, location), data.RandomInteger, location, enabled)
@@ -412,9 +504,9 @@ resource "azurerm_azure_fleet" "test" {
   virtual_machine_profile {
     source_image_reference {
       publisher = "MicrosoftWindowsServer"
-       offer     = "WindowsServer"
-    sku       = "2016-Datacenter"
-    version   = "latest"
+      offer     = "WindowsServer"
+      sku       = "2016-Datacenter"
+      version   = "latest"
     }
 
     os_disk {
@@ -432,11 +524,11 @@ resource "azurerm_azure_fleet" "test" {
 
     os_profile {
       windows_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        admin_password                  = local.admin_password
+        computer_name_prefix = "prefix"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
 
-        patch_mode = "%[4]s"
+        patch_mode            = "%[4]s"
         patch_assessment_mode = "ImageDefault"
       }
     }
@@ -457,18 +549,18 @@ resource "azurerm_azure_fleet" "test" {
       }
     }
 
- extension {
-    name                               = "HealthExtension"
-    publisher                          = "Microsoft.ManagedServices"
-    type                               = "ApplicationHealthLinux"
-    type_handler_version               = "1.0"
+    extension {
+      name                 = "HealthExtension"
+      publisher            = "Microsoft.ManagedServices"
+      type                 = "ApplicationHealthLinux"
+      type_handler_version = "1.0"
 
-    settings_json = jsonencode({
-      "protocol"    = "http"
-      "port"        = 80
-      "requestPath" = "/healthEndpoint"
-    })
-  }
+      settings_json = jsonencode({
+        "protocol"    = "http"
+        "port"        = 80
+        "requestPath" = "/healthEndpoint"
+      })
+    }
   }
 }
 `, r.template(data, location), data.RandomInteger, location, patchMode)
@@ -479,12 +571,12 @@ func (r AzureFleetTestResource) additionalCapabilities(data acceptance.TestData,
 %[1]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
-additional_capabilities_ultra_ssd_enabled = true
-additional_capabilities_hibernation_enabled = true
-  zones = ["1"]
+  name                                        = "acctest-fleet-%[2]d"
+  resource_group_name                         = azurerm_resource_group.test.name
+  location                                    = "%[3]s"
+  additional_capabilities_ultra_ssd_enabled   = true
+  additional_capabilities_hibernation_enabled = true
+  zones                                       = ["1"]
 
   regular_priority_profile {
     capacity     = 1
@@ -497,10 +589,10 @@ additional_capabilities_hibernation_enabled = true
 
   virtual_machine_profile {
     source_image_reference {
-       publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts"
+      version   = "latest"
     }
 
     os_disk {
@@ -510,10 +602,10 @@ additional_capabilities_hibernation_enabled = true
 
     os_profile {
       linux_configuration {
-        computer_name_prefix = "prefix"
-      admin_username       = local.admin_username
-      admin_password       = local.admin_password
-password_authentication_enabled = true
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
       }
     }
 
@@ -532,18 +624,18 @@ password_authentication_enabled = true
       }
     }
 
-extension {
-    name                               = "HealthExtension"
-    publisher                          = "Microsoft.ManagedServices"
-    type                               = "ApplicationHealthLinux"
-    type_handler_version               = "1.0"
+    extension {
+      name                 = "HealthExtension"
+      publisher            = "Microsoft.ManagedServices"
+      type                 = "ApplicationHealthLinux"
+      type_handler_version = "1.0"
 
-    settings_json = jsonencode({
-      "protocol"    = "http"
-      "port"        = 80
-      "requestPath" = "/healthEndpoint"
-    })
-  }
+      settings_json = jsonencode({
+        "protocol"    = "http"
+        "port"        = 80
+        "requestPath" = "/healthEndpoint"
+      })
+    }
   }
 }
 `, r.template(data, location), data.RandomInteger, location)
@@ -597,9 +689,9 @@ resource "azurerm_azure_fleet" "test" {
   virtual_machine_profile {
     source_image_reference {
       publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts"
+      version   = "latest"
     }
 
     os_disk {
@@ -609,10 +701,10 @@ resource "azurerm_azure_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix = "prefix"
-      admin_username       = local.admin_username
-      admin_password       = local.admin_password
-password_authentication_enabled = true
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
       }
     }
 
@@ -630,7 +722,8 @@ password_authentication_enabled = true
         }
       }
     }
-depends_on = [azurerm_capacity_reservation.test]
+    depends_on = [azurerm_capacity_reservation.test]
+  }
 }
 `, r.template(data, location), data.RandomInteger, location)
 }
@@ -673,9 +766,9 @@ resource "azurerm_azure_fleet" "test" {
   virtual_machine_profile {
     source_image_reference {
       publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts"
+      version   = "latest"
     }
 
     os_disk {
@@ -685,10 +778,10 @@ resource "azurerm_azure_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix = "prefix"
-      admin_username       = local.admin_username
-      admin_password       = local.admin_password
-password_authentication_enabled = true
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
       }
     }
 
@@ -706,7 +799,8 @@ password_authentication_enabled = true
         }
       }
     }
-depends_on = [azurerm_capacity_reservation.test]
+    depends_on = [azurerm_capacity_reservation.test]
+  }
 }
 `, r.template(data, location), data.RandomInteger, location)
 }
@@ -797,9 +891,9 @@ resource "azurerm_azure_fleet" "test" {
   virtual_machine_profile {
     source_image_reference {
       publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts"
+      version   = "latest"
     }
 
     os_disk {
@@ -809,10 +903,10 @@ resource "azurerm_azure_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix = "prefix"
-				admin_username       = local.admin_username
-				admin_password       = local.admin_password
-				password_authentication_enabled = true
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
       }
     }
 
@@ -832,13 +926,13 @@ resource "azurerm_azure_fleet" "test" {
     }
 
     gallery_application {
-			version_id             = azurerm_gallery_application_version.test.id
-			configuration_blob_uri = azurerm_storage_blob.test2.id
-			order                  = 1
-			tag                    = "%[5]s"
-      automatic_upgrade_enabled = false
-			treat_failure_as_deployment_failure_enabled = false
-		}
+      version_id                                  = azurerm_gallery_application_version.test.id
+      configuration_blob_uri                      = azurerm_storage_blob.test2.id
+      order                                       = 1
+      tag                                         = "%[5]s"
+      automatic_upgrade_enabled                   = false
+      treat_failure_as_deployment_failure_enabled = false
+    }
   }
 }
 `, r.template(data, location), data.RandomInteger, location, data.RandomString, tag)
@@ -864,10 +958,10 @@ resource "azurerm_azure_fleet" "test" {
 
   virtual_machine_profile {
     source_image_reference {
-    publisher = "MicrosoftWindowsServer"
-    offer     = "WindowsServer"
-    sku       = "2016-Datacenter-Server-Core"
-    version   = "latest"
+      publisher = "MicrosoftWindowsServer"
+      offer     = "WindowsServer"
+      sku       = "2016-Datacenter-Server-Core"
+      version   = "latest"
     }
 
     os_disk {
@@ -876,19 +970,19 @@ resource "azurerm_azure_fleet" "test" {
     }
 
     os_profile {
-     windows_configuration {
-			computer_name_prefix = "testvm"
-      admin_username       = local.admin_username
-      admin_password       = local.admin_password
+      windows_configuration {
+        computer_name_prefix = "testvm"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
 
-      automatic_updates_enabled  = true
-      provision_vm_agent_enabled = true
-      time_zone                   = "W. Europe Standard Time"
+        automatic_updates_enabled  = true
+        provision_vm_agent_enabled = true
+        time_zone                  = "W. Europe Standard Time"
 
- 			winrm_listener {
-        protocol = "Http"
+        winrm_listener {
+          protocol = "Http"
+        }
       }
-		}
     }
 
     network_interface {
@@ -931,10 +1025,10 @@ resource "azurerm_azure_fleet" "test" {
 
   virtual_machine_profile {
     source_image_reference {
-			 publisher = "Canonical"
-			offer     = "0001-com-ubuntu-server-jammy"
-			sku       = "22_04-lts"
-			version   = "latest"
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts"
+      version   = "latest"
     }
 
     os_disk {
@@ -943,13 +1037,13 @@ resource "azurerm_azure_fleet" "test" {
     }
 
     os_profile {
-    	linux_configuration {
-				computer_name_prefix = "testvm-%[2]d"
-				admin_username       = local.admin_username
-				admin_password       = local.admin_password
-	
-				password_authentication_enabled = true
-    	}
+      linux_configuration {
+        computer_name_prefix = "testvm-%[2]d"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
+
+        password_authentication_enabled = true
+      }
     }
 
     network_interface {
@@ -966,7 +1060,7 @@ resource "azurerm_azure_fleet" "test" {
         }
       }
     }
-     user_data_base64 = base64encode("%[4]s")
+    user_data_base64 = base64encode("%[4]s")
   }
 }
 `, r.template(data, location), data.RandomInteger, location, userDta)
@@ -991,10 +1085,10 @@ resource "azurerm_azure_fleet" "test" {
 
   virtual_machine_profile {
     source_image_reference {
-			 publisher = "Canonical"
-			offer     = "0001-com-ubuntu-server-jammy"
-			sku       = "22_04-lts"
-			version   = "latest"
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts"
+      version   = "latest"
     }
 
     os_disk {
@@ -1003,13 +1097,13 @@ resource "azurerm_azure_fleet" "test" {
     }
 
     os_profile {
-    	linux_configuration {
-				computer_name_prefix = "testvm-%[2]d"
-				admin_username       = local.admin_username
-				admin_password       = local.admin_password
-	
-				password_authentication_enabled = true
-    	}
+      linux_configuration {
+        computer_name_prefix = "testvm-%[2]d"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
+
+        password_authentication_enabled = true
+      }
     }
 
     network_interface {
@@ -1027,8 +1121,8 @@ resource "azurerm_azure_fleet" "test" {
       }
     }
 
-     scheduled_event_termination_timeout = "PT5M"
- 		 scheduled_event_os_image_timeout =  "PT15M"
+    scheduled_event_termination_timeout = "PT5M"
+    scheduled_event_os_image_timeout    = "PT15M"
   }
 }
 `, r.template(data, location), data.RandomInteger, location)
@@ -1054,10 +1148,10 @@ resource "azurerm_azure_fleet" "test" {
 
   virtual_machine_profile {
     source_image_reference {
-			 publisher = "Canonical"
-			offer     = "0001-com-ubuntu-server-jammy"
-			sku       = "22_04-lts"
-			version   = "latest"
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts"
+      version   = "latest"
     }
 
     os_disk {
@@ -1066,13 +1160,13 @@ resource "azurerm_azure_fleet" "test" {
     }
 
     os_profile {
-    	linux_configuration {
-				computer_name_prefix = "testvm-%[2]d"
-				admin_username       = local.admin_username
-				admin_password       = local.admin_password
-	
-				password_authentication_enabled = true
-    	}
+      linux_configuration {
+        computer_name_prefix = "testvm-%[2]d"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
+
+        password_authentication_enabled = true
+      }
     }
 
     network_interface {
@@ -1090,7 +1184,7 @@ resource "azurerm_azure_fleet" "test" {
       }
     }
 
-     ScheduledEventTerminationTimeout = "PT15M"
+    ScheduledEventTerminationTimeout = "PT15M"
   }
 }
 `, r.template(data, location), data.RandomInteger, location)
@@ -1114,24 +1208,24 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_B1ls"
   }
 
-   virtual_machine_profile {
-		encryption_at_host_enabled = true
-		secure_boot_enabled = true
-		vtpm_enabled = true
+  virtual_machine_profile {
+    encryption_at_host_enabled = true
+    secure_boot_enabled        = true
+    vtpm_enabled               = true
 
     source_image_reference {
-       publisher = "Canonical"
-			offer     = "0001-com-ubuntu-server-jammy"
-			sku       = "22_04-lts-gen2"
-			version   = "latest"
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts-gen2"
+      version   = "latest"
     }
 
     os_disk {
       storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-     }
+      caching              = "ReadWrite"
+    }
 
-     data_disk {
+    data_disk {
       lun                  = 0
       caching              = "ReadWrite"
       create_option        = "Empty"
@@ -1161,7 +1255,7 @@ resource "azurerm_azure_fleet" "test" {
           idle_timeout_in_minutes = 4
         }
       }
-	  }
+    }
   }
 }
 `, r.template(data, location), data.RandomInteger, location)
@@ -1185,24 +1279,24 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_B1ls"
   }
 
-   virtual_machine_profile {
-		encryption_at_host_enabled = false
-		secure_boot_enabled = false
-		vtpm_enabled = false
+  virtual_machine_profile {
+    encryption_at_host_enabled = false
+    secure_boot_enabled        = false
+    vtpm_enabled               = false
 
     source_image_reference {
-       publisher = "Canonical"
-			offer     = "0001-com-ubuntu-server-jammy"
-			sku       = "22_04-lts-gen2"
-			version   = "latest"
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts-gen2"
+      version   = "latest"
     }
 
     os_disk {
       storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
-     }
+      caching              = "ReadWrite"
+    }
 
-     data_disk {
+    data_disk {
       lun                  = 0
       caching              = "ReadWrite"
       create_option        = "Empty"
@@ -1232,7 +1326,353 @@ resource "azurerm_azure_fleet" "test" {
           idle_timeout_in_minutes = 4
         }
       }
-	  }
+    }
+  }
+}
+`, r.template(data, location), data.RandomInteger, location)
+}
+
+func (r AzureFleetTestResource) bypassPlatformSafetyCheck(data acceptance.TestData, location string, enabled bool) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_azure_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+
+  virtual_machine_profile {
+    encryption_at_host_enabled = false
+    secure_boot_enabled        = false
+    vtpm_enabled               = false
+
+    source_image_reference {
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts-gen2"
+      version   = "latest"
+    }
+
+    os_disk {
+      storage_account_type = "Standard_LRS"
+      caching              = "ReadWrite"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix                  = "prefix"
+        admin_username                        = local.admin_username
+        admin_password                        = local.admin_password
+        password_authentication_enabled       = true
+        patch_mode                            = "AutomaticByPlatform"
+        bypass_platform_safety_checks_enabled = %[4]t
+      }
+    }
+
+    extension {
+      name                               = "HealthExtension"
+      publisher                          = "Microsoft.ManagedServices"
+      type                               = "ApplicationHealthLinux"
+      type_handler_version               = "1.0"
+      auto_upgrade_minor_version_enabled = true
+      settings_json = jsonencode({
+        protocol = "https"
+        port     = 443
+      })
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        subnet_id = azurerm_subnet.test.id
+        primary   = true
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+  }
+}
+`, r.template(data, location), data.RandomInteger, location, enabled)
+}
+
+func (r AzureFleetTestResource) rebootSetting(data acceptance.TestData, location string, rebootSetting string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_azure_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+
+  virtual_machine_profile {
+    encryption_at_host_enabled = false
+    secure_boot_enabled        = false
+    vtpm_enabled               = false
+
+    source_image_reference {
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts-gen2"
+      version   = "latest"
+    }
+
+    os_disk {
+      storage_account_type = "Standard_LRS"
+      caching              = "ReadWrite"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix                  = "prefix"
+        admin_username                        = local.admin_username
+        admin_password                        = local.admin_password
+        password_authentication_enabled       = true
+        patch_mode                            = "AutomaticByPlatform"
+        reboot_setting = "%[4]s"
+      }
+    }
+
+    extension {
+      name                               = "HealthExtension"
+      publisher                          = "Microsoft.ManagedServices"
+      type                               = "ApplicationHealthLinux"
+      type_handler_version               = "1.0"
+      auto_upgrade_minor_version_enabled = true
+      settings_json = jsonencode({
+        protocol = "https"
+        port     = 443
+      })
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        subnet_id = azurerm_subnet.test.id
+        primary   = true
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+  }
+}
+`, r.template(data, location), data.RandomInteger, location, rebootSetting)
+}
+
+func (r AzureFleetTestResource) vmAgentPlatformUpdate(data acceptance.TestData, location string, enabled bool) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_azure_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+
+  virtual_machine_profile {
+    encryption_at_host_enabled = false
+    secure_boot_enabled        = false
+    vtpm_enabled               = false
+
+    source_image_reference {
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts-gen2"
+      version   = "latest"
+    }
+
+    os_disk {
+      storage_account_type = "Standard_LRS"
+      caching              = "ReadWrite"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix                  = "prefix"
+        admin_username                        = local.admin_username
+        admin_password                        = local.admin_password
+        password_authentication_enabled       = true
+        vm_agent_platform_updates_enabled     = %[4]t
+      }
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        subnet_id = azurerm_subnet.test.id
+        primary   = true
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+  }
+}
+`, r.template(data, location), data.RandomInteger, location, enabled)
+}
+
+func (r AzureFleetTestResource) additionalUnAttendContent(data acceptance.TestData, location string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_azure_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_D1_v2"
+  }
+
+  virtual_machine_profile {
+    source_image_reference {
+      publisher = "MicrosoftWindowsServer"
+      offer     = "WindowsServer"
+      sku       = "2016-Datacenter"
+      version   = "latest"
+    }
+
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      windows_configuration {
+        computer_name_prefix = "prefix"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
+        additional_unattend_content {
+					setting = "FirstLogonCommands"
+					content = "<FirstLogonCommands><SynchronousCommand><CommandLine>shutdown /r /t 0 /c \"initial reboot\"</CommandLine><Description>reboot</Description><Order>1</Order></SynchronousCommand></FirstLogonCommands>"
+				}
+      }
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        subnet_id = azurerm_subnet.test.id
+        primary   = true
+
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+  }
+}
+`, r.template(data, location), data.RandomInteger, location)
+}
+
+func (r AzureFleetTestResource) additionalUnAttendContentUpdate(data acceptance.TestData, location string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_azure_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_D1_v2"
+  }
+
+  virtual_machine_profile {
+    source_image_reference {
+      publisher = "MicrosoftWindowsServer"
+      offer     = "WindowsServer"
+      sku       = "2016-Datacenter"
+      version   = "latest"
+    }
+
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      windows_configuration {
+        computer_name_prefix = "prefix"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
+        additional_unattend_content {
+					setting = "AutoLogon"
+					#content = "<FirstLogonCommands><SynchronousCommand><CommandLine>shutdown /r /t 0 /c \"initial reboot\"</CommandLine><Description>reboot</Description><Order>1</Order></SynchronousCommand></FirstLogonCommands>"
+         content = "<AutoLogon><Username>${local.admin_username}</Username><Domain>WORKGROUP</Domain><Password><Value>${local.admin_password}</Value><PlainText>true</PlainText></Password><Enabled>true</Enabled></AutoLogon>"
+				}
+      }
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        subnet_id = azurerm_subnet.test.id
+        primary   = true
+
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+
   }
 }
 `, r.template(data, location), data.RandomInteger, location)

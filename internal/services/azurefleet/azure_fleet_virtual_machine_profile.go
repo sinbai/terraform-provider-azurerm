@@ -631,10 +631,9 @@ func osProfileSchema() *pluginsdk.Schema {
 							"vm_agent_platform_updates_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
-								Default:  true,
+								Default:  false,
 							},
 
-							// It is not supported in VMSS. need to confirm whether it needs to be exposed.
 							"bypass_platform_safety_checks_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
@@ -655,7 +654,6 @@ func osProfileSchema() *pluginsdk.Schema {
 								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchMode(), false),
 							},
 
-							// It is not supported in VMSS. need to confirm whether it needs to be exposed.
 							"reboot_setting": {
 								Type:         pluginsdk.TypeString,
 								Optional:     true,
@@ -730,18 +728,6 @@ func osProfileSchema() *pluginsdk.Schema {
 											Type:         pluginsdk.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForSettingNames(), false),
-										},
-
-										"pass_name": {
-											Type:         pluginsdk.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForPassName(), false),
-										},
-
-										"component_name": {
-											Type:         pluginsdk.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForComponentName(), false),
 										},
 									},
 								},
@@ -1045,7 +1031,7 @@ func expandBaseVirtualMachineProfileModel(inputList []VirtualMachineProfileModel
 		OsProfile:              expandOSProfileModel(inputList),
 		ApplicationProfile:     expandApplicationProfile(input.GalleryApplicationProfile),
 		CapacityReservation:    expandCapacityReservation(input.CapacityReservationGroupId),
-		DiagnosticsProfile:     expandDiagnosticsProfile(input.BootDiagnosticEnabled, input.BootDiagnosticStorageAccountEndpoint),
+		DiagnosticsProfile:     expandExtensionModel(input.BootDiagnosticEnabled, input.BootDiagnosticStorageAccountEndpoint),
 		ScheduledEventsProfile: expandScheduledEventsProfile(input),
 	}
 
@@ -1195,7 +1181,7 @@ func expandSubResources(inputList []string) *[]fleets.SubResource {
 	return &outputList
 }
 
-func expandDiagnosticsProfile(enabled bool, endpoint string) *fleets.DiagnosticsProfile {
+func expandExtensionModel(enabled bool, endpoint string) *fleets.DiagnosticsProfile {
 	bootDiagnostics := fleets.BootDiagnostics{
 		Enabled:    pointer.To(enabled),
 		StorageUri: pointer.To(endpoint),
@@ -1214,87 +1200,65 @@ func expandExtensionProfileModel(inputList []ExtensionModel, timeBudget string) 
 	}
 
 	output := fleets.VirtualMachineScaleSetExtensionProfile{}
-	extensionsValue, err := expandExtensionsModel(inputList)
-	if err != nil {
-		return nil, err
+	var extensions []fleets.VirtualMachineScaleSetExtension
+	for _, v := range inputList {
+		extension := fleets.VirtualMachineScaleSetExtension{}
+
+		if v.Name != "" {
+			extension.Name = pointer.To(v.Name)
+		}
+
+		propertiesValue := fleets.VirtualMachineScaleSetExtensionProperties{
+			AutoUpgradeMinorVersion:       pointer.To(v.AutoUpgradeMinorVersionEnabled),
+			EnableAutomaticUpgrade:        pointer.To(v.AutomaticUpgradeEnabled),
+			ProtectedSettingsFromKeyVault: expandKeyVaultSecretReferenceModel(v.ProtectedSettingsFromKeyVault),
+		}
+		if v.ForceExtensionExecutionOnChange != "" {
+			propertiesValue.ForceUpdateTag = pointer.To(v.ForceExtensionExecutionOnChange)
+		}
+
+		if v.ProtectedSettingsJson != "" {
+			protectedSettingsValue := make(map[string]interface{})
+			err := json.Unmarshal([]byte(v.ProtectedSettingsJson), &protectedSettingsValue)
+			if err != nil {
+				return nil, fmt.Errorf("unmarshaling `protected_settings_json`: %+v", err)
+			}
+			propertiesValue.ProtectedSettings = pointer.To(protectedSettingsValue)
+		}
+
+		if len(v.ExtensionsToProvisionAfterVmCreation) > 0 {
+			propertiesValue.ProvisionAfterExtensions = pointer.To(v.ExtensionsToProvisionAfterVmCreation)
+		}
+
+		if v.Publisher != "" {
+			propertiesValue.Publisher = pointer.To(v.Publisher)
+		}
+
+		if v.SettingsJson != "" {
+			result := make(map[string]interface{})
+			err := json.Unmarshal([]byte(v.SettingsJson), &result)
+			if err != nil {
+				return nil, fmt.Errorf("unmarshaling `settings_json`: %+v", err)
+			}
+			propertiesValue.Settings = pointer.To(result)
+		}
+
+		if v.Type != "" {
+			propertiesValue.Type = pointer.To(v.Type)
+		}
+
+		if v.TypeHandlerVersion != "" {
+			propertiesValue.TypeHandlerVersion = pointer.To(v.TypeHandlerVersion)
+		}
+		extension.Properties = &propertiesValue
+		extensions = append(extensions, extension)
 	}
-	output.Extensions = extensionsValue
+
+	output.Extensions = &extensions
 
 	if timeBudget != "" {
 		output.ExtensionsTimeBudget = pointer.To(timeBudget)
 	}
-	return &output, nil
-}
-
-func expandExtensionsModel(inputList []ExtensionModel) (*[]fleets.VirtualMachineScaleSetExtension, error) {
-	if len(inputList) == 0 {
-		return nil, nil
-	}
-
-	var outputList []fleets.VirtualMachineScaleSetExtension
-	for _, v := range inputList {
-		input := v
-		output := fleets.VirtualMachineScaleSetExtension{}
-
-		if input.Name != "" {
-			output.Name = pointer.To(input.Name)
-		}
-
-		propertiesValue, err := expandExtensionModel(input)
-		if err != nil {
-			return nil, err
-		}
-		output.Properties = propertiesValue
-
-		outputList = append(outputList, output)
-	}
-	return &outputList, nil
-}
-
-func expandExtensionModel(input ExtensionModel) (*fleets.VirtualMachineScaleSetExtensionProperties, error) {
-	output := fleets.VirtualMachineScaleSetExtensionProperties{
-		AutoUpgradeMinorVersion:       pointer.To(input.AutoUpgradeMinorVersionEnabled),
-		EnableAutomaticUpgrade:        pointer.To(input.AutomaticUpgradeEnabled),
-		ProtectedSettingsFromKeyVault: expandKeyVaultSecretReferenceModel(input.ProtectedSettingsFromKeyVault),
-	}
-	if input.ForceExtensionExecutionOnChange != "" {
-		output.ForceUpdateTag = pointer.To(input.ForceExtensionExecutionOnChange)
-	}
-
-	if input.ProtectedSettingsJson != "" {
-		protectedSettingsValue := make(map[string]interface{})
-		err := json.Unmarshal([]byte(input.ProtectedSettingsJson), &protectedSettingsValue)
-		if err != nil {
-			return nil, fmt.Errorf("unmarshaling `protected_settings_json`: %+v", err)
-		}
-		output.ProtectedSettings = pointer.To(protectedSettingsValue)
-	}
-
-	if len(input.ExtensionsToProvisionAfterVmCreation) > 0 {
-		output.ProvisionAfterExtensions = pointer.To(input.ExtensionsToProvisionAfterVmCreation)
-	}
-
-	if input.Publisher != "" {
-		output.Publisher = pointer.To(input.Publisher)
-	}
-
-	if input.SettingsJson != "" {
-		result := make(map[string]interface{})
-		err := json.Unmarshal([]byte(input.SettingsJson), &result)
-		if err != nil {
-			return nil, fmt.Errorf("unmarshaling `settings_json`: %+v", err)
-		}
-		output.Settings = pointer.To(result)
-	}
-
-	if input.Type != "" {
-		output.Type = pointer.To(input.Type)
-	}
-
-	if input.TypeHandlerVersion != "" {
-		output.TypeHandlerVersion = pointer.To(input.TypeHandlerVersion)
-	}
-
 	return &output, nil
 }
 
@@ -1487,9 +1451,10 @@ func expandOSProfileModel(inputList []VirtualMachineProfileModel) *fleets.Virtua
 
 	if lConfig := osProfile.LinuxConfiguration; len(lConfig) > 0 {
 		linuxConfig := fleets.LinuxConfiguration{
-			ProvisionVMAgent: pointer.To(lConfig[0].ProvisionVMAgentEnabled),
-			Ssh:              expandSshConfigurationModel(lConfig[0].AdminSshKeys),
-			PatchSettings:    &fleets.LinuxPatchSettings{},
+			ProvisionVMAgent:             pointer.To(lConfig[0].ProvisionVMAgentEnabled),
+			EnableVMAgentPlatformUpdates: pointer.To(lConfig[0].VMAgentPlatformUpdatesEnabled),
+			Ssh:                          expandSshConfigurationModel(lConfig[0].AdminSshKeys),
+			PatchSettings:                &fleets.LinuxPatchSettings{},
 		}
 
 		// AutomaticByPlatformSettings cannot be set if the PatchMode is not 'AutomaticByPlatform'
@@ -1786,10 +1751,12 @@ func expandAdditionalUnattendContentModel(inputList []AdditionalUnattendContentM
 	for _, v := range inputList {
 		input := v
 		output := fleets.AdditionalUnattendContent{
-			ComponentName: pointer.To(fleets.ComponentName(input.ComponentName)),
-			PassName:      pointer.To(fleets.PassName(input.PassName)),
-			SettingName:   pointer.To(fleets.SettingNames(input.SettingName)),
-			Content:       pointer.To(input.Content),
+			SettingName: pointer.To(fleets.SettingNames(input.Setting)),
+			Content:     pointer.To(input.Content),
+
+			// no other possible values
+			ComponentName: pointer.To(fleets.ComponentNameMicrosoftNegativeWindowsNegativeShellNegativeSetup),
+			PassName:      pointer.To(fleets.PassNameOobeSystem),
 		}
 		outputList = append(outputList, output)
 	}
@@ -2091,6 +2058,9 @@ func flattenVirtualMachineProfileModel(input *fleets.BaseVirtualMachineProfile, 
 		return nil, err
 	}
 	output.Extension = extensionProfileValue
+	if input.ExtensionProfile != nil {
+		output.ExtensionsTimeBudget = pointer.From(input.ExtensionProfile.ExtensionsTimeBudget)
+	}
 
 	licenseType := ""
 	if v := pointer.From(input.LicenseType); v != "None" {
@@ -2252,12 +2222,12 @@ func flattenOSProfileModel(input *fleets.VirtualMachineScaleSetOSProfile, d *sch
 	var windowsConfigs []WindowsConfigurationModel
 	if v := input.WindowsConfiguration; v != nil {
 		windowsConfig := WindowsConfigurationModel{
-			AdditionalUnattendContent:     flattenAdditionalUnattendContentModel(v.AdditionalUnattendContent),
+			AdditionalUnattendContent:     flattenAdditionalUnAttendContentModel(v.AdditionalUnattendContent, d, isAdditional),
 			WinRM:                         flattenWinRMModel(v.WinRM),
 			AdminUsername:                 pointer.From(input.AdminUsername),
 			AutomaticUpdatesEnabled:       pointer.From(v.EnableAutomaticUpdates),
 			ComputerNamePrefix:            pointer.From(input.ComputerNamePrefix),
-			VMAgentPlatformUpdatesEnabled: pointer.From(v.ProvisionVMAgent),
+			VMAgentPlatformUpdatesEnabled: pointer.From(v.EnableVMAgentPlatformUpdates),
 			ProvisionVMAgentEnabled:       pointer.From(v.ProvisionVMAgent),
 			TimeZone:                      pointer.From(v.TimeZone),
 			Secret:                        flattenOsProfileSecretsModel(input.Secrets),
@@ -2287,7 +2257,7 @@ func flattenOSProfileModel(input *fleets.VirtualMachineScaleSetOSProfile, d *sch
 			AdminUsername:                 pointer.From(input.AdminUsername),
 			ComputerNamePrefix:            pointer.From(input.ComputerNamePrefix),
 			PasswordAuthenticationEnabled: !pointer.From(v.DisablePasswordAuthentication),
-			VMAgentPlatformUpdatesEnabled: pointer.From(v.ProvisionVMAgent),
+			VMAgentPlatformUpdatesEnabled: pointer.From(v.EnableVMAgentPlatformUpdates),
 			ProvisionVMAgentEnabled:       pointer.From(v.ProvisionVMAgent),
 			Secret:                        flattenOsProfileSecretsModel(input.Secrets),
 		}
@@ -2338,17 +2308,37 @@ func flattenVaultCertificateModel(inputList *[]fleets.VaultCertificate) []Certif
 	return outputList
 }
 
-func flattenAdditionalUnattendContentModel(inputList *[]fleets.AdditionalUnattendContent) []AdditionalUnattendContentModel {
+func flattenAdditionalUnAttendContentModel(inputList *[]fleets.AdditionalUnattendContent, d *schema.ResourceData, isAdditional bool) []AdditionalUnattendContentModel {
 	var outputList []AdditionalUnattendContentModel
 	if inputList == nil {
 		return outputList
 	}
-	for _, input := range *inputList {
+	for i, input := range *inputList {
 		output := AdditionalUnattendContentModel{}
-		output.ComponentName = string(pointer.From(input.ComponentName))
-		output.Content = pointer.From(input.Content)
-		output.PassName = string(pointer.From(input.PassName))
-		output.SettingName = string(pointer.From(input.SettingName))
+		existing := make([]interface{}, 0)
+		if isAdditional {
+			if v, ok := d.GetOk("additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.windows_configuration.0.additional_unattend_content"); ok {
+				existing = v.([]interface{})
+			}
+		} else {
+			if v, ok := d.GetOk("virtual_machine_profile.0.os_profile.0.windows_configuration.0.additional_unattend_content"); ok {
+				existing = v.([]interface{})
+			}
+		}
+		// content isn't returned by the API since it's sensitive data so we need to pull from the state file.
+		content := ""
+		if len(existing) > i {
+			existingVal := existing[i]
+			existingRaw, ok := existingVal.(map[string]interface{})
+			if ok {
+				contentRaw, ok := existingRaw["content"]
+				if ok {
+					content = contentRaw.(string)
+				}
+			}
+		}
+		output.Content = content
+		output.Setting = string(pointer.From(input.SettingName))
 		outputList = append(outputList, output)
 	}
 	return outputList
@@ -2452,6 +2442,66 @@ func flattenOSDiskModel(input *fleets.VirtualMachineScaleSetOSDisk) []OSDiskMode
 	}
 
 	output.WriteAcceleratorEnabled = pointer.From(input.WriteAcceleratorEnabled)
+
+	return append(outputList, output)
+}
+
+func flattenExtensionModel(input *fleets.VirtualMachineScaleSetExtensionProfile, metadata sdk.ResourceMetaData) ([]ExtensionModel, error) {
+	var outputList []ExtensionModel
+	if input == nil || input.Extensions == nil {
+		return outputList, nil
+	}
+
+	for i, input := range *input.Extensions {
+		output := ExtensionModel{}
+		if input.Name != nil {
+			output.Name = pointer.From(input.Name)
+		}
+
+		if props := input.Properties; props != nil {
+			output.Publisher = pointer.From(props.Publisher)
+			output.Type = pointer.From(props.Type)
+			output.TypeHandlerVersion = pointer.From(props.TypeHandlerVersion)
+			output.AutoUpgradeMinorVersionEnabled = pointer.From(props.AutoUpgradeMinorVersion)
+			output.AutomaticUpgradeEnabled = pointer.From(props.EnableAutomaticUpgrade)
+			output.ForceExtensionExecutionOnChange = pointer.From(props.ForceUpdateTag)
+			// Sensitive data isn't returned, so we get it from config
+			if props.ProtectedSettings == nil {
+				log.Printf("elena props.ProtectedSettings != nil")
+			}
+			output.ProtectedSettingsJson = metadata.ResourceData.Get("virtual_machine_profile.0.extension." + strconv.Itoa(i) + ".protected_settings_json").(string)
+			output.ProtectedSettingsFromKeyVault = flattenProtectedSettingsFromKeyVaultModel(props.ProtectedSettingsFromKeyVault)
+			output.ExtensionsToProvisionAfterVmCreation = pointer.From(props.ProvisionAfterExtensions)
+			// Sensitive data isn't returned, so we get it from config
+			extSettings := ""
+			if props.Settings != nil {
+				settings, err := json.Marshal(props.Settings)
+				if err != nil {
+					return nil, fmt.Errorf("unmarshaling `settings`: %+v", err)
+				}
+
+				extSettings = string(settings)
+			}
+			output.SettingsJson = extSettings
+			//	output.SettingsJson = metadata.ResourceData.Get("virtual_machine_profile.0.extension." + strconv.Itoa(i) + ".settings_json").(string)
+		}
+
+		outputList = append(outputList, output)
+	}
+
+	return outputList, nil
+}
+
+func flattenProtectedSettingsFromKeyVaultModel(input *fleets.KeyVaultSecretReference) []ProtectedSettingsFromKeyVaultModel {
+	var outputList []ProtectedSettingsFromKeyVaultModel
+	if input == nil {
+		return outputList
+	}
+
+	output := ProtectedSettingsFromKeyVaultModel{
+		SecretUrl:     input.SecretURL,
+		SourceVaultId: pointer.From(input.SourceVault.Id),
+	}
 
 	return append(outputList, output)
 }

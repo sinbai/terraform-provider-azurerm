@@ -129,9 +129,9 @@ func (r AzureFleetTestResource) ephemeral(data acceptance.TestData, location str
 
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  name                        = "acctest-fleet-%[2]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -142,7 +142,7 @@ resource "azurerm_azure_fleet" "test" {
   vm_sizes_profile {
     name = "Standard_F4s_v2"
   }
-  
+
   virtual_machine_profile {
     os_profile {
       linux_configuration {
@@ -198,7 +198,7 @@ resource "azurerm_azure_fleet" "test" {
   location            = "%[3]s"
 
   platform_fault_domain_count = 2
-  zones = ["1", "2", "3"]
+  zones                       = ["1", "2", "3"]
 
   regular_priority_profile {
     capacity     = 1
@@ -270,9 +270,9 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DC2as_v5"
   }
 
-   virtual_machine_profile {
-		secure_boot_enabled = true
-		vtpm_enabled = true
+  virtual_machine_profile {
+    secure_boot_enabled = true
+    vtpm_enabled        = true
 
     source_image_reference {
       publisher = "Canonical"
@@ -282,11 +282,11 @@ resource "azurerm_azure_fleet" "test" {
     }
 
     os_disk {
-      storage_account_type = "Premium_LRS"
+      storage_account_type     = "Premium_LRS"
       security_encryption_type = "VMGuestStateOnly"
-     }
+    }
 
-     data_disk {
+    data_disk {
       lun                  = 0
       caching              = "ReadWrite"
       create_option        = "Empty"
@@ -316,7 +316,7 @@ resource "azurerm_azure_fleet" "test" {
           idle_timeout_in_minutes = 4
         }
       }
-	  }
+    }
   }
 }
 `, r.template(data, location), data.RandomInteger, location)
@@ -340,9 +340,9 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DC2as_v5"
   }
 
-   virtual_machine_profile {
-		secure_boot_enabled = false
-		vtpm_enabled = true
+  virtual_machine_profile {
+    secure_boot_enabled = false
+    vtpm_enabled        = true
 
     source_image_reference {
       publisher = "Canonical"
@@ -352,10 +352,10 @@ resource "azurerm_azure_fleet" "test" {
     }
 
     os_disk {
-      storage_account_type = "Premium_LRS"
+      storage_account_type     = "Premium_LRS"
       security_encryption_type = "VMGuestStateOnly"
-     }
-      data_disk {
+    }
+    data_disk {
       lun                  = 0
       caching              = "ReadWrite"
       create_option        = "Empty"
@@ -385,7 +385,7 @@ resource "azurerm_azure_fleet" "test" {
           idle_timeout_in_minutes = 4
         }
       }
-	  }
+    }
   }
 }
 `, r.template(data, location), data.RandomInteger, location)

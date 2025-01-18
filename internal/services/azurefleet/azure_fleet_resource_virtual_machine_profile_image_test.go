@@ -163,7 +163,7 @@ resource "azurerm_network_interface" "public" {
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
 
-   ip_configuration {
+  ip_configuration {
     name                          = "testconfigurationsource"
     subnet_id                     = azurerm_subnet.test.id
     private_ip_address_allocation = "Dynamic"
@@ -172,7 +172,7 @@ resource "azurerm_network_interface" "public" {
 }
 
 resource "azurerm_linux_virtual_machine" "source" {
-   name                            = "acctestsourceVM-%[2]d"
+  name                            = "acctestsourceVM-%[2]d"
   resource_group_name             = azurerm_resource_group.test.name
   location                        = azurerm_resource_group.test.location
   size                            = "Standard_DS1_v2"
@@ -201,6 +201,7 @@ resource "azurerm_linux_virtual_machine" "source" {
     version   = "latest"
   }
 }
+
 
 `, r.templateWithOutProvider(data, data.Locations.Primary), data.RandomInteger)
 }
@@ -232,6 +233,7 @@ resource "azurerm_azure_fleet" "test" {
 func (r AzureFleetTestResource) imageFromImageId(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 
+
 %[1]s
 
 resource "azurerm_image" "test" {
@@ -256,35 +258,35 @@ resource "azurerm_azure_fleet" "image_id" {
   }
 
   virtual_machine_profile {
-	source_image_id                 = azurerm_image.test.id
-	
-	os_disk {
-		caching              = "ReadWrite"
-		storage_account_type = "Standard_LRS"
-	}
-	
-	os_profile {
-		linux_configuration {
-			computer_name_prefix = "prefix"
-			admin_username       = local.admin_username
-			admin_password       = local.admin_password
-			password_authentication_enabled = true
-		}
-	}
+    source_image_id = azurerm_image.test.id
 
-	network_interface {
-		name                            = "networkProTest"
-   	primary 												= true
-		accelerated_networking_enabled  = false
-		ip_forwarding_enabled           = true
-		ip_configuration {
-			name                                   = "ipConfigTest"
-			load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
-			primary                                = true
-			subnet_id                              = azurerm_subnet.test.id
-		}
-	}
-}
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
+      }
+    }
+
+    network_interface {
+      name                           = "networkProTest"
+      primary                        = true
+      accelerated_networking_enabled = false
+      ip_forwarding_enabled          = true
+      ip_configuration {
+        name                                   = "ipConfigTest"
+        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+        primary                                = true
+        subnet_id                              = azurerm_subnet.test.id
+      }
+    }
+  }
 }
 `, r.imageFromImageReference(data), data.RandomInteger, data.Locations.Primary)
 }
@@ -292,6 +294,7 @@ resource "azurerm_azure_fleet" "image_id" {
 func (r AzureFleetTestResource) imageFromSharedImageGallery(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 
+
 %[1]s
 
 resource "azurerm_image" "test" {
@@ -351,36 +354,36 @@ resource "azurerm_azure_fleet" "image_id" {
   }
 
   virtual_machine_profile {
-	source_image_id    = azurerm_shared_image_gallery.test.id
-  //source_image_id = "/sharedGalleries/${azurerm_shared_image_version.test.gallery_name}/images/${azurerm_shared_image.test.name}"
-	
-	os_disk {
-		caching              = "ReadWrite"
-		storage_account_type = "Standard_LRS"
-	}
-	
-	os_profile {
-		linux_configuration {
-			computer_name_prefix = "prefix"
-			admin_username       = local.admin_username
-			admin_password       = local.admin_password
-			password_authentication_enabled = true
-		}
-	}
+    source_image_id = azurerm_shared_image_gallery.test.id
+    //source_image_id = "/sharedGalleries/${azurerm_shared_image_version.test.gallery_name}/images/${azurerm_shared_image.test.name}"
 
-	network_interface {
-		name                            = "networkProTest"
-   	primary 												= true
-		accelerated_networking_enabled  = false
-		ip_forwarding_enabled           = true
-		ip_configuration {
-			name                                   = "ipConfigTest"
-			load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
-			primary                                = true
-			subnet_id                              = azurerm_subnet.test.id
-		}
-	}
-}
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
+      }
+    }
+
+    network_interface {
+      name                           = "networkProTest"
+      primary                        = true
+      accelerated_networking_enabled = false
+      ip_forwarding_enabled          = true
+      ip_configuration {
+        name                                   = "ipConfigTest"
+        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+        primary                                = true
+        subnet_id                              = azurerm_subnet.test.id
+      }
+    }
+  }
 }
 `, r.imageFromImageReference(data), data.RandomInteger, data.Locations.Primary)
 }
@@ -388,6 +391,7 @@ resource "azurerm_azure_fleet" "image_id" {
 func (r AzureFleetTestResource) imageFromSharedImageGalleryVersion(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 
+
 %[1]s
 
 resource "azurerm_image" "test" {
@@ -447,35 +451,35 @@ resource "azurerm_azure_fleet" "image_id" {
   }
 
   virtual_machine_profile {
-	source_image_id                 = azurerm_shared_image_version.test.id
-	
-	os_disk {
-		caching              = "ReadWrite"
-		storage_account_type = "Standard_LRS"
-	}
-	
-	os_profile {
-		linux_configuration {
-			computer_name_prefix = "prefix"
-			admin_username       = local.admin_username
-			admin_password       = local.admin_password
-			password_authentication_enabled = true
-		}
-	}
+    source_image_id = azurerm_shared_image_version.test.id
 
-	network_interface {
-		name                            = "networkProTest"
-   	primary 												= true
-		accelerated_networking_enabled  = false
-		ip_forwarding_enabled           = true
-		ip_configuration {
-			name                                   = "ipConfigTest"
-			load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
-			primary                                = true
-			subnet_id                              = azurerm_subnet.test.id
-		}
-	}
-}
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
+      }
+    }
+
+    network_interface {
+      name                           = "networkProTest"
+      primary                        = true
+      accelerated_networking_enabled = false
+      ip_forwarding_enabled          = true
+      ip_configuration {
+        name                                   = "ipConfigTest"
+        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+        primary                                = true
+        subnet_id                              = azurerm_subnet.test.id
+      }
+    }
+  }
 }
 `, r.imageFromImageReference(data), data.RandomInteger, data.Locations.Primary)
 }
@@ -483,6 +487,7 @@ resource "azurerm_azure_fleet" "image_id" {
 func (r AzureFleetTestResource) imageFromCommunitySharedImageGallery(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 
+
 %[1]s
 
 resource "azurerm_image" "test" {
@@ -552,35 +557,35 @@ resource "azurerm_azure_fleet" "image_id" {
   }
 
   virtual_machine_profile {
-	source_image_id                 = "/communityGalleries/${azurerm_shared_image_gallery.test.sharing.0.community_gallery.0.name}/images/${azurerm_shared_image_version.test.image_name}"
-	
-	os_disk {
-		caching              = "ReadWrite"
-		storage_account_type = "Standard_LRS"
-	}
-	
-	os_profile {
-		linux_configuration {
-			computer_name_prefix = "prefix"
-			admin_username       = local.admin_username
-			admin_password       = local.admin_password
-			password_authentication_enabled = true
-		}
-	}
+    source_image_id = "/communityGalleries/${azurerm_shared_image_gallery.test.sharing.0.community_gallery.0.name}/images/${azurerm_shared_image_version.test.image_name}"
 
-	network_interface {
-		name                            = "networkProTest"
-   	primary 												= true
-		accelerated_networking_enabled  = false
-		ip_forwarding_enabled           = true
-		ip_configuration {
-			name                                   = "ipConfigTest"
-			load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
-			primary                                = true
-			subnet_id                              = azurerm_subnet.test.id
-		}
-	}
-}
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
+      }
+    }
+
+    network_interface {
+      name                           = "networkProTest"
+      primary                        = true
+      accelerated_networking_enabled = false
+      ip_forwarding_enabled          = true
+      ip_configuration {
+        name                                   = "ipConfigTest"
+        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+        primary                                = true
+        subnet_id                              = azurerm_subnet.test.id
+      }
+    }
+  }
 }
 `, r.imageFromImageReference(data), data.RandomInteger, data.Locations.Primary)
 }
@@ -588,6 +593,7 @@ resource "azurerm_azure_fleet" "image_id" {
 func (r AzureFleetTestResource) imageFromCommunitySharedImageGalleryVersion(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 
+
 %[1]s
 
 resource "azurerm_image" "test" {
@@ -657,35 +663,35 @@ resource "azurerm_azure_fleet" "image_id" {
   }
 
   virtual_machine_profile {
-	source_image_id                 = "/communityGalleries/${azurerm_shared_image_gallery.test.sharing.0.community_gallery.0.name}/images/${azurerm_shared_image_version.test.image_name}/versions/${azurerm_shared_image_version.test.name}"
-	
-	os_disk {
-		caching              = "ReadWrite"
-		storage_account_type = "Standard_LRS"
-	}
-	
-	os_profile {
-		linux_configuration {
-			computer_name_prefix = "prefix"
-			admin_username       = local.admin_username
-			admin_password       = local.admin_password
-			password_authentication_enabled = true
-		}
-	}
+    source_image_id = "/communityGalleries/${azurerm_shared_image_gallery.test.sharing.0.community_gallery.0.name}/images/${azurerm_shared_image_version.test.image_name}/versions/${azurerm_shared_image_version.test.name}"
 
-	network_interface {
-		name                            = "networkProTest"
-   	primary 												= true
-		accelerated_networking_enabled  = false
-		ip_forwarding_enabled           = true
-		ip_configuration {
-			name                                   = "ipConfigTest"
-			load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
-			primary                                = true
-			subnet_id                              = azurerm_subnet.test.id
-		}
-	}
-}
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
+      }
+    }
+
+    network_interface {
+      name                           = "networkProTest"
+      primary                        = true
+      accelerated_networking_enabled = false
+      ip_forwarding_enabled          = true
+      ip_configuration {
+        name                                   = "ipConfigTest"
+        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+        primary                                = true
+        subnet_id                              = azurerm_subnet.test.id
+      }
+    }
+  }
 }
 `, r.imageFromImageReference(data), data.RandomInteger, data.Locations.Primary)
 }

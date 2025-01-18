@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/utils"
 	"log"
 	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -202,10 +201,8 @@ type WindowsConfigurationModel struct {
 }
 
 type AdditionalUnattendContentModel struct {
-	ComponentName string `tfschema:"component_name"`
-	Content       string `tfschema:"content"`
-	PassName      string `tfschema:"pass_name"`
-	SettingName   string `tfschema:"setting_name"`
+	Content string `tfschema:"content"`
+	Setting string `tfschema:"setting"`
 }
 
 type WinRMModel struct {
@@ -1578,18 +1575,6 @@ func expandAdditionalLocationProfileModel(inputList []AdditionalLocationProfileM
 			return nil, err
 		}
 
-		// TODO: waiting for service team to reply whether `linux_configuration:{}` is supported
-		// `additional_location_profile` has `virtual_machine_profile_override` which implicitly means that all the values from `virtual_machine_profile` will be copied over if they are not specified.
-		// When `windows_configuration` in additional regions, the `linux_configuration` gets copied over and VMSS does not allow users to specify both for a region.
-		// API requires users to specify `linux_configuration` to `null`/`{}` in the `virtual_machine_profile_override` to prevent this.
-		if virtualMachineProfileOverrideValue != nil {
-			if virtualMachineProfileOverrideValue.OsProfile.LinuxConfiguration != nil {
-				virtualMachineProfileOverrideValue.OsProfile.WindowsConfiguration = &fleets.WindowsConfiguration{}
-			}
-			if virtualMachineProfileOverrideValue.OsProfile.WindowsConfiguration != nil {
-				virtualMachineProfileOverrideValue.OsProfile.LinuxConfiguration = &fleets.LinuxConfiguration{}
-			}
-		}
 		output.VirtualMachineProfileOverride = virtualMachineProfileOverrideValue
 
 		outputList = append(outputList, output)
@@ -1636,53 +1621,6 @@ func flattenAdditionalLocationProfileModel(input *fleets.AdditionalLocationsProf
 	}
 
 	return outputList, nil
-}
-
-func flattenExtensionModel(input *fleets.VirtualMachineScaleSetExtensionProfile, metadata sdk.ResourceMetaData) ([]ExtensionModel, error) {
-	var outputList []ExtensionModel
-	if input == nil || input.Extensions == nil {
-		return outputList, nil
-	}
-
-	for i, input := range *input.Extensions {
-		output := ExtensionModel{}
-		if input.Name != nil {
-			output.Name = pointer.From(input.Name)
-		}
-
-		if props := input.Properties; props != nil {
-			output.Publisher = pointer.From(props.Publisher)
-			output.Type = pointer.From(props.Type)
-			output.TypeHandlerVersion = pointer.From(props.TypeHandlerVersion)
-			output.AutoUpgradeMinorVersionEnabled = pointer.From(props.AutoUpgradeMinorVersion)
-			output.AutomaticUpgradeEnabled = pointer.From(props.EnableAutomaticUpgrade)
-			output.ForceExtensionExecutionOnChange = pointer.From(props.ForceUpdateTag)
-			// Sensitive data isn't returned, so we get it from config
-			output.ProtectedSettingsJson = metadata.ResourceData.Get("virtual_machine_profile.0.extension." + strconv.Itoa(i) + ".protected_settings_json").(string)
-			output.ProtectedSettingsFromKeyVault = flattenProtectedSettingsFromKeyVaultModel(props.ProtectedSettingsFromKeyVault)
-			output.ExtensionsToProvisionAfterVmCreation = pointer.From(props.ProvisionAfterExtensions)
-			// Sensitive data isn't returned, so we get it from config
-			output.SettingsJson = metadata.ResourceData.Get("virtual_machine_profile.0.extension." + strconv.Itoa(i) + ".settings_json").(string)
-		}
-
-		outputList = append(outputList, output)
-	}
-
-	return outputList, nil
-}
-
-func flattenProtectedSettingsFromKeyVaultModel(input *fleets.KeyVaultSecretReference) []ProtectedSettingsFromKeyVaultModel {
-	var outputList []ProtectedSettingsFromKeyVaultModel
-	if input == nil {
-		return outputList
-	}
-
-	output := ProtectedSettingsFromKeyVaultModel{
-		SecretUrl:     input.SecretURL,
-		SourceVaultId: pointer.From(input.SourceVault.Id),
-	}
-
-	return append(outputList, output)
 }
 
 func flattenSubResourceId(inputList []fleets.SubResource) []string {

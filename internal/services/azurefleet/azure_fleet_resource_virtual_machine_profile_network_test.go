@@ -316,9 +316,9 @@ func (r AzureFleetTestResource) multiple(data acceptance.TestData, location stri
 %[1]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  name                        = "acctest-fleet-%[2]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -329,7 +329,7 @@ resource "azurerm_azure_fleet" "test" {
   vm_sizes_profile {
     name = "Standard_D1_v2"
   }
-  
+
   virtual_machine_profile {
     os_profile {
       linux_configuration {
@@ -389,9 +389,9 @@ func (r AzureFleetTestResource) acceleratedNetworking(data acceptance.TestData, 
 %[1]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  name                        = "acctest-fleet-%[2]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -402,7 +402,7 @@ resource "azurerm_azure_fleet" "test" {
   vm_sizes_profile {
     name = "Standard_D2s_v3"
   }
-  
+
   virtual_machine_profile {
     os_profile {
       linux_configuration {
@@ -414,8 +414,8 @@ resource "azurerm_azure_fleet" "test" {
     }
 
     network_interface {
-      name    = "primary-networkProTest"
-      primary = true
+      name                          = "primary-networkProTest"
+      primary                       = true
       enable_accelerated_networking = %[4]t
 
       ip_configuration {
@@ -486,8 +486,8 @@ resource "azurerm_azure_fleet" "test" {
     }
 
     network_interface {
-      name    = "networkProTest"
-      primary = true
+      name                      = "networkProTest"
+      primary                   = true
       network_security_group_id = azurerm_network_security_group.test.id
 
       ip_configuration {
@@ -525,9 +525,9 @@ func (r AzureFleetTestResource) dnsNameLabel(data acceptance.TestData, location 
 
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  name                        = "acctest-fleet-%[2]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -538,7 +538,7 @@ resource "azurerm_azure_fleet" "test" {
   vm_sizes_profile {
     name = "Standard_D1_v2"
   }
-  
+
   virtual_machine_profile {
     os_profile {
       linux_configuration {
@@ -588,9 +588,9 @@ func (r AzureFleetTestResource) ipForwarding(data acceptance.TestData, location 
 %[1]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  name                        = "acctest-fleet-%[2]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -601,7 +601,7 @@ resource "azurerm_azure_fleet" "test" {
   vm_sizes_profile {
     name = "Standard_D1_v2"
   }
-  
+
   virtual_machine_profile {
     os_profile {
       linux_configuration {
@@ -613,8 +613,8 @@ resource "azurerm_azure_fleet" "test" {
     }
 
     network_interface {
-      name    = "primary-networkProTest"
-      primary = true
+      name                  = "primary-networkProTest"
+      primary               = true
       ip_forwarding_enabled = "%[4]t"
 
       ip_configuration {
@@ -651,9 +651,9 @@ func (r AzureFleetTestResource) basicPublicIP(data acceptance.TestData, location
 %[1]s
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  name                        = "acctest-fleet-%[2]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -664,7 +664,7 @@ resource "azurerm_azure_fleet" "test" {
   vm_sizes_profile {
     name = "Standard_D1_v2"
   }
-  
+
   virtual_machine_profile {
     os_profile {
       linux_configuration {
@@ -688,7 +688,7 @@ resource "azurerm_azure_fleet" "test" {
           name                    = "TestPublicIPConfiguration"
           domain_name_label       = "test-domain-label"
           idle_timeout_in_minutes = 4
-				}
+        }
       }
     }
 
@@ -714,9 +714,9 @@ func (r AzureFleetTestResource) publicIPSku(data acceptance.TestData, location s
 
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  name                        = "acctest-fleet-%[2]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -727,7 +727,7 @@ resource "azurerm_azure_fleet" "test" {
   vm_sizes_profile {
     name = "Standard_D1_v2"
   }
-  
+
   virtual_machine_profile {
     os_profile {
       linux_configuration {
@@ -752,10 +752,10 @@ resource "azurerm_azure_fleet" "test" {
           domain_name_label       = "update-domain-label"
           idle_timeout_in_minutes = 3
           delete_option           = "Detach"
-					sku {
-						name = "Standard"
-						tier  = "Regional"
-        	}
+          sku {
+            name = "Standard"
+            tier = "Regional"
+          }
         }
       }
     }
@@ -782,9 +782,9 @@ func (r AzureFleetTestResource) publicIPVersion(data acceptance.TestData, locati
 
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  name                        = "acctest-fleet-%[2]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -795,7 +795,7 @@ resource "azurerm_azure_fleet" "test" {
   vm_sizes_profile {
     name = "Standard_D1_v2"
   }
-  
+
   virtual_machine_profile {
     os_profile {
       linux_configuration {
@@ -810,27 +810,27 @@ resource "azurerm_azure_fleet" "test" {
       name    = "primary-networkProTest"
       primary = true
 
-				ip_configuration {
-					name      = "primary"
-					primary   = true
-					subnet_id = azurerm_subnet.test.id
-	
-					 public_ip_address {
-					name                    = "TestPublicIPConfiguration"
-					domain_name_label       = "test-domain-label"
-					idle_timeout_in_minutes = 4
-				}
+      ip_configuration {
+        name      = "primary"
+        primary   = true
+        subnet_id = azurerm_subnet.test.id
+
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
       }
-			ip_configuration {
-				name    = "second"
-				version = "IPv6"
-	
-				public_ip_address {
-					name                    = "second"
-					idle_timeout_in_minutes = 4
-					version                 = "IPv6"
-				}
-			}
+      ip_configuration {
+        name    = "second"
+        version = "IPv6"
+
+        public_ip_address {
+          name                    = "second"
+          idle_timeout_in_minutes = 4
+          version                 = "IPv6"
+        }
+      }
     }
 
     os_disk {
@@ -855,9 +855,9 @@ func (r AzureFleetTestResource) dNSSettings(data acceptance.TestData, location s
 
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  name                        = "acctest-fleet-%[2]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -868,7 +868,7 @@ resource "azurerm_azure_fleet" "test" {
   vm_sizes_profile {
     name = "Standard_D4_v2"
   }
-  
+
   virtual_machine_profile {
     os_profile {
       linux_configuration {
@@ -880,8 +880,8 @@ resource "azurerm_azure_fleet" "test" {
     }
 
     network_interface {
-      name    = "primary-networkProTest"
-      primary = true
+      name        = "primary-networkProTest"
+      primary     = true
       dns_servers = [%[4]s]
       ip_configuration {
         name      = "primary"
@@ -918,9 +918,9 @@ func (r AzureFleetTestResource) loadBalancer(data acceptance.TestData, location 
 
 
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  name                        = "acctest-fleet-%[2]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[3]s"
   platform_fault_domain_count = 2
 
   regular_priority_profile {
@@ -931,7 +931,7 @@ resource "azurerm_azure_fleet" "test" {
   vm_sizes_profile {
     name = "Standard_D1_v2"
   }
-  
+
   virtual_machine_profile {
     os_profile {
       linux_configuration {

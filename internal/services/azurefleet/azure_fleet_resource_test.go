@@ -278,22 +278,22 @@ func TestAccAzureFleet_identity(t *testing.T) {
 	})
 }
 
-func TestAccAzureFleet_additionalLocation(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.additionalLocation(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(
-			//"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password",
-			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
-		),
-	})
-}
+//func TestAccAzureFleet_additionalLocation(t *testing.T) {
+//	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
+//	r := AzureFleetTestResource{}
+//	data.ResourceTest(t, r, []acceptance.TestStep{
+//		{
+//			Config: r.additionalLocation(data),
+//			Check: acceptance.ComposeTestCheckFunc(
+//				check.That(data.ResourceName).ExistsInAzure(r),
+//			),
+//		},
+//		data.ImportStep(
+//			//"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password",
+//			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+//		),
+//	})
+//}
 
 func TestAccAzureFleet_additionalLocationLinux(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
@@ -359,40 +359,40 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
-		source_image_reference {
-			publisher = "MicrosoftWindowsServer"
-			offer     = "WindowsServer"
-			sku       = "2016-Datacenter-Server-Core"
-			version   = "latest"
-		}
-		
-		os_profile {
-			windows_configuration {
-				computer_name_prefix = "testvm"
-				admin_username       = local.admin_username
-				admin_password       = local.admin_password
-	
-				#automatic_updates_enabled  = true
-			#	provision_vm_agent_enabled = true
-			#	time_zone                   = "W. Europe Standard Time"
-	
-			#	winrm_listener {
-				#	protocol = "Http"
-			#	}
-			}
-		}
-	
-		network_interface {
-			name                            = "networkProTest"
-			ip_configuration {
-				name      = "TestIPConfiguration"
-				subnet_id = azurerm_subnet.test.id
-				public_ip_address {
-					name                    = "TestPublicIPConfiguration"
-			 }
-			}
-		}
-	}
+    source_image_reference {
+      publisher = "MicrosoftWindowsServer"
+      offer     = "WindowsServer"
+      sku       = "2016-Datacenter-Server-Core"
+      version   = "latest"
+    }
+
+    os_profile {
+      windows_configuration {
+        computer_name_prefix = "testvm"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
+
+        #automatic_updates_enabled  = true
+        #	provision_vm_agent_enabled = true
+        #	time_zone                   = "W. Europe Standard Time"
+
+        #	winrm_listener {
+        #	protocol = "Http"
+        #	}
+      }
+    }
+
+    network_interface {
+      name = "networkProTest"
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        subnet_id = azurerm_subnet.test.id
+        public_ip_address {
+          name = "TestPublicIPConfiguration"
+        }
+      }
+    }
+  }
 }
 `, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
 }
@@ -516,7 +516,7 @@ resource "azurerm_azure_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
- regular_priority_profile {
+  regular_priority_profile {
     capacity     = 1
     min_capacity = 1
   }
@@ -552,7 +552,7 @@ resource "azurerm_azure_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
- regular_priority_profile {
+  regular_priority_profile {
     capacity     = 1
     min_capacity = 1
   }
@@ -592,7 +592,7 @@ resource "azurerm_azure_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
- regular_priority_profile {
+  regular_priority_profile {
     capacity     = 1
     min_capacity = 1
   }
@@ -808,68 +808,68 @@ func (r AzureFleetTestResource) plan(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 	%[1]s
 
-	resource "azurerm_azure_fleet" "test" {
-	  name                = "acctest-fleet-%[2]d"
-	  resource_group_name = azurerm_resource_group.test.name
-	  location            = "%[3]s"
-	
-	  plan {
-	    name           = "arcsight_logger_72_byol"
-	    product        = "arcsight-logger"
-	    publisher      = "micro-focus"
-	    promotion_code = "test"
-	  }
-	
-	  regular_priority_profile {
-	    capacity     = 1
-	    min_capacity = 1
-	  }
-	
-	  vm_sizes_profile {
-	    name = "Standard_DS1_v2"
-	  }
-	
-	  virtual_machine_profile {
-	    source_image_reference {
-	      publisher = "micro-focus"
-	      offer     = "arcsight-logger"
-	      sku       = "arcsight_logger_72_byol"
-	      version   = "7.2.0"
-	    }
-	
-	    os_disk {
-	      caching              = "ReadWrite"
-	      storage_account_type = "Standard_LRS"
-	    }
-	
-	    data_disk {
-	      caching              = "ReadWrite"
-	      disk_size_in_gb      = 900
-	      create_option        = "FromImage"
-	      storage_account_type = "Standard_LRS"
-	    }
-	
-	    os_profile {
-	      linux_configuration {
-	        computer_name_prefix            = "prefix"
-	        admin_username                  = local.admin_username
-	        admin_password                  = local.admin_password
-	        password_authentication_enabled = true
-	      }
-	    }
-	
-	    network_interface {
-	      name    = "networkProTest"
-	      primary = true
-	      ip_configuration {
-	        name                                   = "TestIPConfiguration"
-	        subnet_id                              = azurerm_subnet.test.id
-	        primary                                = true
-	        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
-	      }
-	    }
-	  }
-	}
+resource "azurerm_azure_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  plan {
+    name           = "arcsight_logger_72_byol"
+    product        = "arcsight-logger"
+    publisher      = "micro-focus"
+    promotion_code = "test"
+  }
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+
+  virtual_machine_profile {
+    source_image_reference {
+      publisher = "micro-focus"
+      offer     = "arcsight-logger"
+      sku       = "arcsight_logger_72_byol"
+      version   = "7.2.0"
+    }
+
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    data_disk {
+      caching              = "ReadWrite"
+      disk_size_in_gb      = 900
+      create_option        = "FromImage"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
+      }
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name                                   = "TestIPConfiguration"
+        subnet_id                              = azurerm_subnet.test.id
+        primary                                = true
+        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+      }
+    }
+  }
+}
 	`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary)
 }
 
@@ -963,16 +963,16 @@ resource "azurerm_azure_fleet" "import" {
 func (r AzureFleetTestResource) additionalLocation(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
-
+%[2]s
 resource "azurerm_azure_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
+  name                = "acctest-fleet-%[3]d"
   resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  location            = "%[4]s"
 
-  %[4]s
+  %[5]s
 
   additional_location_profile {
-    location = "%[5]s"
+    location = "%[6]s"
   }
 
   spot_priority_profile {
@@ -986,7 +986,7 @@ resource "azurerm_azure_fleet" "test" {
     name = "Standard_DS1_v2"
   }
 }
-`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile(), data.Locations.Secondary)
+`, r.template(data, data.Locations.Primary), r.additionalLinuxTemplate(data, data.Locations.Secondary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile(), data.Locations.Secondary)
 }
 
 func (r AzureFleetTestResource) additionalLocationLinux(data acceptance.TestData) string {
@@ -1254,10 +1254,14 @@ virtual_machine_profile {
 		accelerated_networking_enabled  = false
 		ip_forwarding_enabled           = true
 		ip_configuration {
-			name                                   = "ipConfigTest"
-			load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
-			primary                                = true
-			subnet_id                              = azurerm_subnet.test.id
+			name      = "TestIPConfiguration"
+        subnet_id = azurerm_subnet.test.id
+        primary   = true
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
 		}
 	}
 }
@@ -1306,10 +1310,14 @@ virtual_machine_profile {
 		accelerated_networking_enabled  = false
 		ip_forwarding_enabled           = true
 		ip_configuration {
-			name                                   = "ipConfigTestUpdate"
-			load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
-			primary                                = true
-			subnet_id                              = azurerm_subnet.test.id
+			name      = "TestIPConfigurationUpdate"
+        subnet_id = azurerm_subnet.test.id
+        primary   = true
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
 		}
 	}
 
@@ -1576,48 +1584,48 @@ func (r AzureFleetTestResource) additionalLinuxTemplate(data acceptance.TestData
 	return fmt.Sprintf(`
 
 resource "azurerm_resource_group" "linux_test" {
-  name     = "acctest-rg-fleet-al-linux-%[1]d"
+  name     = "acctest-rg-fleet-al-%[1]d"
   location = "%[2]s"
 }
 
 resource "azurerm_virtual_network" "linux_test" {
-  name                = "acctvn-al-linux-%[1]d"
+  name                = "acctvn-al-%[1]d"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.linux_test.location
   resource_group_name = azurerm_resource_group.linux_test.name
 }
 
 resource "azurerm_subnet" "linux_test" {
-  name                 = "acctsub-al-linux-%[1]d"
+  name                 = "acctsub-%[1]d"
   resource_group_name  = azurerm_resource_group.linux_test.name
   virtual_network_name = azurerm_virtual_network.linux_test.name
   address_prefixes     = ["10.0.2.0/24"]
 }
 
 resource "azurerm_public_ip" "linux_test" {
- name                = "acctestpublicIP-al-%[1]d"
- location            = azurerm_resource_group.linux_test.location
-resource_group_name = azurerm_resource_group.linux_test.name
- allocation_method   = "Static"
- sku                 = "Standard"
- zones               = ["1"]
+  name                = "acctestpublicIP%[1]d"
+  location            = azurerm_resource_group.linux_test.location
+  resource_group_name = azurerm_resource_group.linux_test.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = ["1"]
 }
 
 resource "azurerm_lb" "linux_test" {
-name                = "acctest-loadbalancer-al-%[1]d"
- location            = azurerm_resource_group.linux_test.location
- resource_group_name = azurerm_resource_group.linux_test.name
-sku                 = "Standard"
+  name                = "acctest-loadbalancer-%[1]d"
+  location            = azurerm_resource_group.linux_test.location
+  resource_group_name = azurerm_resource_group.linux_test.name
+  sku                 = "Standard"
 
-frontend_ip_configuration {
-name                 = "internal-al-%[1]d"
- public_ip_address_id = azurerm_public_ip.linux_test.id
- }
+  frontend_ip_configuration {
+    name                 = "internal"
+    public_ip_address_id = azurerm_public_ip.linux_test.id
+  }
 }
 
 resource "azurerm_lb_backend_address_pool" "linux_test" {
-name            = "internal-al"
-loadbalancer_id = azurerm_lb.linux_test.id
+  name            = "internal"
+  loadbalancer_id = azurerm_lb.linux_test.id
 }
 `, data.RandomInteger, location)
 }
@@ -1644,29 +1652,29 @@ resource "azurerm_subnet" "windows_test" {
 }
 
 resource "azurerm_public_ip" "windows_test" {
- name                = "acctestpublicIP-al-%[1]d"
- location            = azurerm_resource_group.windows_test.location
-resource_group_name = azurerm_resource_group.windows_test.name
- allocation_method   = "Static"
- sku                 = "Standard"
- zones               = ["1"]
+  name                = "acctestpublicIP-al-%[1]d"
+  location            = azurerm_resource_group.windows_test.location
+  resource_group_name = azurerm_resource_group.windows_test.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = ["1"]
 }
 
 resource "azurerm_lb" "windows_test" {
-name                = "acctest-loadbalancer-al-%[1]d"
- location            = azurerm_resource_group.windows_test.location
- resource_group_name = azurerm_resource_group.windows_test.name
-sku                 = "Standard"
+  name                = "acctest-loadbalancer-al-%[1]d"
+  location            = azurerm_resource_group.windows_test.location
+  resource_group_name = azurerm_resource_group.windows_test.name
+  sku                 = "Standard"
 
-frontend_ip_configuration {
-name                 = "internal-al-%[1]d"
- public_ip_address_id = azurerm_public_ip.windows_test.id
- }
+  frontend_ip_configuration {
+    name                 = "internal-al-%[1]d"
+    public_ip_address_id = azurerm_public_ip.windows_test.id
+  }
 }
 
 resource "azurerm_lb_backend_address_pool" "windows_test" {
-name            = "internal-al"
-loadbalancer_id = azurerm_lb.windows_test.id
+  name            = "internal-al"
+  loadbalancer_id = azurerm_lb.windows_test.id
 }
 `, data.RandomInteger, location)
 }

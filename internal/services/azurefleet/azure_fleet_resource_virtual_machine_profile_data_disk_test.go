@@ -327,12 +327,12 @@ resource "azurerm_azure_fleet" "test" {
           idle_timeout_in_minutes = 4
         }
       }
-	  }
+    }
   }
 
   depends_on = [
-      "azurerm_role_assignment.disk-encryption-read-keyvault",
-      "azurerm_key_vault_access_policy.disk-encryption",
+    "azurerm_role_assignment.disk-encryption-read-keyvault",
+    "azurerm_key_vault_access_policy.disk-encryption",
   ]
 }
 `, r.diskEncryptionSetResourceDependencies(data), r.templateWithOutProvider(data, location), data.RandomInteger, location)
