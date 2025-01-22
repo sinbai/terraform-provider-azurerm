@@ -38,7 +38,6 @@ import (
 	authorization "github.com/hashicorp/terraform-provider-azurerm/internal/services/authorization/client"
 	automanage "github.com/hashicorp/terraform-provider-azurerm/internal/services/automanage/client"
 	automation "github.com/hashicorp/terraform-provider-azurerm/internal/services/automation/client"
-	azurefleet "github.com/hashicorp/terraform-provider-azurerm/internal/services/azurefleet/client"
 	azureStackHCI "github.com/hashicorp/terraform-provider-azurerm/internal/services/azurestackhci/client"
 	batch "github.com/hashicorp/terraform-provider-azurerm/internal/services/batch/client"
 	blueprints "github.com/hashicorp/terraform-provider-azurerm/internal/services/blueprints/client"
@@ -48,6 +47,7 @@ import (
 	cognitiveServices "github.com/hashicorp/terraform-provider-azurerm/internal/services/cognitive/client"
 	communication "github.com/hashicorp/terraform-provider-azurerm/internal/services/communication/client"
 	compute "github.com/hashicorp/terraform-provider-azurerm/internal/services/compute/client"
+	computeFleet "github.com/hashicorp/terraform-provider-azurerm/internal/services/computefleet/client"
 	confidentialledger "github.com/hashicorp/terraform-provider-azurerm/internal/services/confidentialledger/client"
 	connections "github.com/hashicorp/terraform-provider-azurerm/internal/services/connections/client"
 	consumption "github.com/hashicorp/terraform-provider-azurerm/internal/services/consumption/client"
@@ -174,7 +174,7 @@ type Client struct {
 	Authorization                     *authorization.Client
 	Automanage                        *automanage.Client
 	Automation                        *automation.Client
-	AzureFleet                        *azurefleet.Client
+	ComputeFleet                      *computeFleet.Client
 	AzureStackHCI                     *azurestackhci_v2024_01_01.Client
 	Batch                             *batch.Client
 	Blueprints                        *blueprints.Client
@@ -344,8 +344,8 @@ func (client *Client) Build(ctx context.Context, o *common.ClientOptions) error 
 	if client.Automation, err = automation.NewClient(o); err != nil {
 		return fmt.Errorf("building clients for Automation: %+v", err)
 	}
-	if client.AzureFleet, err = azurefleet.NewClient(o); err != nil {
-		return fmt.Errorf("building clients for Azure Fleet: %+v", err)
+	if client.ComputeFleet, err = computeFleet.NewClient(o); err != nil {
+		return fmt.Errorf("building clients for Compute Fleet: %+v", err)
 	}
 	if client.AzureStackHCI, err = azureStackHCI.NewClient(o); err != nil {
 		return fmt.Errorf("building clients for AzureStackHCI: %+v", err)

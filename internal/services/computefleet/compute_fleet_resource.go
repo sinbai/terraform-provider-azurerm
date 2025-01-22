@@ -1,12 +1,8 @@
-package azurefleet
+package computefleet
 
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	computeValidate "github.com/hashicorp/terraform-provider-azurerm/internal/services/compute/validate"
-	"github.com/hashicorp/terraform-provider-azurerm/utils"
-	"log"
 	"regexp"
 	"time"
 
@@ -16,12 +12,15 @@ import (
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/identity"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/location"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/azurefleet/2024-11-01/fleets"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
+	computeValidate "github.com/hashicorp/terraform-provider-azurerm/internal/services/compute/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
+	"github.com/hashicorp/terraform-provider-azurerm/utils"
 )
 
-type AzureFleetResourceModel struct {
+type ComputeFleetResourceModel struct {
 	Name                                     string                                     `tfschema:"name"`
 	ResourceGroupName                        string                                     `tfschema:"resource_group_name"`
 	Identity                                 []identity.ModelSystemAssignedUserAssigned `tfschema:"identity"`
@@ -54,10 +53,10 @@ type VirtualMachineProfileModel struct {
 	BootDiagnosticStorageAccountEndpoint string                      `tfschema:"boot_diagnostic_storage_account_endpoint"`
 	Extension                            []ExtensionModel            `tfschema:"extension"`
 	ExtensionsTimeBudget                 string                      `tfschema:"extensions_time_budget"`
+	ExtensionOperationsEnabled           bool                        `tfschema:"extension_operations_enabled"`
 	LicenseType                          string                      `tfschema:"license_type"`
 	NetworkInterface                     []NetworkInterfaceModel     `tfschema:"network_interface"`
 	OsProfile                            []OSProfileModel            `tfschema:"os_profile"`
-	ExtensionOperationsEnabled           bool                        `tfschema:"extension_operations_enabled"`
 	ScheduledEventTerminationTimeout     string                      `tfschema:"scheduled_event_termination_timeout"`
 	ScheduledEventOsImageTimeout         string                      `tfschema:"scheduled_event_os_image_timeout"`
 	EncryptionAtHostEnabled              bool                        `tfschema:"encryption_at_host_enabled"`
@@ -68,6 +67,7 @@ type VirtualMachineProfileModel struct {
 	SourceImageReference                 []SourceImageReferenceModel `tfschema:"source_image_reference"`
 	SourceImageId                        string                      `tfschema:"source_image_id"`
 	UserDataBase64                       string                      `tfschema:"user_data_base64"`
+	NetworkApiVersion                    string                      `tfschema:"network_api_version"`
 }
 
 type GalleryApplicationModel struct {
@@ -90,6 +90,7 @@ type ExtensionModel struct {
 	ProtectedSettingsJson                string                               `tfschema:"protected_settings_json"`
 	ProtectedSettingsFromKeyVault        []ProtectedSettingsFromKeyVaultModel `tfschema:"protected_settings_from_key_vault"`
 	ExtensionsToProvisionAfterVmCreation []string                             `tfschema:"extensions_to_provision_after_vm_creation"`
+	FailureSuppressionEnabled            bool                                 `tfschema:"failure_suppression_enabled"`
 	SettingsJson                         string                               `tfschema:"settings_json"`
 }
 
@@ -103,10 +104,8 @@ type NetworkInterfaceModel struct {
 	AuxiliaryMode                string                 `tfschema:"auxiliary_mode"`
 	AuxiliarySku                 string                 `tfschema:"auxiliary_sku"`
 	DeleteOption                 string                 `tfschema:"delete_option"`
-	TcpStateTrackingEnabled      bool                   `tfschema:"tcp_state_tracking_enabled"`
 	DnsServers                   []string               `tfschema:"dns_servers"`
 	AcceleratedNetworkingEnabled bool                   `tfschema:"accelerated_networking_enabled"`
-	FpgaEnabled                  bool                   `tfschema:"fpga_enabled"`
 	IPForwardingEnabled          bool                   `tfschema:"ip_forwarding_enabled"`
 	IPConfiguration              []IPConfigurationModel `tfschema:"ip_configuration"`
 	NetworkSecurityGroupId       string                 `tfschema:"network_security_group_id"`
@@ -133,17 +132,12 @@ type PublicIPAddressModel struct {
 	IPTag                []IPTagModel `tfschema:"ip_tag"`
 	Version              string       `tfschema:"version"`
 	PublicIPPrefix       string       `tfschema:"public_ip_prefix_id"`
-	Sku                  []SkuModel   `tfschema:"sku"`
+	SkuName              string       `tfschema:"sku_name"`
 }
 
 type IPTagModel struct {
 	Type string `tfschema:"type"`
 	Tag  string `tfschema:"tag"`
-}
-
-type SkuModel struct {
-	Name string `tfschema:"name"`
-	Tier string `tfschema:"tier"`
 }
 
 type OSProfileModel struct {
@@ -153,23 +147,18 @@ type OSProfileModel struct {
 }
 
 type LinuxConfigurationModel struct {
-	AdminPassword                     string             `tfschema:"admin_password"`
-	AdminUsername                     string             `tfschema:"admin_username"`
-	ComputerNamePrefix                string             `tfschema:"computer_name_prefix"`
-	Secret                            []SecretModel      `tfschema:"secret"`
-	PasswordAuthenticationEnabled     bool               `tfschema:"password_authentication_enabled"`
-	VMAgentPlatformUpdatesEnabled     bool               `tfschema:"vm_agent_platform_updates_enabled"`
-	PatchAssessmentMode               string             `tfschema:"patch_assessment_mode"`
-	PatchMode                         string             `tfschema:"patch_mode"`
-	BypassPlatformSafetyChecksEnabled bool               `tfschema:"bypass_platform_safety_checks_enabled"`
-	RebootSetting                     string             `tfschema:"reboot_setting"`
-	ProvisionVMAgentEnabled           bool               `tfschema:"provision_vm_agent_enabled"`
-	AdminSshKeys                      []AdminSshKeyModel `tfschema:"admin_ssh_key"`
-}
-
-type AdminSshKeyModel struct {
-	PublicKey string `tfschema:"public_key"`
-	Username  string `tfschema:"username"`
+	AdminPassword                     string        `tfschema:"admin_password"`
+	AdminUsername                     string        `tfschema:"admin_username"`
+	ComputerNamePrefix                string        `tfschema:"computer_name_prefix"`
+	Secret                            []SecretModel `tfschema:"secret"`
+	PasswordAuthenticationEnabled     bool          `tfschema:"password_authentication_enabled"`
+	VMAgentPlatformUpdatesEnabled     bool          `tfschema:"vm_agent_platform_updates_enabled"`
+	PatchAssessmentMode               string        `tfschema:"patch_assessment_mode"`
+	PatchMode                         string        `tfschema:"patch_mode"`
+	BypassPlatformSafetyChecksEnabled bool          `tfschema:"bypass_platform_safety_checks_enabled"`
+	RebootSetting                     string        `tfschema:"reboot_setting"`
+	ProvisionVMAgentEnabled           bool          `tfschema:"provision_vm_agent_enabled"`
+	SSHPublicKeys                     []string      `tfschema:"ssh_public_keys"`
 }
 
 type SecretModel struct {
@@ -300,37 +289,33 @@ type VMSizeProfileModel struct {
 	Rank int64  `tfschema:"rank"`
 }
 
-type AzureFleetResource struct{}
+type ComputeFleetResource struct{}
 
-var _ sdk.ResourceWithUpdate = AzureFleetResource{}
+var _ sdk.ResourceWithUpdate = ComputeFleetResource{}
 
-var _ sdk.ResourceWithCustomizeDiff = AzureFleetResource{}
+var _ sdk.ResourceWithCustomizeDiff = ComputeFleetResource{}
 
-func (r AzureFleetResource) ResourceType() string {
-	return "azurerm_azure_fleet"
+func (r ComputeFleetResource) ResourceType() string {
+	return "azurerm_compute_fleet"
 }
 
-func (r AzureFleetResource) ModelObject() interface{} {
-	return &AzureFleetResourceModel{}
+func (r ComputeFleetResource) ModelObject() interface{} {
+	return &ComputeFleetResourceModel{}
 }
 
-func (r AzureFleetResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
+func (r ComputeFleetResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return fleets.ValidateFleetID
 }
 
-func (r AzureFleetResource) Arguments() map[string]*pluginsdk.Schema {
+func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"name": {
 			Type:     pluginsdk.TypeString,
 			Required: true,
 			ForceNew: true,
 			ValidateFunc: validation.StringMatch(
-				regexp.MustCompile("^[^_\\W][\\w\\-._]{0,62}\\w$"),
-				"Azure resource names cannot",
-				// Azure resource names cannot contain special characters /""[]:|<>+=;,?*@&, whitespace, or begin with '_' or end with '.' or '-'
-				// The name cannot begin or end with the hyphen '-' character.
-				// This field must be between 1 and 64 characters.
-				//Linux VM names may only contain letters, numbers, '.', and '-'.
+				regexp.MustCompile("^[a-zA-Z0-9][a-zA-Z0-9.-]{0,62}[a-zA-Z0-9]$"),
+				"The fleet name can only start or end with a number or a letter, and can contain only letters, numbers, periods (.), hyphens (-), up to 64 characters",
 			),
 		},
 
@@ -776,7 +761,7 @@ func vmAttributesMaxMinFloatSchema(parent string) map[string]*pluginsdk.Schema {
 	}
 }
 
-func (r AzureFleetResource) Attributes() map[string]*pluginsdk.Schema {
+func (r ComputeFleetResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"unique_id": {
 			Type:     pluginsdk.TypeString,
@@ -785,14 +770,14 @@ func (r AzureFleetResource) Attributes() map[string]*pluginsdk.Schema {
 	}
 }
 
-func (r AzureFleetResource) Create() sdk.ResourceFunc {
+func (r ComputeFleetResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.AzureFleet.FleetsClient
+			client := metadata.Client.ComputeFleet.ComputeFleetClient
 			subscriptionId := metadata.Client.Account.SubscriptionId
 
-			var model AzureFleetResourceModel
+			var model ComputeFleetResourceModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
@@ -817,8 +802,14 @@ func (r AzureFleetResource) Create() sdk.ResourceFunc {
 					VMAttributes:           expandVMAttributesModel(model.VMAttributes),
 					VMSizesProfile:         pointer.From(expandVMSizeProfileModel(model.VMSizesProfile)),
 				},
-				Tags:  &model.Tags,
-				Zones: &model.Zones,
+			}
+
+			if model.Tags != nil {
+				properties.Tags = pointer.To(model.Tags)
+			}
+
+			if model.Zones != nil {
+				properties.Zones = pointer.To(model.Zones)
 			}
 
 			expandedIdentity, err := identity.ExpandLegacySystemAndUserAssignedMapFromModel(model.Identity)
@@ -841,7 +832,7 @@ func (r AzureFleetResource) Create() sdk.ResourceFunc {
 				PlatformFaultDomainCount: pointer.To(model.PlatformFaultDomainCount),
 			}
 
-			baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData, false)
+			baseVirtualMachineProfileValue, err := expandVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData, false)
 			if err != nil {
 				return err
 			}
@@ -862,19 +853,18 @@ func (r AzureFleetResource) Create() sdk.ResourceFunc {
 	}
 }
 
-func (r AzureFleetResource) Update() sdk.ResourceFunc {
+func (r ComputeFleetResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.AzureFleet.FleetsClient
+			client := metadata.Client.ComputeFleet.ComputeFleetClient
 
-			log.Printf("enter udpate func?")
 			id, err := fleets.ParseFleetID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			var model AzureFleetResourceModel
+			var model ComputeFleetResourceModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
@@ -892,18 +882,37 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 			}
 
 			properties := existing.Model
-
-			// set `admin_password` as API requires 'osProfile.adminPassword' when updating but the GET API does not return the password
+			//  Since the behavior of fleet API for updating resource means deleting and recreating, set `admin_password` as API requires `osProfile.adminPassword` when updating resource but the GET API does not return the `osProfile.adminPassword`
 			if props := properties.Properties; props != nil {
-				if v := props.ComputeProfile.BaseVirtualMachineProfile.OsProfile; v != nil {
-					if len(model.VirtualMachineProfile[0].OsProfile[0].LinuxConfiguration) > 0 {
+				if len(model.VirtualMachineProfile[0].OsProfile[0].LinuxConfiguration) > 0 {
+					if v := props.ComputeProfile.BaseVirtualMachineProfile.OsProfile; v != nil {
 						v.AdminPassword = pointer.To(model.VirtualMachineProfile[0].OsProfile[0].LinuxConfiguration[0].AdminPassword)
 					}
-					if len(model.VirtualMachineProfile[0].OsProfile[0].WindowsConfiguration) > 0 {
+				}
+				if len(model.VirtualMachineProfile[0].OsProfile[0].WindowsConfiguration) > 0 {
+					if v := props.ComputeProfile.BaseVirtualMachineProfile.OsProfile; v != nil {
 						v.AdminPassword = pointer.To(model.VirtualMachineProfile[0].OsProfile[0].WindowsConfiguration[0].AdminPassword)
 					}
 				}
+
+				if a := model.AdditionalLocationProfile; len(a) > 0 && len(a[0].VirtualMachineProfileOverride) > 0 {
+					if os := a[0].VirtualMachineProfileOverride[0].OsProfile; len(os) > 0 && len(os[0].WindowsConfiguration) > 0 {
+						if v := props.AdditionalLocationsProfile; v != nil && len(v.LocationProfiles) > 0 {
+							if vmss := v.LocationProfiles[0].VirtualMachineProfileOverride; vmss != nil && vmss.OsProfile != nil {
+								vmss.OsProfile.AdminPassword = pointer.To(os[0].WindowsConfiguration[0].AdminPassword)
+							}
+						}
+					}
+					if os := a[0].VirtualMachineProfileOverride[0].OsProfile; len(os) > 0 && len(os[0].LinuxConfiguration) > 0 {
+						if v := props.AdditionalLocationsProfile; v != nil && len(v.LocationProfiles) > 0 {
+							if vmss := v.LocationProfiles[0].VirtualMachineProfileOverride; vmss != nil && vmss.OsProfile != nil {
+								vmss.OsProfile.AdminPassword = pointer.To(os[0].LinuxConfiguration[0].AdminPassword)
+							}
+						}
+					}
+				}
 			}
+
 			if metadata.ResourceData.HasChange("identity") {
 				identityValue, err := identity.ExpandLegacySystemAndUserAssignedMapFromModel(model.Identity)
 				if err != nil {
@@ -917,7 +926,6 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 			}
 
 			if metadata.ResourceData.HasChange("additional_location_profile") {
-				// all properties of `virtual_machine_profile_override` can be updated, and changing means deleting and recreating.
 				additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, model.AdditionalCapabilitiesUltraSSDEnabled, metadata.ResourceData)
 				if err != nil {
 					return err
@@ -925,10 +933,9 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 				properties.Properties.AdditionalLocationsProfile = additionalLocationsProfileValue
 			}
 
-			// all properties of `virtual_machine_profile` can be updated, and changing means deleting and recreating.
+			// changing the properties of `virtual_machine_profile` means deleting and recreating.
 			if metadata.ResourceData.HasChange("virtual_machine_profile") {
-				log.Printf("virtual_machine_profile HasChange")
-				baseVirtualMachineProfileValue, err := expandBaseVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData, false)
+				baseVirtualMachineProfileValue, err := expandVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData, false)
 				if err != nil {
 					return err
 				}
@@ -975,11 +982,11 @@ func (r AzureFleetResource) Update() sdk.ResourceFunc {
 	}
 }
 
-func (r AzureFleetResource) Read() sdk.ResourceFunc {
+func (r ComputeFleetResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.AzureFleet.FleetsClient
+			client := metadata.Client.ComputeFleet.ComputeFleetClient
 
 			id, err := fleets.ParseFleetID(metadata.ResourceData.Id())
 			if err != nil {
@@ -995,7 +1002,7 @@ func (r AzureFleetResource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("retrieving %s: %+v", *id, err)
 			}
 
-			state := AzureFleetResourceModel{
+			state := ComputeFleetResourceModel{
 				Name:              id.FleetName,
 				ResourceGroupName: id.ResourceGroupName,
 			}
@@ -1050,11 +1057,11 @@ func (r AzureFleetResource) Read() sdk.ResourceFunc {
 	}
 }
 
-func (r AzureFleetResource) Delete() sdk.ResourceFunc {
+func (r ComputeFleetResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 30 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.AzureFleet.FleetsClient
+			client := metadata.Client.ComputeFleet.ComputeFleetClient
 
 			id, err := fleets.ParseFleetID(metadata.ResourceData.Id())
 			if err != nil {
@@ -1069,7 +1076,7 @@ func (r AzureFleetResource) Delete() sdk.ResourceFunc {
 		},
 	}
 }
-func customizeForVmAttributes(state AzureFleetResourceModel, d sdk.ResourceMetaData) error {
+func customizeForVmAttributes(state ComputeFleetResourceModel, d sdk.ResourceMetaData) error {
 	// Once the properties of vm_attributes are added, they can not be removed
 	old, new := d.ResourceDiff.GetChange("vm_attributes.0.accelerator_count")
 	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
@@ -1215,11 +1222,11 @@ func customizeForVmAttributes(state AzureFleetResourceModel, d sdk.ResourceMetaD
 	return nil
 }
 
-func (r AzureFleetResource) CustomizeDiff() sdk.ResourceFunc {
+func (r ComputeFleetResource) CustomizeDiff() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			var state AzureFleetResourceModel
+			var state ComputeFleetResourceModel
 			if err := metadata.DecodeDiff(&state); err != nil {
 				return fmt.Errorf("DecodeDiff: %+v", err)
 			}
@@ -1457,7 +1464,7 @@ func expandVMCategorys(inputList []string) *[]fleets.VMCategory {
 		return nil
 	}
 
-	var outputList []fleets.VMCategory
+	outputList := make([]fleets.VMCategory, 0)
 	for _, v := range inputList {
 		if v != "" {
 			outputList = append(outputList, fleets.VMCategory(v))
@@ -1471,7 +1478,7 @@ func expandLocalStorageDiskTypes(inputList []string) *[]fleets.LocalStorageDiskT
 		return nil
 	}
 
-	var outputList []fleets.LocalStorageDiskType
+	outputList := make([]fleets.LocalStorageDiskType, 0)
 	for _, v := range inputList {
 		if v != "" {
 			outputList = append(outputList, fleets.LocalStorageDiskType(v))
@@ -1501,7 +1508,7 @@ func expandAcceleratorTypes(inputList []string) *[]fleets.AcceleratorType {
 		return nil
 	}
 
-	var outputList []fleets.AcceleratorType
+	outputList := make([]fleets.AcceleratorType, 0)
 	for _, v := range inputList {
 		if v != "" {
 			outputList = append(outputList, fleets.AcceleratorType(v))
@@ -1514,8 +1521,7 @@ func expandArchitectureTypes(inputList []string) *[]fleets.ArchitectureType {
 	if len(inputList) == 0 {
 		return nil
 	}
-
-	var outputList []fleets.ArchitectureType
+	outputList := make([]fleets.ArchitectureType, 0)
 	for _, v := range inputList {
 		if v != "" {
 			outputList = append(outputList, fleets.ArchitectureType(v))
@@ -1529,7 +1535,7 @@ func expandCPUManufacturers(inputList []string) *[]fleets.CPUManufacturer {
 		return nil
 	}
 
-	var outputList []fleets.CPUManufacturer
+	outputList := make([]fleets.CPUManufacturer, 0)
 	for _, v := range inputList {
 		if v != "" {
 			outputList = append(outputList, fleets.CPUManufacturer(v))
@@ -1543,7 +1549,7 @@ func expandVMSizeProfileModel(inputList []VMSizeProfileModel) *[]fleets.VMSizePr
 		return nil
 	}
 
-	var outputList []fleets.VMSizeProfile
+	outputList := make([]fleets.VMSizeProfile, 0)
 	for _, v := range inputList {
 		input := v
 		output := fleets.VMSizeProfile{
@@ -1563,14 +1569,14 @@ func expandAdditionalLocationProfileModel(inputList []AdditionalLocationProfileM
 	}
 
 	output := fleets.AdditionalLocationsProfile{}
-	var outputList []fleets.LocationProfile
+	outputList := make([]fleets.LocationProfile, 0)
 	for _, v := range inputList {
 		input := v
 		output := fleets.LocationProfile{
 			Location: input.Location,
 		}
 
-		virtualMachineProfileOverrideValue, err := expandBaseVirtualMachineProfileModel(input.VirtualMachineProfileOverride, d, true)
+		virtualMachineProfileOverrideValue, err := expandVirtualMachineProfileModel(input.VirtualMachineProfileOverride, d, true)
 		if err != nil {
 			return nil, err
 		}
@@ -1586,7 +1592,7 @@ func expandAdditionalLocationProfileModel(inputList []AdditionalLocationProfileM
 }
 
 func flattenPlanModel(input *fleets.Plan) []PlanModel {
-	var outputList []PlanModel
+	outputList := make([]PlanModel, 0)
 	if input == nil {
 		return outputList
 	}
@@ -1602,7 +1608,7 @@ func flattenPlanModel(input *fleets.Plan) []PlanModel {
 }
 
 func flattenAdditionalLocationProfileModel(input *fleets.AdditionalLocationsProfile, metadata sdk.ResourceMetaData) ([]AdditionalLocationProfileModel, error) {
-	var outputList []AdditionalLocationProfileModel
+	outputList := make([]AdditionalLocationProfileModel, 0)
 	if input == nil {
 		return outputList, nil
 	}
@@ -1624,7 +1630,7 @@ func flattenAdditionalLocationProfileModel(input *fleets.AdditionalLocationsProf
 }
 
 func flattenSubResourceId(inputList []fleets.SubResource) []string {
-	var outputList []string
+	outputList := make([]string, 0)
 	if len(inputList) == 0 {
 		return outputList
 	}
@@ -1636,13 +1642,18 @@ func flattenSubResourceId(inputList []fleets.SubResource) []string {
 }
 
 func flattenPublicIPAddressModel(input *fleets.VirtualMachineScaleSetPublicIPAddressConfiguration) []PublicIPAddressModel {
-	var outputList []PublicIPAddressModel
+	outputList := make([]PublicIPAddressModel, 0)
 	if input == nil {
 		return outputList
 	}
 	output := PublicIPAddressModel{
 		Name: input.Name,
-		Sku:  flattenPublicIPAddressSkuModel(input.Sku),
+	}
+
+	if v := input.Sku; v != nil {
+		if v.Name != nil && v.Tier != nil {
+			output.SkuName = fmt.Sprintf("%s_%s", pointer.From(v.Name), pointer.From(v.Tier))
+		}
 	}
 
 	if props := input.Properties; props != nil {
@@ -1661,20 +1672,8 @@ func flattenPublicIPAddressModel(input *fleets.VirtualMachineScaleSetPublicIPAdd
 	return append(outputList, output)
 }
 
-func flattenPublicIPAddressSkuModel(input *fleets.PublicIPAddressSku) []SkuModel {
-	var outputList []SkuModel
-	if input == nil {
-		return outputList
-	}
-	output := SkuModel{}
-	output.Name = string(pointer.From(input.Name))
-	output.Tier = string(pointer.From(input.Tier))
-
-	return append(outputList, output)
-}
-
 func flattenIPTagModel(inputList *[]fleets.VirtualMachineScaleSetIPTag) []IPTagModel {
-	var outputList []IPTagModel
+	outputList := make([]IPTagModel, 0)
 	if inputList == nil {
 		return outputList
 	}
@@ -1690,7 +1689,7 @@ func flattenIPTagModel(inputList *[]fleets.VirtualMachineScaleSetIPTag) []IPTagM
 }
 
 func flattenRegularPriorityProfileModel(input *fleets.RegularPriorityProfile) []RegularPriorityProfileModel {
-	var outputList []RegularPriorityProfileModel
+	outputList := make([]RegularPriorityProfileModel, 0)
 	if input == nil {
 		return outputList
 	}
@@ -1704,7 +1703,7 @@ func flattenRegularPriorityProfileModel(input *fleets.RegularPriorityProfile) []
 }
 
 func flattenSpotPriorityProfileModel(input *fleets.SpotPriorityProfile) []SpotPriorityProfileModel {
-	var outputList []SpotPriorityProfileModel
+	outputList := make([]SpotPriorityProfileModel, 0)
 	if input == nil {
 		return outputList
 	}
@@ -1728,7 +1727,7 @@ func flattenSpotPriorityProfileModel(input *fleets.SpotPriorityProfile) []SpotPr
 }
 
 func flattenVMAttributesModel(input *fleets.VMAttributes) []VMAttributesModel {
-	var outputList []VMAttributesModel
+	outputList := make([]VMAttributesModel, 0)
 	if input == nil {
 		return outputList
 	}
@@ -1760,7 +1759,7 @@ func flattenVMAttributesModel(input *fleets.VMAttributes) []VMAttributesModel {
 }
 
 func flattenVMAttributeMinMaxIntegerModel(input *fleets.VMAttributeMinMaxInteger) []VMAttributeMinMaxIntegerModel {
-	var outputList []VMAttributeMinMaxIntegerModel
+	outputList := make([]VMAttributeMinMaxIntegerModel, 0)
 	if input == nil {
 		return outputList
 	}
@@ -1772,7 +1771,7 @@ func flattenVMAttributeMinMaxIntegerModel(input *fleets.VMAttributeMinMaxInteger
 }
 
 func flattenVMAttributeMinMaxDoubleModel(input *fleets.VMAttributeMinMaxDouble) []VMAttributeMinMaxDoubleModel {
-	var outputList []VMAttributeMinMaxDoubleModel
+	outputList := make([]VMAttributeMinMaxDoubleModel, 0)
 	if input == nil {
 		return outputList
 	}
@@ -1784,7 +1783,7 @@ func flattenVMAttributeMinMaxDoubleModel(input *fleets.VMAttributeMinMaxDouble) 
 }
 
 func flattenToStringSlice[T any](inputList *[]T) []string {
-	var outputList []string
+	outputList := make([]string, 0)
 	if inputList == nil {
 		return outputList
 	}
@@ -1798,7 +1797,7 @@ func flattenToStringSlice[T any](inputList *[]T) []string {
 }
 
 func flattenVMSizeProfileModel(inputList *[]fleets.VMSizeProfile) []VMSizeProfileModel {
-	var outputList []VMSizeProfileModel
+	outputList := make([]VMSizeProfileModel, 0)
 	if inputList == nil {
 		return outputList
 	}

@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/authorization"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/automanage"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/automation"
-	"github.com/hashicorp/terraform-provider-azurerm/internal/services/azurefleet"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/azurestackhci"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/batch"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/billing"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/cognitive"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/communication"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/compute"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/services/computefleet"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/confidentialledger"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/connections"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/consumption"
@@ -150,7 +150,6 @@ func SupportedTypedServices() []sdk.TypedServiceRegistration {
 		automanage.Registration{},
 		automation.Registration{},
 		advisor.Registration{},
-		azurefleet.Registration{},
 		azurestackhci.Registration{},
 		batch.Registration{},
 		bot.Registration{},
@@ -158,6 +157,7 @@ func SupportedTypedServices() []sdk.TypedServiceRegistration {
 		cognitive.Registration{},
 		communication.Registration{},
 		compute.Registration{},
+		computefleet.Registration{},
 		consumption.Registration{},
 		containerapps.Registration{},
 		cosmos.Registration{},

@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package azurefleet_test
+package computefleet_test
 
 import (
 	"context"
@@ -21,9 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 )
 
-func TestAccAzureFleet_virtualMachineProfileImage_imageFromImageId(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileImage_imageFromImageId(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -44,9 +44,9 @@ func TestAccAzureFleet_virtualMachineProfileImage_imageFromImageId(t *testing.T)
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileImage_imageFromCommunitySharedImageGallery(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileImage_imageFromCommunitySharedImageGallery(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -67,9 +67,9 @@ func TestAccAzureFleet_virtualMachineProfileImage_imageFromCommunitySharedImageG
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileImage_imageFromCommunitySharedImageGalleryVersion(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileImage_imageFromCommunitySharedImageGalleryVersion(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -90,9 +90,9 @@ func TestAccAzureFleet_virtualMachineProfileImage_imageFromCommunitySharedImageG
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileImage_imageFromSharedImageGallery(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileImage_imageFromSharedImageGallery(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -113,9 +113,9 @@ func TestAccAzureFleet_virtualMachineProfileImage_imageFromSharedImageGallery(t 
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileImage_imageFromSharedImageGalleryVersion(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileImage_imageFromSharedImageGalleryVersion(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -136,7 +136,7 @@ func TestAccAzureFleet_virtualMachineProfileImage_imageFromSharedImageGalleryVer
 	})
 }
 
-func (r AzureFleetTestResource) imageFromExistingMachinePrep(data acceptance.TestData) string {
+func (r ComputeFleetTestResource) imageFromExistingMachinePrep(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {
@@ -206,12 +206,12 @@ resource "azurerm_linux_virtual_machine" "source" {
 `, r.templateWithOutProvider(data, data.Locations.Primary), data.RandomInteger)
 }
 
-func (r AzureFleetTestResource) imageFromImageReference(data acceptance.TestData) string {
+func (r ComputeFleetTestResource) imageFromImageReference(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 
 %[1]s
 
-resource "azurerm_azure_fleet" "test" {
+resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-refer-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -230,7 +230,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.imageFromExistingMachinePrep(data), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
-func (r AzureFleetTestResource) imageFromImageId(data acceptance.TestData) string {
+func (r ComputeFleetTestResource) imageFromImageId(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 
 
@@ -243,7 +243,7 @@ resource "azurerm_image" "test" {
   source_virtual_machine_id = azurerm_linux_virtual_machine.source.id
 }
 
-resource "azurerm_azure_fleet" "image_id" {
+resource "azurerm_compute_fleet" "image_id" {
   name                = "acctest-fleet-id-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -258,6 +258,7 @@ resource "azurerm_azure_fleet" "image_id" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     source_image_id = azurerm_image.test.id
 
     os_disk {
@@ -291,7 +292,7 @@ resource "azurerm_azure_fleet" "image_id" {
 `, r.imageFromImageReference(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r AzureFleetTestResource) imageFromSharedImageGallery(data acceptance.TestData) string {
+func (r ComputeFleetTestResource) imageFromSharedImageGallery(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 
 
@@ -339,7 +340,7 @@ resource "azurerm_shared_image_version" "test" {
   }
 }
 
-resource "azurerm_azure_fleet" "image_id" {
+resource "azurerm_compute_fleet" "image_id" {
   name                = "acctest-fleet-id-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -354,6 +355,7 @@ resource "azurerm_azure_fleet" "image_id" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     source_image_id = azurerm_shared_image_gallery.test.id
     //source_image_id = "/sharedGalleries/${azurerm_shared_image_version.test.gallery_name}/images/${azurerm_shared_image.test.name}"
 
@@ -388,7 +390,7 @@ resource "azurerm_azure_fleet" "image_id" {
 `, r.imageFromImageReference(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r AzureFleetTestResource) imageFromSharedImageGalleryVersion(data acceptance.TestData) string {
+func (r ComputeFleetTestResource) imageFromSharedImageGalleryVersion(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 
 
@@ -436,7 +438,7 @@ resource "azurerm_shared_image_version" "test" {
   }
 }
 
-resource "azurerm_azure_fleet" "image_id" {
+resource "azurerm_compute_fleet" "image_id" {
   name                = "acctest-fleet-id-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -451,6 +453,7 @@ resource "azurerm_azure_fleet" "image_id" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     source_image_id = azurerm_shared_image_version.test.id
 
     os_disk {
@@ -484,7 +487,7 @@ resource "azurerm_azure_fleet" "image_id" {
 `, r.imageFromImageReference(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r AzureFleetTestResource) imageFromCommunitySharedImageGallery(data acceptance.TestData) string {
+func (r ComputeFleetTestResource) imageFromCommunitySharedImageGallery(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 
 
@@ -542,7 +545,7 @@ resource "azurerm_shared_image_version" "test" {
   }
 }
 
-resource "azurerm_azure_fleet" "image_id" {
+resource "azurerm_compute_fleet" "image_id" {
   name                = "acctest-fleet-id-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -557,6 +560,7 @@ resource "azurerm_azure_fleet" "image_id" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     source_image_id = "/communityGalleries/${azurerm_shared_image_gallery.test.sharing.0.community_gallery.0.name}/images/${azurerm_shared_image_version.test.image_name}"
 
     os_disk {
@@ -590,7 +594,7 @@ resource "azurerm_azure_fleet" "image_id" {
 `, r.imageFromImageReference(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r AzureFleetTestResource) imageFromCommunitySharedImageGalleryVersion(data acceptance.TestData) string {
+func (r ComputeFleetTestResource) imageFromCommunitySharedImageGalleryVersion(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 
 
@@ -648,7 +652,7 @@ resource "azurerm_shared_image_version" "test" {
   }
 }
 
-resource "azurerm_azure_fleet" "image_id" {
+resource "azurerm_compute_fleet" "image_id" {
   name                = "acctest-fleet-id-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -663,6 +667,7 @@ resource "azurerm_azure_fleet" "image_id" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     source_image_id = "/communityGalleries/${azurerm_shared_image_gallery.test.sharing.0.community_gallery.0.name}/images/${azurerm_shared_image_version.test.image_name}/versions/${azurerm_shared_image_version.test.name}"
 
     os_disk {
@@ -696,7 +701,7 @@ resource "azurerm_azure_fleet" "image_id" {
 `, r.imageFromImageReference(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (AzureFleetTestResource) generalizeVirtualMachine(data acceptance.TestData) func(context.Context, *clients.Client, *pluginsdk.InstanceState) error {
+func (ComputeFleetTestResource) generalizeVirtualMachine(data acceptance.TestData) func(context.Context, *clients.Client, *pluginsdk.InstanceState) error {
 	return func(ctx context.Context, client *clients.Client, state *pluginsdk.InstanceState) error {
 		id, err := virtualmachines.ParseVirtualMachineID(state.ID)
 		if err != nil {

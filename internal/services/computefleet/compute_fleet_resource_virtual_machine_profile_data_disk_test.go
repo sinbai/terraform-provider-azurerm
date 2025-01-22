@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package azurefleet_test
+package computefleet_test
 
 import (
 	"fmt"
@@ -11,13 +11,13 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 )
 
-func TestAccAzureFleet_virtualMachineProfileDataDisk_basicManagedDisk(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileDataDisk_basic(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.basicManagedDisk(data, data.Locations.Primary),
+			Config: r.basicDataDisk(data, data.Locations.Primary),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -26,9 +26,9 @@ func TestAccAzureFleet_virtualMachineProfileDataDisk_basicManagedDisk(t *testing
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileDataDisk_basicManagedDiskWithZones(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileDataDisk_basicManagedDiskWithZones(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -41,9 +41,9 @@ func TestAccAzureFleet_virtualMachineProfileDataDisk_basicManagedDiskWithZones(t
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileDataDisk_loadBalancerManagedDataDisks(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileDataDisk_loadBalancerManagedDataDisks(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -56,9 +56,9 @@ func TestAccAzureFleet_virtualMachineProfileDataDisk_loadBalancerManagedDataDisk
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileDataDisk_diskEncryptionSet(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileDataDisk_diskEncryptionSet(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -71,9 +71,9 @@ func TestAccAzureFleet_virtualMachineProfileDataDisk_diskEncryptionSet(t *testin
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypePremiumLRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileDataDisk_storageAccountTypePremiumLRS(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -86,9 +86,9 @@ func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypePremiumLR
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypePremiumV2LRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileDataDisk_storageAccountTypePremiumV2LRS(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -103,9 +103,9 @@ func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypePremiumV2
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypePremiumZRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileDataDisk_storageAccountTypePremiumZRS(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -118,9 +118,9 @@ func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypePremiumZR
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypeStandardLRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileDataDisk_storageAccountTypeStandardLRS(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -133,9 +133,9 @@ func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypeStandardL
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypeStandardSSDLRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileDataDisk_storageAccountTypeStandardSSDLRS(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -148,9 +148,9 @@ func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypeStandardS
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypeStandardSSDZRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileDataDisk_storageAccountTypeStandardSSDZRS(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -163,9 +163,9 @@ func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypeStandardS
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypeUltraSSDLRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileDataDisk_storageAccountTypeUltraSSDLRS(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -180,9 +180,9 @@ func TestAccAzureFleet_virtualMachineProfileDataDisk_storageAccountTypeUltraSSDL
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileDataDisk_MarketPlaceImage(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileDataDisk_MarketPlaceImage(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -195,12 +195,12 @@ func TestAccAzureFleet_virtualMachineProfileDataDisk_MarketPlaceImage(t *testing
 	})
 }
 
-func (r AzureFleetTestResource) basicManagedDisk(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) basicDataDisk(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
 
-resource "azurerm_azure_fleet" "test" {
+resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -215,6 +215,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -263,13 +264,13 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetTestResource) diskEncryptionSet(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) diskEncryptionSet(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
 %[2]s
 
-resource "azurerm_azure_fleet" "test" {
+resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[3]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[4]s"
@@ -284,6 +285,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -338,12 +340,12 @@ resource "azurerm_azure_fleet" "test" {
 `, r.diskEncryptionSetResourceDependencies(data), r.templateWithOutProvider(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetTestResource) basicManagedDiskWithZones(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) basicManagedDiskWithZones(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
 
-resource "azurerm_azure_fleet" "test" {
+resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -360,6 +362,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -408,12 +411,12 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetTestResource) loadBalancerManagedDataDisks(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) loadBalancerManagedDataDisks(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
 
-resource "azurerm_azure_fleet" "test" {
+resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -430,6 +433,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -471,11 +475,11 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetTestResource) dataDiskStorageAccountType(data acceptance.TestData, location string, storageAccountType string) string {
+func (r ComputeFleetTestResource) dataDiskStorageAccountType(data acceptance.TestData, location string, storageAccountType string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "azurerm_azure_fleet" "test" {
+resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -492,6 +496,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -534,12 +539,12 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location, storageAccountType)
 }
 
-func (r AzureFleetTestResource) dataDiskStorageAccountTypePremiumV2LRS(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) dataDiskStorageAccountTypePremiumV2LRS(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
 
-resource "azurerm_azure_fleet" "test" {
+resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -556,6 +561,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -599,12 +605,12 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetTestResource) dataDiskMarketPlaceImage(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) dataDiskMarketPlaceImage(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
 
-resource "azurerm_azure_fleet" "test" {
+resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -625,6 +631,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "micro-focus"
       offer     = "arcsight-logger"
@@ -668,11 +675,11 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetTestResource) dataDiskStorageAccountTypeUltraSSDLRS(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) dataDiskStorageAccountTypeUltraSSDLRS(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "azurerm_azure_fleet" "test" {
+resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -690,6 +697,7 @@ resource "azurerm_azure_fleet" "test" {
   zones = ["1"]
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -737,7 +745,7 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetTestResource) diskEncryptionSetResourceDependencies(data acceptance.TestData) string {
+func (r ComputeFleetTestResource) diskEncryptionSetResourceDependencies(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {

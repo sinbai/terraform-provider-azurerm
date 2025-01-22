@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package azurefleet_test
+package computefleet_test
 
 import (
 	"fmt"
@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 )
 
-func TestAccAzureFleet_virtualMachineProfileOsDisk_caching(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileOsDisk_caching(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -26,9 +26,9 @@ func TestAccAzureFleet_virtualMachineProfileOsDisk_caching(t *testing.T) {
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileOsDisk_storageAccountTypePremiumLRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileOsDisk_storageAccountTypePremiumLRS(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -41,9 +41,9 @@ func TestAccAzureFleet_virtualMachineProfileOsDisk_storageAccountTypePremiumLRS(
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileOsDisk_storageAccountTypePremiumZRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileOsDisk_storageAccountTypePremiumZRS(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -56,9 +56,9 @@ func TestAccAzureFleet_virtualMachineProfileOsDisk_storageAccountTypePremiumZRS(
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileOsDisk_storageAccountTypeStandardLRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileOsDisk_storageAccountTypeStandardLRS(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -71,9 +71,9 @@ func TestAccAzureFleet_virtualMachineProfileOsDisk_storageAccountTypeStandardLRS
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileOsDisk_storageAccountTypeStandardSSDLRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileOsDisk_storageAccountTypeStandardSSDLRS(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -86,9 +86,9 @@ func TestAccAzureFleet_virtualMachineProfileOsDisk_storageAccountTypeStandardSSD
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileOsDisk_storageAccountTypeStandardSSDZRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileOsDisk_storageAccountTypeStandardSSDZRS(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -101,9 +101,9 @@ func TestAccAzureFleet_virtualMachineProfileOsDisk_storageAccountTypeStandardSSD
 	})
 }
 
-func TestAccAzureFleet_virtualMachineProfileOsDisk_securityEncryptionType(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_azure_fleet", "test")
-	r := AzureFleetTestResource{}
+func TestAccComputeFleet_virtualMachineProfileOsDisk_securityEncryptionType(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -123,12 +123,12 @@ func TestAccAzureFleet_virtualMachineProfileOsDisk_securityEncryptionType(t *tes
 	})
 }
 
-func (r AzureFleetTestResource) ephemeral(data acceptance.TestData, location string, placement string) string {
+func (r ComputeFleetTestResource) ephemeral(data acceptance.TestData, location string, placement string) string {
 	return fmt.Sprintf(`
 %[1]s
 
 
-resource "azurerm_azure_fleet" "test" {
+resource "azurerm_compute_fleet" "test" {
   name                        = "acctest-fleet-%[2]d"
   resource_group_name         = azurerm_resource_group.test.name
   location                    = "%[3]s"
@@ -144,6 +144,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
@@ -187,12 +188,12 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location, placement)
 }
 
-func (r AzureFleetTestResource) storageAccountType(data acceptance.TestData, location string, storageAccountType string) string {
+func (r ComputeFleetTestResource) storageAccountType(data acceptance.TestData, location string, storageAccountType string) string {
 	return fmt.Sprintf(`
 %[1]s
 
 
-resource "azurerm_azure_fleet" "test" {
+resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -210,6 +211,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
@@ -252,11 +254,11 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location, storageAccountType)
 }
 
-func (r AzureFleetTestResource) securityEncryptionType(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) securityEncryptionType(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "azurerm_azure_fleet" "test" {
+resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -271,6 +273,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     secure_boot_enabled = true
     vtpm_enabled        = true
 
@@ -322,11 +325,11 @@ resource "azurerm_azure_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r AzureFleetTestResource) securityEncryptionTypeUpdate(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) securityEncryptionTypeUpdate(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "azurerm_azure_fleet" "test" {
+resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
@@ -341,6 +344,7 @@ resource "azurerm_azure_fleet" "test" {
   }
 
   virtual_machine_profile {
+		network_api_version = "2020-11-01"
     secure_boot_enabled = false
     vtpm_enabled        = true
 
