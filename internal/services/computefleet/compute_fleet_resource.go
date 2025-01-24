@@ -147,26 +147,35 @@ type OSProfileModel struct {
 }
 
 type LinuxConfigurationModel struct {
-	AdminPassword                     string        `tfschema:"admin_password"`
-	AdminUsername                     string        `tfschema:"admin_username"`
-	ComputerNamePrefix                string        `tfschema:"computer_name_prefix"`
-	Secret                            []SecretModel `tfschema:"secret"`
-	PasswordAuthenticationEnabled     bool          `tfschema:"password_authentication_enabled"`
-	VMAgentPlatformUpdatesEnabled     bool          `tfschema:"vm_agent_platform_updates_enabled"`
-	PatchAssessmentMode               string        `tfschema:"patch_assessment_mode"`
-	PatchMode                         string        `tfschema:"patch_mode"`
-	BypassPlatformSafetyChecksEnabled bool          `tfschema:"bypass_platform_safety_checks_enabled"`
-	RebootSetting                     string        `tfschema:"reboot_setting"`
-	ProvisionVMAgentEnabled           bool          `tfschema:"provision_vm_agent_enabled"`
-	SSHPublicKeys                     []string      `tfschema:"ssh_public_keys"`
+	AdminPassword                     string             `tfschema:"admin_password"`
+	AdminUsername                     string             `tfschema:"admin_username"`
+	ComputerNamePrefix                string             `tfschema:"computer_name_prefix"`
+	Secret                            []LinuxSecretModel `tfschema:"secret"`
+	PasswordAuthenticationEnabled     bool               `tfschema:"password_authentication_enabled"`
+	VMAgentPlatformUpdatesEnabled     bool               `tfschema:"vm_agent_platform_updates_enabled"`
+	PatchAssessmentMode               string             `tfschema:"patch_assessment_mode"`
+	PatchMode                         string             `tfschema:"patch_mode"`
+	BypassPlatformSafetyChecksEnabled bool               `tfschema:"bypass_platform_safety_checks_enabled"`
+	RebootSetting                     string             `tfschema:"reboot_setting"`
+	ProvisionVMAgentEnabled           bool               `tfschema:"provision_vm_agent_enabled"`
+	SSHPublicKeys                     []string           `tfschema:"ssh_public_keys"`
 }
 
-type SecretModel struct {
-	KeyVaultId   string             `tfschema:"key_vault_id"`
-	Certificates []CertificateModel `tfschema:"certificates"`
+type LinuxSecretModel struct {
+	KeyVaultId  string                  `tfschema:"key_vault_id"`
+	Certificate []LinuxCertificateModel `tfschema:"certificate"`
 }
 
-type CertificateModel struct {
+type WindowsSecretModel struct {
+	KeyVaultId  string                    `tfschema:"key_vault_id"`
+	Certificate []WindowsCertificateModel `tfschema:"certificate"`
+}
+
+type LinuxCertificateModel struct {
+	Url string `tfschema:"url"`
+}
+
+type WindowsCertificateModel struct {
 	Store string `tfschema:"store"`
 	Url   string `tfschema:"url"`
 }
@@ -175,7 +184,7 @@ type WindowsConfigurationModel struct {
 	AdminPassword                     string                           `tfschema:"admin_password"`
 	AdminUsername                     string                           `tfschema:"admin_username"`
 	ComputerNamePrefix                string                           `tfschema:"computer_name_prefix"`
-	Secret                            []SecretModel                    `tfschema:"secret"`
+	Secret                            []WindowsSecretModel             `tfschema:"secret"`
 	AdditionalUnattendContent         []AdditionalUnattendContentModel `tfschema:"additional_unattend_content"`
 	AutomaticUpdatesEnabled           bool                             `tfschema:"automatic_updates_enabled"`
 	VMAgentPlatformUpdatesEnabled     bool                             `tfschema:"vm_agent_platform_updates_enabled"`
@@ -323,7 +332,7 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 
 		"resource_group_name": commonschema.ResourceGroupName(),
 
-		"virtual_machine_profile": virtualMachineProfileSchema(true),
+		"virtual_machine_profile": virtualMachineProfileSchema(),
 
 		"additional_capabilities_hibernation_enabled": {
 			Type:     pluginsdk.TypeBool,
@@ -350,7 +359,10 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 				Schema: map[string]*pluginsdk.Schema{
 					"location": commonschema.LocationWithoutForceNew(),
 
-					"virtual_machine_profile_override": virtualMachineProfileSchema(false),
+					// The behavior of the API is when `virtual_machine_profile_override` is not specified but only location is specified then the `virtual_machine_profile` will be used.
+					// However, it is not possible to have two VNets with the same resource id in different regions under the same subscription. Confirmed with service team that this is an API bug, they will return a friendly error later, they will show user-friendly error message later.
+					// So, set `virtual_machine_profile_override` is required here.
+					"virtual_machine_profile_override": virtualMachineProfileSchema(),
 				},
 			},
 		},
@@ -419,7 +431,7 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 						Type:     pluginsdk.TypeString,
 						Optional: true,
 						ForceNew: true,
-						Default:  fleets.RegularPriorityAllocationStrategyLowestPrice,
+						Default:  string(fleets.RegularPriorityAllocationStrategyLowestPrice),
 						ValidateFunc: validation.StringInSlice([]string{
 							string(fleets.RegularPriorityAllocationStrategyLowestPrice),
 							string(fleets.RegularPriorityAllocationStrategyPrioritized),
@@ -452,7 +464,7 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 						Type:     pluginsdk.TypeString,
 						Optional: true,
 						ForceNew: true,
-						Default:  fleets.SpotAllocationStrategyPriceCapacityOptimized,
+						Default:  string(fleets.SpotAllocationStrategyPriceCapacityOptimized),
 						ValidateFunc: validation.StringInSlice([]string{
 							string(fleets.SpotAllocationStrategyPriceCapacityOptimized),
 							string(fleets.SpotAllocationStrategyLowestPrice),
@@ -464,7 +476,7 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 						Type:     pluginsdk.TypeString,
 						Optional: true,
 						ForceNew: true,
-						Default:  fleets.EvictionPolicyDelete,
+						Default:  string(fleets.EvictionPolicyDelete),
 						ValidateFunc: validation.StringInSlice([]string{
 							string(fleets.EvictionPolicyDelete),
 							string(fleets.EvictionPolicyDeallocate),
@@ -577,7 +589,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 				"accelerator_support": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
-					Default:  fleets.VMAttributeSupportExcluded,
+					Default:  string(fleets.VMAttributeSupportExcluded),
 					ValidateFunc: validation.StringInSlice(
 						fleets.PossibleValuesForVMAttributeSupport(), false),
 				},
@@ -605,7 +617,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 				"burstable_support": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
-					Default:  fleets.VMAttributeSupportExcluded,
+					Default:  string(fleets.VMAttributeSupportExcluded),
 					ValidateFunc: validation.StringInSlice(
 						fleets.PossibleValuesForVMAttributeSupport(), false),
 				},
@@ -662,7 +674,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 				"local_storage_support": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
-					Default:  fleets.VMAttributeSupportIncluded,
+					Default:  string(fleets.VMAttributeSupportIncluded),
 					ValidateFunc: validation.StringInSlice(
 						fleets.PossibleValuesForVMAttributeSupport(), false),
 				},
@@ -706,7 +718,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 				"rdma_support": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
-					Default:  fleets.VMAttributeSupportExcluded,
+					Default:  string(fleets.VMAttributeSupportExcluded),
 					ValidateFunc: validation.StringInSlice(
 						fleets.PossibleValuesForVMAttributeSupport(), false),
 				},
@@ -1337,6 +1349,10 @@ func (r ComputeFleetResource) CustomizeDiff() sdk.ResourceFunc {
 						return fmt.Errorf("`protected_settings_from_key_vault` cannot be used with `protected_settings_json`")
 					}
 				}
+			}
+
+			if len(state.Zones) > 0 && state.PlatformFaultDomainCount > 1 {
+				return fmt.Errorf("specifying `zones` is not allowed when `platform_fault_domain_count` higher than 1")
 			}
 
 			return nil

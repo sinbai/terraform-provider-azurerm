@@ -11,79 +11,20 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 )
 
-func TestAccComputeFleet_virtualMachineProfileOthers_additionalCapabilities(t *testing.T) {
+func TestAccComputeFleet_virtualMachineProfileOthers_bootDiagnosticEnabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.additionalCapabilities(data, data.Locations.Primary),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-	})
-}
-
-func TestAccComputeFleet_virtualMachineProfileOthers_automaticVMGuestPatchingLinux(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
-	r := ComputeFleetTestResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.linuxVMGuestPatching(data, data.Locations.Primary, "ImageDefault"),
+			Config: r.bootDiagnostic(data, data.Locations.Primary, true),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.linuxVMGuestPatching(data, data.Locations.Primary, "AutomaticByPlatform"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-	})
-}
-
-func TestAccComputeFleet_virtualMachineProfileOthers_automaticVMGuestPatchingWindows(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
-	r := ComputeFleetTestResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.windowsVMGuestPatching(data, data.Locations.Primary, "AutomaticByOS"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password"),
-		{
-			Config: r.windowsVMGuestPatching(data, data.Locations.Primary, "AutomaticByPlatform"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password"),
-	})
-}
-
-func TestAccComputeFleet_virtualMachineProfileOthers_hotPatching(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
-	r := ComputeFleetTestResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.hotPatchingWindows(data, data.Locations.Primary, true),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-		{
-			Config: r.hotPatchingWindows(data, data.Locations.Primary, false),
+			Config: r.bootDiagnostic(data, data.Locations.Primary, false),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -114,50 +55,6 @@ func TestAccComputeFleet_virtualMachineProfileOthers_capacityReservationGroup(t 
 	})
 }
 
-func TestAccComputeFleet_virtualMachineProfileOthers_licenseType(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
-	r := ComputeFleetTestResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.licenseTypeWindows(data, data.Locations.Primary, "Windows_Client"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password"),
-		{
-			Config: r.licenseTypeWindows(data, data.Locations.Primary, "Windows_Server"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password"),
-	})
-}
-
-func TestAccComputeFleet_virtualMachineProfileOthers_UserData(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
-	r := ComputeFleetTestResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.userData(data, data.Locations.Primary, "Hello World"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-		{
-			Config: r.userData(data, data.Locations.Primary, "Goodbye World"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-	})
-}
-
 func TestAccComputeFleet_virtualMachineProfileOthers_galleryApplication(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
@@ -177,6 +74,28 @@ func TestAccComputeFleet_virtualMachineProfileOthers_galleryApplication(t *testi
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+	})
+}
+
+func TestAccComputeFleet_virtualMachineProfileOthers_licenseType(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.licenseType(data, data.Locations.Primary, "Windows_Client"),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password"),
+		{
+			Config: r.licenseType(data, data.Locations.Primary, "Windows_Server"),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password"),
 	})
 }
 
@@ -224,20 +143,20 @@ func TestAccComputeFleet_virtualMachineProfileOthers_securityProfile(t *testing.
 	})
 }
 
-func TestAccComputeFleet_virtualMachineProfileOthers_bypassPlatformSafetyCheck(t *testing.T) {
+func TestAccComputeFleet_virtualMachineProfileOthers_UserData(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.bypassPlatformSafetyCheck(data, data.Locations.Primary, true),
+			Config: r.userData(data, data.Locations.Primary, "Hello World"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.bypassPlatformSafetyCheck(data, data.Locations.Primary, false),
+			Config: r.userData(data, data.Locations.Primary, "Goodbye World"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -246,20 +165,20 @@ func TestAccComputeFleet_virtualMachineProfileOthers_bypassPlatformSafetyCheck(t
 	})
 }
 
-func TestAccComputeFleet_virtualMachineProfileOthers_rebootSetting(t *testing.T) {
+func TestAccComputeFleet_virtualMachineProfileOthers_additionalCapabilities(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.rebootSetting(data, data.Locations.Primary, "Always"),
+			Config: r.additionalCapabilities(data, data.Locations.Primary),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.rebootSetting(data, data.Locations.Primary, "IfRequired"),
+			Config: r.additionalCapabilitiesUpdate(data, data.Locations.Primary),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -268,55 +187,7 @@ func TestAccComputeFleet_virtualMachineProfileOthers_rebootSetting(t *testing.T)
 	})
 }
 
-func TestAccComputeFleet_virtualMachineProfileOthers_vmAgentPlatformUpdate(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
-	r := ComputeFleetTestResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.vmAgentPlatformUpdate(data, data.Locations.Primary, true),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-		{
-			Config: r.vmAgentPlatformUpdate(data, data.Locations.Primary, false),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-	})
-}
-
-func TestAccComputeFleet_virtualMachineProfileOthers_additionalUnAttendContent(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
-	r := ComputeFleetTestResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.additionalUnAttendContent(data, data.Locations.Primary),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(
-			"virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password",
-			"virtual_machine_profile.0.os_profile.0.windows_configuration.0.additional_unattend_content.0.content"),
-		{
-			Config: r.additionalUnAttendContentUpdate(data, data.Locations.Primary),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(
-			"virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password",
-			"virtual_machine_profile.0.os_profile.0.windows_configuration.0.additional_unattend_content.0.content"),
-	})
-}
-
-func (r ComputeFleetTestResource) linuxVMGuestPatching(data acceptance.TestData, location string, patchMode string) string {
+func (r ComputeFleetTestResource) bootDiagnostic(data acceptance.TestData, location string, enabled bool) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -331,7 +202,96 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   vm_sizes_profile {
-    name = "Standard_F2"
+    name = "Standard_DS1_v2"
+  }
+
+  virtual_machine_profile {
+    network_api_version                      = "2020-11-01"
+    boot_diagnostic_enabled                  = %[4]t
+    boot_diagnostic_storage_account_endpoint = azurerm_storage_account.test.primary_blob_endpoint
+
+    source_image_reference {
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts-gen2"
+      version   = "latest"
+    }
+
+    os_disk {
+      storage_account_type = "Standard_LRS"
+      caching              = "ReadWrite"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
+      }
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        subnet_id = azurerm_subnet.test.id
+        primary   = true
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+  }
+}
+
+resource "azurerm_storage_account" "test" {
+  name                            = "accteststr%[5]s"
+  resource_group_name             = azurerm_resource_group.test.name
+  location                        = azurerm_resource_group.test.location
+  account_tier                    = "Standard"
+  account_replication_type        = "LRS"
+  allow_nested_items_to_be_public = false
+}
+`, r.template(data, location), data.RandomInteger, location, enabled, data.RandomString)
+}
+
+func (r ComputeFleetTestResource) capacityReservationGroup(data acceptance.TestData, location string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_capacity_reservation_group" "test" {
+  name                = "acctest-ccrg-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+}
+
+resource "azurerm_capacity_reservation" "test" {
+  name                          = "acctest-ccr-%[2]d"
+  capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
+  sku {
+    name     = "Standard_F2"
+    capacity = 1
+  }
+}
+
+resource "azurerm_compute_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_D2s_v3"
   }
 
   virtual_machine_profile {
@@ -348,262 +308,6 @@ resource "azurerm_compute_fleet" "test" {
       storage_account_type = "Standard_LRS"
     }
 
-    data_disk {
-      lun                  = 0
-      caching              = "ReadWrite"
-      create_option        = "Empty"
-      disk_size_in_gb      = 10
-      storage_account_type = "Standard_LRS"
-    }
-
-    os_profile {
-      linux_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        admin_password                  = local.admin_password
-        password_authentication_enabled = true
-
-        patch_mode            = "%[4]s"
-        patch_assessment_mode = "%[4]s"
-      }
-    }
-
-    network_interface {
-      name    = "networkProTest"
-      primary = true
-      ip_configuration {
-        name      = "TestIPConfiguration"
-        subnet_id = azurerm_subnet.test.id
-        primary   = true
-
-        public_ip_address {
-          name                    = "TestPublicIPConfiguration"
-          domain_name_label       = "test-domain-label"
-          idle_timeout_in_minutes = 4
-        }
-      }
-    }
-
-    extension {
-      name                 = "HealthExtension"
-      publisher            = "Microsoft.ManagedServices"
-      type                 = "ApplicationHealthLinux"
-      type_handler_version = "1.0"
-
-      settings_json = jsonencode({
-        "protocol"    = "http"
-        "port"        = 80
-        "requestPath" = "/healthEndpoint"
-      })
-    }
-  }
-}
-`, r.template(data, location), data.RandomInteger, location, patchMode)
-}
-
-func (r ComputeFleetTestResource) hotPatchingWindows(data acceptance.TestData, location string, enabled bool) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azurerm_compute_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
-
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
-  }
-
-  vm_sizes_profile {
-    name = "Standard_F2s_v2"
-  }
-
-  virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    source_image_reference {
-      publisher = "MicrosoftWindowsServer"
-      offer     = "WindowsServer"
-      sku       = "2016-Datacenter"
-      version   = "latest"
-    }
-
-    os_disk {
-      caching              = "ReadWrite"
-      storage_account_type = "Standard_LRS"
-    }
-
-    data_disk {
-      lun                  = 0
-      caching              = "ReadWrite"
-      create_option        = "Empty"
-      disk_size_in_gb      = 10
-      storage_account_type = "Standard_LRS"
-    }
-
-    os_profile {
-      windows_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
-
-        patch_mode           = "AutomaticByPlatform"
-        hot_patching_enabled = %[4]t
-      }
-    }
-
-    network_interface {
-      name    = "networkProTest"
-      primary = true
-      ip_configuration {
-        name      = "TestIPConfiguration"
-        subnet_id = azurerm_subnet.test.id
-        primary   = true
-
-        public_ip_address {
-          name                    = "TestPublicIPConfiguration"
-          domain_name_label       = "test-domain-label"
-          idle_timeout_in_minutes = 4
-        }
-      }
-    }
-
-    extension {
-      name                 = "HealthExtension"
-      publisher            = "Microsoft.ManagedServices"
-      type                 = "ApplicationHealthLinux"
-      type_handler_version = "1.0"
-
-      settings_json = jsonencode({
-        "protocol"    = "http"
-        "port"        = 80
-        "requestPath" = "/healthEndpoint"
-      })
-    }
-  }
-}
-`, r.template(data, location), data.RandomInteger, location, enabled)
-}
-
-func (r ComputeFleetTestResource) windowsVMGuestPatching(data acceptance.TestData, location string, patchMode string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azurerm_compute_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
-
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
-  }
-
-  vm_sizes_profile {
-    name = "Standard_D1_v2"
-  }
-
-  virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    source_image_reference {
-      publisher = "MicrosoftWindowsServer"
-      offer     = "WindowsServer"
-      sku       = "2016-Datacenter"
-      version   = "latest"
-    }
-
-    os_disk {
-      caching              = "ReadWrite"
-      storage_account_type = "Standard_LRS"
-    }
-
-    data_disk {
-      lun                  = 0
-      caching              = "ReadWrite"
-      create_option        = "Empty"
-      disk_size_in_gb      = 10
-      storage_account_type = "Standard_LRS"
-    }
-
-    os_profile {
-      windows_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
-
-        patch_mode            = "%[4]s"
-        patch_assessment_mode = "ImageDefault"
-      }
-    }
-
-    network_interface {
-      name    = "networkProTest"
-      primary = true
-      ip_configuration {
-        name      = "TestIPConfiguration"
-        subnet_id = azurerm_subnet.test.id
-        primary   = true
-
-        public_ip_address {
-          name                    = "TestPublicIPConfiguration"
-          domain_name_label       = "test-domain-label"
-          idle_timeout_in_minutes = 4
-        }
-      }
-    }
-
-    extension {
-      name                 = "HealthExtension"
-      publisher            = "Microsoft.ManagedServices"
-      type                 = "ApplicationHealthLinux"
-      type_handler_version = "1.0"
-
-      settings_json = jsonencode({
-        "protocol"    = "http"
-        "port"        = 80
-        "requestPath" = "/healthEndpoint"
-      })
-    }
-  }
-}
-`, r.template(data, location), data.RandomInteger, location, patchMode)
-}
-
-func (r ComputeFleetTestResource) additionalCapabilities(data acceptance.TestData, location string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azurerm_compute_fleet" "test" {
-  name                                        = "acctest-fleet-%[2]d"
-  resource_group_name                         = azurerm_resource_group.test.name
-  location                                    = "%[3]s"
-  additional_capabilities_ultra_ssd_enabled   = true
-  additional_capabilities_hibernation_enabled = true
-  zones                                       = ["1"]
-
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
-  }
-
-  vm_sizes_profile {
-    name = "Standard_D2s_v3"
-  }
-
-  virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts"
-      version   = "latest"
-    }
-
-    os_disk {
-      caching              = "ReadWrite"
-      storage_account_type = "Standard_LRS"
-    }
-
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
@@ -627,19 +331,7 @@ resource "azurerm_compute_fleet" "test" {
         }
       }
     }
-
-    extension {
-      name                 = "HealthExtension"
-      publisher            = "Microsoft.ManagedServices"
-      type                 = "ApplicationHealthLinux"
-      type_handler_version = "1.0"
-
-      settings_json = jsonencode({
-        "protocol"    = "http"
-        "port"        = 80
-        "requestPath" = "/healthEndpoint"
-      })
-    }
+    depends_on = [azurerm_capacity_reservation.test]
   }
 }
 `, r.template(data, location), data.RandomInteger, location)
@@ -691,85 +383,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts"
-      version   = "latest"
-    }
-
-    os_disk {
-      caching              = "ReadWrite"
-      storage_account_type = "Standard_LRS"
-    }
-
-    os_profile {
-      linux_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        admin_password                  = local.admin_password
-        password_authentication_enabled = true
-      }
-    }
-
-    network_interface {
-      name    = "networkProTest"
-      primary = true
-      ip_configuration {
-        name      = "TestIPConfiguration"
-        subnet_id = azurerm_subnet.test.id
-        primary   = true
-        public_ip_address {
-          name                    = "TestPublicIPConfiguration"
-          domain_name_label       = "test-domain-label"
-          idle_timeout_in_minutes = 4
-        }
-      }
-    }
-    depends_on = [azurerm_capacity_reservation.test]
-  }
-}
-`, r.template(data, location), data.RandomInteger, location)
-}
-
-func (r ComputeFleetTestResource) capacityReservationGroup(data acceptance.TestData, location string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azurerm_capacity_reservation_group" "test" {
-  name                = "acctest-ccrg-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = azurerm_resource_group.test.location
-}
-
-resource "azurerm_capacity_reservation" "test" {
-  name                          = "acctest-ccr-%[2]d"
-  capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
-  sku {
-    name     = "Standard_F2"
-    capacity = 1
-  }
-}
-
-resource "azurerm_compute_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
-
-  capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
-
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
-  }
-
-  vm_sizes_profile {
-    name = "Standard_D2s_v3"
-  }
-
-  virtual_machine_profile {
-		network_api_version = "2020-11-01"
+    network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -895,7 +509,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
+    network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -945,7 +559,7 @@ resource "azurerm_compute_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location, data.RandomString, tag)
 }
 
-func (r ComputeFleetTestResource) licenseTypeWindows(data acceptance.TestData, location string, lType string) string {
+func (r ComputeFleetTestResource) licenseType(data acceptance.TestData, location string, lType string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -964,7 +578,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
+    network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "MicrosoftWindowsServer"
       offer     = "WindowsServer"
@@ -1013,67 +627,6 @@ resource "azurerm_compute_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location, lType)
 }
 
-func (r ComputeFleetTestResource) userData(data acceptance.TestData, location string, userDta string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azurerm_compute_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
-
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
-  }
-
-  vm_sizes_profile {
-    name = "Standard_D1_v2"
-  }
-
-  virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts"
-      version   = "latest"
-    }
-
-    os_disk {
-      caching              = "ReadWrite"
-      storage_account_type = "Standard_LRS"
-    }
-
-    os_profile {
-      linux_configuration {
-        computer_name_prefix = "testvm-%[2]d"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
-
-        password_authentication_enabled = true
-      }
-    }
-
-    network_interface {
-      name    = "networkProTest"
-      primary = true
-      ip_configuration {
-        name      = "TestIPConfiguration"
-        subnet_id = azurerm_subnet.test.id
-        primary   = true
-        public_ip_address {
-          name                    = "TestPublicIPConfiguration"
-          domain_name_label       = "test-domain-label"
-          idle_timeout_in_minutes = 4
-        }
-      }
-    }
-    user_data_base64 = base64encode("%[4]s")
-  }
-}
-`, r.template(data, location), data.RandomInteger, location, userDta)
-}
 func (r ComputeFleetTestResource) scheduledEvent(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -1093,7 +646,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
+    network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -1157,7 +710,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
+    network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -1201,6 +754,68 @@ resource "azurerm_compute_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
+func (r ComputeFleetTestResource) userData(data acceptance.TestData, location string, userDta string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_compute_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_D1_v2"
+  }
+
+  virtual_machine_profile {
+    network_api_version = "2020-11-01"
+    source_image_reference {
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts"
+      version   = "latest"
+    }
+
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix = "testvm-%[2]d"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
+
+        password_authentication_enabled = true
+      }
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        subnet_id = azurerm_subnet.test.id
+        primary   = true
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+    user_data_base64 = base64encode("%[4]s")
+  }
+}
+`, r.template(data, location), data.RandomInteger, location, userDta)
+}
+
 func (r ComputeFleetTestResource) securityProfile(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -1220,7 +835,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
+    network_api_version        = "2020-11-01"
     encryption_at_host_enabled = true
     secure_boot_enabled        = true
     vtpm_enabled               = true
@@ -1292,7 +907,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
+    network_api_version        = "2020-11-01"
     encryption_at_host_enabled = false
     secure_boot_enabled        = false
     vtpm_enabled               = false
@@ -1345,14 +960,17 @@ resource "azurerm_compute_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r ComputeFleetTestResource) bypassPlatformSafetyCheck(data acceptance.TestData, location string, enabled bool) string {
+func (r ComputeFleetTestResource) additionalCapabilities(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
 resource "azurerm_compute_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  name                                        = "acctest-fleet-%[2]d"
+  resource_group_name                         = azurerm_resource_group.test.name
+  location                                    = "%[3]s"
+  additional_capabilities_ultra_ssd_enabled   = false
+  additional_capabilities_hibernation_enabled = false
+  zones                                       = ["1"]
 
   regular_priority_profile {
     capacity     = 1
@@ -1360,190 +978,29 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   vm_sizes_profile {
-    name = "Standard_DS1_v2"
+    name = "Standard_D2s_v3"
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    encryption_at_host_enabled = false
-    secure_boot_enabled        = false
-    vtpm_enabled               = false
-
+    network_api_version = "2020-11-01"
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts-gen2"
+      sku       = "22_04-lts"
       version   = "latest"
     }
 
     os_disk {
-      storage_account_type = "Standard_LRS"
       caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
     }
 
     os_profile {
       linux_configuration {
-        computer_name_prefix                  = "prefix"
-        admin_username                        = local.admin_username
-        admin_password                        = local.admin_password
-        password_authentication_enabled       = true
-        patch_mode                            = "AutomaticByPlatform"
-        bypass_platform_safety_checks_enabled = %[4]t
-      }
-    }
-
-    extension {
-      name                               = "HealthExtension"
-      publisher                          = "Microsoft.ManagedServices"
-      type                               = "ApplicationHealthLinux"
-      type_handler_version               = "1.0"
-      auto_upgrade_minor_version_enabled = true
-      settings_json = jsonencode({
-        protocol = "https"
-        port     = 443
-      })
-    }
-
-    network_interface {
-      name    = "networkProTest"
-      primary = true
-      ip_configuration {
-        name      = "TestIPConfiguration"
-        subnet_id = azurerm_subnet.test.id
-        primary   = true
-        public_ip_address {
-          name                    = "TestPublicIPConfiguration"
-          domain_name_label       = "test-domain-label"
-          idle_timeout_in_minutes = 4
-        }
-      }
-    }
-  }
-}
-`, r.template(data, location), data.RandomInteger, location, enabled)
-}
-
-func (r ComputeFleetTestResource) rebootSetting(data acceptance.TestData, location string, rebootSetting string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azurerm_compute_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
-
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
-  }
-
-  vm_sizes_profile {
-    name = "Standard_DS1_v2"
-  }
-
-  virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    encryption_at_host_enabled = false
-    secure_boot_enabled        = false
-    vtpm_enabled               = false
-
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts-gen2"
-      version   = "latest"
-    }
-
-    os_disk {
-      storage_account_type = "Standard_LRS"
-      caching              = "ReadWrite"
-    }
-
-    os_profile {
-      linux_configuration {
-        computer_name_prefix                  = "prefix"
-        admin_username                        = local.admin_username
-        admin_password                        = local.admin_password
-        password_authentication_enabled       = true
-        patch_mode                            = "AutomaticByPlatform"
-        reboot_setting = "%[4]s"
-      }
-    }
-
-    extension {
-      name                               = "HealthExtension"
-      publisher                          = "Microsoft.ManagedServices"
-      type                               = "ApplicationHealthLinux"
-      type_handler_version               = "1.0"
-      auto_upgrade_minor_version_enabled = true
-      settings_json = jsonencode({
-        protocol = "https"
-        port     = 443
-      })
-    }
-
-    network_interface {
-      name    = "networkProTest"
-      primary = true
-      ip_configuration {
-        name      = "TestIPConfiguration"
-        subnet_id = azurerm_subnet.test.id
-        primary   = true
-        public_ip_address {
-          name                    = "TestPublicIPConfiguration"
-          domain_name_label       = "test-domain-label"
-          idle_timeout_in_minutes = 4
-        }
-      }
-    }
-  }
-}
-`, r.template(data, location), data.RandomInteger, location, rebootSetting)
-}
-
-func (r ComputeFleetTestResource) vmAgentPlatformUpdate(data acceptance.TestData, location string, enabled bool) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azurerm_compute_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
-
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
-  }
-
-  vm_sizes_profile {
-    name = "Standard_DS1_v2"
-  }
-
-  virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    encryption_at_host_enabled = false
-    secure_boot_enabled        = false
-    vtpm_enabled               = false
-
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts-gen2"
-      version   = "latest"
-    }
-
-    os_disk {
-      storage_account_type = "Standard_LRS"
-      caching              = "ReadWrite"
-    }
-
-    os_profile {
-      linux_configuration {
-        computer_name_prefix                  = "prefix"
-        admin_username                        = local.admin_username
-        admin_password                        = local.admin_password
-        password_authentication_enabled       = true
-        vm_agent_platform_updates_enabled     = %[4]t
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
       }
     }
 
@@ -1554,70 +1011,6 @@ resource "azurerm_compute_fleet" "test" {
         name      = "TestIPConfiguration"
         subnet_id = azurerm_subnet.test.id
         primary   = true
-        public_ip_address {
-          name                    = "TestPublicIPConfiguration"
-          domain_name_label       = "test-domain-label"
-          idle_timeout_in_minutes = 4
-        }
-      }
-    }
-  }
-}
-`, r.template(data, location), data.RandomInteger, location, enabled)
-}
-
-func (r ComputeFleetTestResource) additionalUnAttendContent(data acceptance.TestData, location string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azurerm_compute_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
-
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
-  }
-
-  vm_sizes_profile {
-    name = "Standard_D1_v2"
-  }
-
-  virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    source_image_reference {
-      publisher = "MicrosoftWindowsServer"
-      offer     = "WindowsServer"
-      sku       = "2016-Datacenter"
-      version   = "latest"
-    }
-
-    os_disk {
-      caching              = "ReadWrite"
-      storage_account_type = "Standard_LRS"
-    }
-
-    os_profile {
-      windows_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
-        additional_unattend_content {
-					setting = "FirstLogonCommands"
-					content = "<FirstLogonCommands><SynchronousCommand><CommandLine>shutdown /r /t 0 /c \"initial reboot\"</CommandLine><Description>reboot</Description><Order>1</Order></SynchronousCommand></FirstLogonCommands>"
-				}
-      }
-    }
-
-    network_interface {
-      name    = "networkProTest"
-      primary = true
-      ip_configuration {
-        name      = "TestIPConfiguration"
-        subnet_id = azurerm_subnet.test.id
-        primary   = true
-
         public_ip_address {
           name                    = "TestPublicIPConfiguration"
           domain_name_label       = "test-domain-label"
@@ -1630,14 +1023,17 @@ resource "azurerm_compute_fleet" "test" {
 `, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r ComputeFleetTestResource) additionalUnAttendContentUpdate(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) additionalCapabilitiesUpdate(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
 
 resource "azurerm_compute_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  name                                        = "acctest-fleet-%[2]d"
+  resource_group_name                         = azurerm_resource_group.test.name
+  location                                    = "%[3]s"
+  additional_capabilities_ultra_ssd_enabled   = true
+  additional_capabilities_hibernation_enabled = true
+  zones                                       = ["1"]
 
   regular_priority_profile {
     capacity     = 1
@@ -1645,15 +1041,15 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   vm_sizes_profile {
-    name = "Standard_D1_v2"
+    name = "Standard_D2s_v3"
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
+    network_api_version = "2020-11-01"
     source_image_reference {
-      publisher = "MicrosoftWindowsServer"
-      offer     = "WindowsServer"
-      sku       = "2016-Datacenter"
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts"
       version   = "latest"
     }
 
@@ -1663,15 +1059,11 @@ resource "azurerm_compute_fleet" "test" {
     }
 
     os_profile {
-      windows_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
-        additional_unattend_content {
-					setting = "AutoLogon"
-					#content = "<FirstLogonCommands><SynchronousCommand><CommandLine>shutdown /r /t 0 /c \"initial reboot\"</CommandLine><Description>reboot</Description><Order>1</Order></SynchronousCommand></FirstLogonCommands>"
-         content = "<AutoLogon><Username>${local.admin_username}</Username><Domain>WORKGROUP</Domain><Password><Value>${local.admin_password}</Value><PlainText>true</PlainText></Password><Enabled>true</Enabled></AutoLogon>"
-				}
+      linux_configuration {
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
       }
     }
 
@@ -1682,7 +1074,6 @@ resource "azurerm_compute_fleet" "test" {
         name      = "TestIPConfiguration"
         subnet_id = azurerm_subnet.test.id
         primary   = true
-
         public_ip_address {
           name                    = "TestPublicIPConfiguration"
           domain_name_label       = "test-domain-label"
@@ -1691,6 +1082,18 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
 
+    extension {
+      name                 = "HealthExtension"
+      publisher            = "Microsoft.ManagedServices"
+      type                 = "ApplicationHealthLinux"
+      type_handler_version = "1.0"
+
+      settings_json = jsonencode({
+        "protocol"    = "http"
+        "port"        = 80
+        "requestPath" = "/healthEndpoint"
+      })
+    }
   }
 }
 `, r.template(data, location), data.RandomInteger, location)

@@ -11,13 +11,13 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 )
 
-func TestAccComputeFleet_virtualMachineProfileOsDisk_caching(t *testing.T) {
+func TestAccComputeFleet_virtualMachineProfileOsDisk_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.ephemeral(data, data.Locations.Primary, "CacheDisk"),
+			Config: r.osDiskBasic(data, data.Locations.Primary),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -26,13 +26,13 @@ func TestAccComputeFleet_virtualMachineProfileOsDisk_caching(t *testing.T) {
 	})
 }
 
-func TestAccComputeFleet_virtualMachineProfileOsDisk_storageAccountTypePremiumLRS(t *testing.T) {
+func TestAccComputeFleet_virtualMachineProfileOsDisk_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.storageAccountType(data, data.Locations.Primary, "Premium_LRS"),
+			Config: r.osDiskComplete(data, data.Locations.Primary),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -41,13 +41,35 @@ func TestAccComputeFleet_virtualMachineProfileOsDisk_storageAccountTypePremiumLR
 	})
 }
 
-func TestAccComputeFleet_virtualMachineProfileOsDisk_storageAccountTypePremiumZRS(t *testing.T) {
+func TestAccComputeFleet_virtualMachineProfileOsDisk_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.storageAccountType(data, "westeurope", "Premium_ZRS"),
+			Config: r.osDiskComplete(data, "westeurope"),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		{
+			// Limited regional availability for some storage account type
+			Config: r.osDiskCompleteUpdate(data, "westeurope"),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		{
+			Config: r.osDiskBasic(data, "westeurope"),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		{
+			Config: r.osDiskComplete(data, "westeurope"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -56,87 +78,19 @@ func TestAccComputeFleet_virtualMachineProfileOsDisk_storageAccountTypePremiumZR
 	})
 }
 
-func TestAccComputeFleet_virtualMachineProfileOsDisk_storageAccountTypeStandardLRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
-	r := ComputeFleetTestResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.storageAccountType(data, data.Locations.Primary, "Standard_LRS"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-	})
-}
-
-func TestAccComputeFleet_virtualMachineProfileOsDisk_storageAccountTypeStandardSSDLRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
-	r := ComputeFleetTestResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.storageAccountType(data, data.Locations.Primary, "StandardSSD_LRS"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-	})
-}
-
-func TestAccComputeFleet_virtualMachineProfileOsDisk_storageAccountTypeStandardSSDZRS(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
-	r := ComputeFleetTestResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.storageAccountType(data, "westeurope", "StandardSSD_ZRS"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-	})
-}
-
-func TestAccComputeFleet_virtualMachineProfileOsDisk_securityEncryptionType(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
-	r := ComputeFleetTestResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.securityEncryptionType(data, data.Locations.Primary),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-		{
-			Config: r.securityEncryptionTypeUpdate(data, data.Locations.Primary),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
-	})
-}
-
-func (r ComputeFleetTestResource) ephemeral(data acceptance.TestData, location string, placement string) string {
+func (r ComputeFleetTestResource) osDiskBasic(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
-
 
 resource "azurerm_compute_fleet" "test" {
   name                        = "acctest-fleet-%[2]d"
   resource_group_name         = azurerm_resource_group.test.name
   location                    = "%[3]s"
-  platform_fault_domain_count = 2
+  platform_fault_domain_count = 1
 
   regular_priority_profile {
     capacity     = 1
-    min_capacity = 1
+    min_capacity = 0
   }
 
   vm_sizes_profile {
@@ -144,7 +98,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
+    network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
@@ -170,12 +124,7 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
 
-    os_disk {
-      storage_account_type = "Standard_LRS"
-      caching              = "ReadOnly"
-      diff_disk_option     = "Local"
-      diff_disk_placement  = "%[4]s"
-    }
+    os_disk {}
 
     source_image_reference {
       publisher = "Canonical"
@@ -185,134 +134,49 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
 }
-`, r.template(data, location), data.RandomInteger, location, placement)
+`, r.template(data, location), data.RandomInteger, location)
 }
 
-func (r ComputeFleetTestResource) storageAccountType(data acceptance.TestData, location string, storageAccountType string) string {
+func (r ComputeFleetTestResource) osDiskComplete(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
-
-
+%[2]s
 resource "azurerm_compute_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
-
-  platform_fault_domain_count = 2
-  zones                       = ["1", "2", "3"]
+  name                        = "acctest-fleet-%[3]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[4]s"
+  platform_fault_domain_count = 1
 
   regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+    capacity     = 0
+    min_capacity = 0
   }
 
   vm_sizes_profile {
-    name = "Standard_F2s_v2"
+    name = "Standard_DC8ads_v5"
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    os_profile {
-      linux_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        admin_password                  = local.admin_password
-        password_authentication_enabled = true
-      }
-    }
-
-    network_interface {
-      name    = "networkProTest"
-      primary = true
-
-      ip_configuration {
-        name      = "TestIPConfiguration"
-        primary   = true
-        subnet_id = azurerm_subnet.test.id
-
-        public_ip_address {
-          name                    = "TestPublicIPConfiguration"
-          domain_name_label       = "test-domain-label"
-          idle_timeout_in_minutes = 4
-        }
-      }
-    }
-
-    os_disk {
-      storage_account_type = "%[4]s"
-      caching              = "ReadWrite"
-    }
-
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts"
-      version   = "latest"
-    }
-  }
-}
-`, r.template(data, location), data.RandomInteger, location, storageAccountType)
-}
-
-func (r ComputeFleetTestResource) securityEncryptionType(data acceptance.TestData, location string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azurerm_compute_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
-
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
-  }
-
-  vm_sizes_profile {
-    name = "Standard_DC2as_v5"
-  }
-
-  virtual_machine_profile {
-		network_api_version = "2020-11-01"
+    network_api_version = "2020-11-01"
     secure_boot_enabled = true
     vtpm_enabled        = true
 
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-confidential-vm-jammy"
-      sku       = "22_04-lts-cvm"
-      version   = "latest"
-    }
-
-    os_disk {
-      storage_account_type     = "Premium_LRS"
-      security_encryption_type = "VMGuestStateOnly"
-    }
-
-    data_disk {
-      lun                  = 0
-      caching              = "ReadWrite"
-      create_option        = "Empty"
-      disk_size_in_gb      = 10
-      storage_account_type = "Standard_LRS"
-    }
-
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        admin_password                  = local.admin_password
-        password_authentication_enabled = true
+        computer_name_prefix = "prefix"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
       }
     }
-
     network_interface {
       name    = "networkProTest"
       primary = true
+
       ip_configuration {
         name      = "TestIPConfiguration"
-        subnet_id = azurerm_subnet.test.id
         primary   = true
+        subnet_id = azurerm_subnet.test.id
+
         public_ip_address {
           name                    = "TestPublicIPConfiguration"
           domain_name_label       = "test-domain-label"
@@ -320,69 +184,70 @@ resource "azurerm_compute_fleet" "test" {
         }
       }
     }
+
+    os_disk {
+      caching                   = "ReadOnly"
+      delete_option             = "Delete"
+      diff_disk_option          = "Local"
+      diff_disk_placement       = "ResourceDisk"
+      disk_size_in_gb           = 30
+      storage_account_type      = "Premium_LRS"
+      security_encryption_type  = "DiskWithVMGuestState"
+      disk_encryption_set_id    = azurerm_disk_encryption_set.test.id
+      write_accelerator_enabled = false
+    }
+
+    source_image_reference {
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-confidential-vm-jammy"
+      sku       = "22_04-lts-cvm"
+      version   = "latest"
+    }
   }
 }
-`, r.template(data, location), data.RandomInteger, location)
+`, r.diskEncryptionSetResourceDependencies(data), r.templateWithOutProvider(data, location), data.RandomInteger, location)
 }
 
-func (r ComputeFleetTestResource) securityEncryptionTypeUpdate(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) osDiskCompleteUpdate(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 %[1]s
-
+%[2]s
 resource "azurerm_compute_fleet" "test" {
-  name                = "acctest-fleet-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
+  name                        = "acctest-fleet-%[3]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[4]s"
+  platform_fault_domain_count = 1
 
   regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+    capacity     = 0
+    min_capacity = 0
   }
 
   vm_sizes_profile {
-    name = "Standard_DC2as_v5"
+    name = "Standard_DC8ads_v5"
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    secure_boot_enabled = false
+    network_api_version = "2020-11-01"
+    secure_boot_enabled = true
     vtpm_enabled        = true
-
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-confidential-vm-jammy"
-      sku       = "22_04-lts-cvm"
-      version   = "latest"
-    }
-
-    os_disk {
-      storage_account_type     = "Premium_LRS"
-      security_encryption_type = "VMGuestStateOnly"
-    }
-    data_disk {
-      lun                  = 0
-      caching              = "ReadWrite"
-      create_option        = "Empty"
-      disk_size_in_gb      = 10
-      storage_account_type = "Standard_LRS"
-    }
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        admin_password                  = local.admin_password
-        password_authentication_enabled = true
+        computer_name_prefix = "prefix"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
       }
     }
-
     network_interface {
       name    = "networkProTest"
       primary = true
+
       ip_configuration {
         name      = "TestIPConfiguration"
-        subnet_id = azurerm_subnet.test.id
         primary   = true
+        subnet_id = azurerm_subnet.test.id
+
         public_ip_address {
           name                    = "TestPublicIPConfiguration"
           domain_name_label       = "test-domain-label"
@@ -390,7 +255,26 @@ resource "azurerm_compute_fleet" "test" {
         }
       }
     }
+
+    os_disk {
+      caching                   = "ReadOnly"
+      delete_option             = "Delete"
+      diff_disk_option          = "Local"
+      diff_disk_placement       = "ResourceDisk"
+      disk_size_in_gb           = 50
+      storage_account_type      = "Premium_ZRS"
+      security_encryption_type  = "DiskWithVMGuestState"
+      disk_encryption_set_id    = azurerm_disk_encryption_set.test.id
+      write_accelerator_enabled = false
+    }
+
+    source_image_reference {
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-confidential-vm-jammy"
+      sku       = "22_04-lts-cvm"
+      version   = "latest"
+    }
   }
 }
-`, r.template(data, location), data.RandomInteger, location)
+`, r.diskEncryptionSetResourceDependencies(data), r.templateWithOutProvider(data, location), data.RandomInteger, location)
 }

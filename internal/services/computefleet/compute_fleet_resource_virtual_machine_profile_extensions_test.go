@@ -17,7 +17,7 @@ func TestAccComputeFleet_virtualMachineProfileExtensions_basic(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.basicExtensions(data, data.Locations.Primary),
+			Config: r.extensionsBasic(data, data.Locations.Primary),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -32,28 +32,28 @@ func TestAccComputeFleet_virtualMachineProfileExtensions_update(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.completeExtensions(data, data.Locations.Primary),
+			Config: r.extensionsComplete(data, data.Locations.Primary),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password", "virtual_machine_profile.0.extension.2.protected_settings_json"),
 		{
-			Config: r.completeExtensionsUpdate(data, data.Locations.Primary),
+			Config: r.extensionsCompleteUpdate(data, data.Locations.Primary),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password", "virtual_machine_profile.0.extension.2.protected_settings_json"),
 		{
-			Config: r.basicExtensions(data, data.Locations.Primary),
+			Config: r.extensionsBasic(data, data.Locations.Primary),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.completeExtensions(data, data.Locations.Primary),
+			Config: r.extensionsComplete(data, data.Locations.Primary),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -68,7 +68,7 @@ func TestAccComputeFleet_virtualMachineProfileExtensions_complete(t *testing.T) 
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.completeExtensions(data, data.Locations.Primary),
+			Config: r.extensionsComplete(data, data.Locations.Primary),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -77,7 +77,7 @@ func TestAccComputeFleet_virtualMachineProfileExtensions_complete(t *testing.T) 
 	})
 }
 
-func (r ComputeFleetTestResource) basicExtensions(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) extensionsBasic(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {
@@ -107,7 +107,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
+    network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
@@ -159,7 +159,7 @@ resource "azurerm_compute_fleet" "test" {
 `, r.templateWithOutProvider(data, location), data.RandomInteger, location)
 }
 
-func (r ComputeFleetTestResource) completeExtensions(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) extensionsComplete(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {
@@ -196,12 +196,6 @@ resource "azurerm_key_vault" "test" {
   }
 }
 
-#resource "azurerm_role_assignment" "test" {
- # scope                = azurerm_key_vault.test.id
- # role_definition_name = "Key Vault Administrator"
-  #principal_id         = data.azurerm_client_config.current.object_id
-#}
-
 resource "azurerm_key_vault_secret" "test" {
   name         = "secret"
   value        = "{\"commandToExecute\":\"echo $HOSTNAME\"}"
@@ -224,7 +218,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
+    network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
@@ -291,7 +285,7 @@ resource "azurerm_compute_fleet" "test" {
       type_handler_version                      = "1.0"
       auto_upgrade_minor_version_enabled        = true
       extensions_to_provision_after_vm_creation = ["CustomScript"]
-      force_extension_execution_on_change = "test"
+      force_extension_execution_on_change       = "test"
 
       settings_json = jsonencode({
         "commandToExecute" = "echo $HOSTNAME"
@@ -301,12 +295,13 @@ resource "azurerm_compute_fleet" "test" {
         "managedIdentity" = {}
       })
     }
+    extensions_time_budget = "PT30M"
   }
 }
 `, r.templateWithOutProvider(data, location), data.RandomInteger, location, data.RandomString)
 }
 
-func (r ComputeFleetTestResource) completeExtensionsUpdate(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) extensionsCompleteUpdate(data acceptance.TestData, location string) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {
@@ -343,12 +338,6 @@ resource "azurerm_key_vault" "test" {
   }
 }
 
-#resource "azurerm_role_assignment" "test" {
- # scope                = azurerm_key_vault.test.id
- # role_definition_name = "Key Vault Administrator"
- # principal_id         = data.azurerm_client_config.current.object_id
-#}
-
 resource "azurerm_key_vault_secret" "test" {
   name         = "secret"
   value        = "{\"commandToExecute\":\"echo $HOSTNAME\"}"
@@ -371,7 +360,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
+    network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
         computer_name_prefix = "prefix"
@@ -432,23 +421,24 @@ resource "azurerm_compute_fleet" "test" {
     }
 
     extension {
-      name                                      = "Docker"
-      publisher                                 = "Microsoft.Azure.Extensions"
-      type                                      = "DockerExtension"
-      type_handler_version                      = "1.0"
+      name                 = "Docker"
+      publisher            = "Microsoft.Azure.Extensions"
+      type                 = "DockerExtension"
+      type_handler_version = "1.0"
 
       auto_upgrade_minor_version_enabled        = false
       extensions_to_provision_after_vm_creation = ["CustomScript"]
-      force_extension_execution_on_change = "testUpdate"
+      force_extension_execution_on_change       = "testUpdate"
 
       settings_json = jsonencode({
-         "commandToExecute" = "echo $(date)"
+        "commandToExecute" = "echo $(date)"
       })
 
       protected_settings_json = jsonencode({
-         "reset_ssh" = "True"
+        "reset_ssh" = "True"
       })
     }
+    extensions_time_budget = "PT1H"
   }
 }
 `, r.templateWithOutProvider(data, location), data.RandomInteger, location, data.RandomString)

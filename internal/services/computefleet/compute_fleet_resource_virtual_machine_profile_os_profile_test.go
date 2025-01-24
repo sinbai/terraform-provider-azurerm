@@ -1,0 +1,695 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package computefleet_test
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
+)
+
+func TestAccComputeFleet_virtualMachineProfileOsProfile_linuxBasic(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.osProfileLinuxBasic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+	})
+}
+
+func TestAccComputeFleet_virtualMachineProfileOsProfile_linuxComplete(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.osProfileLinuxComplete(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password", "virtual_machine_profile.0.os_profile.0.custom_data_base64"),
+	})
+}
+
+func TestAccComputeFleet_virtualMachineProfileOsProfile_linuxUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.osProfileLinuxComplete(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password", "virtual_machine_profile.0.os_profile.0.custom_data_base64"),
+		{
+			Config: r.osProfileLinuxCompleteUpdate(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password", "virtual_machine_profile.0.os_profile.0.custom_data_base64"),
+		{
+			Config: r.osProfileLinuxBasic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		{
+			Config: r.osProfileLinuxComplete(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password", "virtual_machine_profile.0.os_profile.0.custom_data_base64"),
+	})
+}
+
+func TestAccComputeFleet_windowsBasic(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.osProfileWindowsBasic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password"),
+	})
+}
+
+func TestAccComputeFleet_windowsComplete(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.osProfileWindowsComplete(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password", "virtual_machine_profile.0.os_profile.0.custom_data_base64"),
+	})
+}
+
+func TestAccComputeFleet_windowsUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.osProfileWindowsComplete(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password", "virtual_machine_profile.0.os_profile.0.custom_data_base64"),
+		{
+			Config: r.osProfileWindowsCompleteUpdate(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password", "virtual_machine_profile.0.os_profile.0.custom_data_base64"),
+		{
+			Config: r.osProfileWindowsBasic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password"), {
+			Config: r.osProfileWindowsComplete(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password", "virtual_machine_profile.0.os_profile.0.custom_data_base64"),
+	})
+}
+
+func (r ComputeFleetTestResource) osProfileWindowsBasic(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_compute_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+
+  %[4]s
+}
+`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseWindowsVirtualMachineProfile())
+}
+
+func (r ComputeFleetTestResource) osProfileWindowsComplete(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+%[2]s
+resource "azurerm_compute_fleet" "test" {
+  name                = "acctest-fleet-%[3]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[4]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+
+  virtual_machine_profile {
+    network_api_version = "2020-11-01"
+    source_image_reference {
+      publisher = "MicrosoftWindowsServer"
+      offer     = "WindowsServer"
+      sku       = "2016-Datacenter-Server-Core"
+      version   = "latest"
+    }
+
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      windows_configuration {
+        computer_name_prefix = "testvm"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
+        additional_unattend_content {
+          setting = "FirstLogonCommands"
+          content = "<FirstLogonCommands><SynchronousCommand><CommandLine>shutdown /r /t 0 /c \"initial reboot\"</CommandLine><Description>reboot</Description><Order>1</Order></SynchronousCommand></FirstLogonCommands>"
+        }
+        automatic_updates_enabled         = true
+        vm_agent_platform_updates_enabled = true
+
+        patch_mode                            = "AutomaticByPlatform"
+        patch_assessment_mode                 = "ImageDefault"
+        hot_patching_enabled                  = true
+        bypass_platform_safety_checks_enabled = true
+        reboot_setting                        = "Always" #IfRequired
+        provision_vm_agent_enabled            = true
+        secret {
+          key_vault_id = azurerm_key_vault.test.id
+          certificate {
+            url   = azurerm_key_vault_certificate.first.secret_id
+            store = "test"
+          }
+        }
+
+        time_zone = "W. Europe Standard Time"
+
+        winrm_listener {
+          certificate_url = azurerm_key_vault_certificate.second.secret_id
+          protocol        = "Https"
+        }
+      }
+    }
+
+    extension {
+      name                 = "HealthExtension"
+      publisher            = "Microsoft.ManagedServices"
+      type                 = "ApplicationHealthLinux"
+      type_handler_version = "1.0"
+
+      settings_json = jsonencode({
+        "protocol"    = "http"
+        "port"        = 80
+        "requestPath" = "/healthEndpoint"
+      })
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        primary   = true
+        subnet_id = azurerm_subnet.test.id
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+  }
+}
+`, r.templateWithOutProvider(data, data.Locations.Primary), r.secretResourceDependencies(data), data.RandomInteger, data.Locations.Primary)
+}
+
+func (r ComputeFleetTestResource) osProfileWindowsCompleteUpdate(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+%[2]s
+resource "azurerm_compute_fleet" "test" {
+  name                = "acctest-fleet-%[3]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[4]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+
+  virtual_machine_profile {
+    network_api_version = "2020-11-01"
+    source_image_reference {
+      publisher = "MicrosoftWindowsServer"
+      offer     = "WindowsServer"
+      sku       = "2016-Datacenter-Server-Core"
+      version   = "latest"
+    }
+
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      windows_configuration {
+        computer_name_prefix = "testvm"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
+        additional_unattend_content {
+          setting = "AutoLogon"
+          content = "<AutoLogon><Username>${local.admin_username}</Username><Domain>WORKGROUP</Domain><Password><Value>${local.admin_password}</Value><PlainText>true</PlainText></Password><Enabled>true</Enabled></AutoLogon>"
+        }
+        automatic_updates_enabled         = false
+        vm_agent_platform_updates_enabled = false
+        patch_mode                        = "ImageDefault"
+        patch_assessment_mode             = "ImageDefault"
+        hot_patching_enabled              = false
+        provision_vm_agent_enabled        = true
+        time_zone                         = "W. Europe Standard Time"
+        secret {
+          key_vault_id = azurerm_key_vault.test.id
+          certificate {
+            url   = azurerm_key_vault_certificate.first.secret_id
+            store = "testUpdate"
+          }
+        }
+        winrm_listener {
+          certificate_url = azurerm_key_vault_certificate.second.secret_id
+          protocol        = "Https"
+        }
+      }
+    }
+
+    extension {
+      name                 = "HealthExtension"
+      publisher            = "Microsoft.ManagedServices"
+      type                 = "ApplicationHealthLinux"
+      type_handler_version = "1.0"
+
+      settings_json = jsonencode({
+        "protocol"    = "http"
+        "port"        = 80
+        "requestPath" = "/healthEndpoint"
+      })
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        primary   = true
+        subnet_id = azurerm_subnet.test.id
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+  }
+}
+`, r.templateWithOutProvider(data, data.Locations.Primary), r.secretResourceDependencies(data), data.RandomInteger, data.Locations.Primary)
+}
+
+func (r ComputeFleetTestResource) osProfileLinuxBasic(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_compute_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+
+  %[4]s
+}
+`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
+}
+
+func (r ComputeFleetTestResource) osProfileLinuxComplete(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+%[2]s
+
+resource "azurerm_compute_fleet" "test" {
+  name                = "acctest-fleet-%[3]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[4]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+
+
+  virtual_machine_profile {
+    network_api_version = "2020-11-01"
+    source_image_reference {
+      offer     = "0001-com-ubuntu-server-focal"
+      publisher = "canonical"
+      sku       = "20_04-lts-gen2"
+      version   = "latest"
+    }
+
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      custom_data_base64 = "Y3VzdG9tIGRhdGEh"
+      linux_configuration {
+        computer_name_prefix                  = "prefix"
+        admin_username                        = local.admin_username
+        admin_password                        = local.admin_password
+        password_authentication_enabled       = true
+        ssh_public_keys                       = [local.first_public_key]
+        provision_vm_agent_enabled            = true
+        vm_agent_platform_updates_enabled     = true
+        patch_mode                            = "AutomaticByPlatform"
+        patch_assessment_mode                 = "ImageDefault"
+        bypass_platform_safety_checks_enabled = true
+        reboot_setting                        = "Always"
+        secret {
+          key_vault_id = azurerm_key_vault.test.id
+          certificate {
+            url = azurerm_key_vault_certificate.first.secret_id
+          }
+        }
+      }
+    }
+    extension {
+      name                 = "HealthExtension"
+      publisher            = "Microsoft.ManagedServices"
+      type                 = "ApplicationHealthLinux"
+      type_handler_version = "1.0"
+
+      settings_json = jsonencode({
+        "protocol"    = "http"
+        "port"        = 80
+        "requestPath" = "/healthEndpoint"
+      })
+    }
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        subnet_id = azurerm_subnet.test.id
+        primary   = true
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+  }
+}
+`, r.templateWithOutProvider(data, data.Locations.Primary), r.secretResourceDependencies(data), data.RandomInteger, data.Locations.Primary)
+}
+
+func (r ComputeFleetTestResource) osProfileLinuxCompleteUpdate(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+%[2]s
+resource "azurerm_compute_fleet" "test" {
+  name                = "acctest-fleet-%[3]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[4]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+
+  virtual_machine_profile {
+    network_api_version = "2020-11-01"
+    source_image_reference {
+      offer     = "0001-com-ubuntu-server-focal"
+      publisher = "canonical"
+      sku       = "20_04-lts-gen2"
+      version   = "latest"
+    }
+
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      custom_data_base64 = "Y3VzdG9tIGRhdGEh"
+      linux_configuration {
+        computer_name_prefix              = "prefix"
+        admin_username                    = local.admin_username
+        admin_password                    = local.admin_password
+        password_authentication_enabled   = false
+        ssh_public_keys                   = [local.first_public_key]
+        provision_vm_agent_enabled        = true
+        vm_agent_platform_updates_enabled = false
+        patch_mode                        = "ImageDefault"
+        patch_assessment_mode             = "ImageDefault"
+        secret {
+          key_vault_id = azurerm_key_vault.test.id
+          certificate {
+            url = azurerm_key_vault_certificate.first.secret_id
+          }
+        }
+      }
+    }
+
+    extension {
+      name                 = "HealthExtension"
+      publisher            = "Microsoft.ManagedServices"
+      type                 = "ApplicationHealthLinux"
+      type_handler_version = "1.0"
+
+      settings_json = jsonencode({
+        "protocol"    = "http"
+        "port"        = 80
+        "requestPath" = "/healthEndpoint"
+      })
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        subnet_id = azurerm_subnet.test.id
+        primary   = true
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+  }
+}
+`, r.templateWithOutProvider(data, data.Locations.Primary), r.secretResourceDependencies(data), data.RandomInteger, data.Locations.Primary)
+}
+
+func (r ComputeFleetTestResource) secretResourceDependencies(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {
+    key_vault {
+      recover_soft_deleted_key_vaults            = false
+      purge_soft_delete_on_destroy               = false
+      purge_soft_deleted_certificates_on_destroy = false
+    }
+  }
+}
+
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_key_vault" "test" {
+  name                = "acctestkeyvault%[1]s"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+
+  sku_name                        = "standard"
+  enabled_for_template_deployment = true
+  enabled_for_deployment          = true
+
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+
+    certificate_permissions = [
+      "Create",
+      "Delete",
+      "Get",
+      "Update",
+    ]
+
+    key_permissions = [
+      "Create",
+      "GetRotationPolicy",
+    ]
+
+    secret_permissions = [
+      "Set",
+    ]
+
+    storage_permissions = [
+      "Set",
+    ]
+  }
+}
+
+resource "azurerm_key_vault_certificate" "first" {
+  name         = "first"
+  key_vault_id = azurerm_key_vault.test.id
+
+  certificate_policy {
+    issuer_parameters {
+      name = "Self"
+    }
+
+    key_properties {
+      exportable = true
+      key_size   = 2048
+      key_type   = "RSA"
+      reuse_key  = true
+    }
+
+    lifetime_action {
+      action {
+        action_type = "AutoRenew"
+      }
+
+      trigger {
+        days_before_expiry = 30
+      }
+    }
+
+    secret_properties {
+      content_type = "application/x-pkcs12"
+    }
+
+    x509_certificate_properties {
+      key_usage = [
+        "cRLSign",
+        "dataEncipherment",
+        "digitalSignature",
+        "keyAgreement",
+        "keyCertSign",
+        "keyEncipherment",
+      ]
+
+      subject            = "CN=hello-world-first"
+      validity_in_months = 12
+    }
+  }
+}
+
+resource "azurerm_key_vault_certificate" "second" {
+  name         = "second"
+  key_vault_id = azurerm_key_vault.test.id
+
+  certificate_policy {
+    issuer_parameters {
+      name = "Self"
+    }
+
+    key_properties {
+      exportable = true
+      key_size   = 2048
+      key_type   = "RSA"
+      reuse_key  = true
+    }
+
+    lifetime_action {
+      action {
+        action_type = "AutoRenew"
+      }
+
+      trigger {
+        days_before_expiry = 30
+      }
+    }
+
+    secret_properties {
+      content_type = "application/x-pkcs12"
+    }
+
+    x509_certificate_properties {
+      key_usage = [
+        "cRLSign",
+        "dataEncipherment",
+        "digitalSignature",
+        "keyAgreement",
+        "keyCertSign",
+        "keyEncipherment",
+      ]
+
+      subject            = "CN=hello-world-second"
+      validity_in_months = 12
+    }
+  }
+}
+`, data.RandomString)
+}

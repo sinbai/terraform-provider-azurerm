@@ -234,6 +234,8 @@ func (r ComputeFleetTestResource) imageFromImageId(data acceptance.TestData) str
 	return fmt.Sprintf(`
 
 
+
+
 %[1]s
 
 resource "azurerm_image" "test" {
@@ -258,8 +260,8 @@ resource "azurerm_compute_fleet" "image_id" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    source_image_id = azurerm_image.test.id
+    network_api_version = "2020-11-01"
+    source_image_id     = azurerm_image.test.id
 
     os_disk {
       caching              = "ReadWrite"
@@ -294,6 +296,8 @@ resource "azurerm_compute_fleet" "image_id" {
 
 func (r ComputeFleetTestResource) imageFromSharedImageGallery(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+
+
 
 
 %[1]s
@@ -355,8 +359,8 @@ resource "azurerm_compute_fleet" "image_id" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    source_image_id = azurerm_shared_image_gallery.test.id
+    network_api_version = "2020-11-01"
+    source_image_id     = azurerm_shared_image_gallery.test.id
     //source_image_id = "/sharedGalleries/${azurerm_shared_image_version.test.gallery_name}/images/${azurerm_shared_image.test.name}"
 
     os_disk {
@@ -394,6 +398,8 @@ func (r ComputeFleetTestResource) imageFromSharedImageGalleryVersion(data accept
 	return fmt.Sprintf(`
 
 
+
+
 %[1]s
 
 resource "azurerm_image" "test" {
@@ -453,8 +459,8 @@ resource "azurerm_compute_fleet" "image_id" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    source_image_id = azurerm_shared_image_version.test.id
+    network_api_version = "2020-11-01"
+    source_image_id     = azurerm_shared_image_version.test.id
 
     os_disk {
       caching              = "ReadWrite"
@@ -491,6 +497,8 @@ func (r ComputeFleetTestResource) imageFromCommunitySharedImageGallery(data acce
 	return fmt.Sprintf(`
 
 
+
+
 %[1]s
 
 resource "azurerm_image" "test" {
@@ -560,8 +568,8 @@ resource "azurerm_compute_fleet" "image_id" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    source_image_id = "/communityGalleries/${azurerm_shared_image_gallery.test.sharing.0.community_gallery.0.name}/images/${azurerm_shared_image_version.test.image_name}"
+    network_api_version = "2020-11-01"
+    source_image_id     = "/communityGalleries/${azurerm_shared_image_gallery.test.sharing.0.community_gallery.0.name}/images/${azurerm_shared_image_version.test.image_name}"
 
     os_disk {
       caching              = "ReadWrite"
@@ -598,6 +606,8 @@ func (r ComputeFleetTestResource) imageFromCommunitySharedImageGalleryVersion(da
 	return fmt.Sprintf(`
 
 
+
+
 %[1]s
 
 resource "azurerm_image" "test" {
@@ -667,8 +677,8 @@ resource "azurerm_compute_fleet" "image_id" {
   }
 
   virtual_machine_profile {
-		network_api_version = "2020-11-01"
-    source_image_id = "/communityGalleries/${azurerm_shared_image_gallery.test.sharing.0.community_gallery.0.name}/images/${azurerm_shared_image_version.test.image_name}/versions/${azurerm_shared_image_version.test.name}"
+    network_api_version = "2020-11-01"
+    source_image_id     = "/communityGalleries/${azurerm_shared_image_gallery.test.sharing.0.community_gallery.0.name}/images/${azurerm_shared_image_version.test.image_name}/versions/${azurerm_shared_image_version.test.name}"
 
     os_disk {
       caching              = "ReadWrite"

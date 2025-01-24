@@ -6,7 +6,7 @@ package computefleet
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"github.com/hashicorp/terraform-provider-azurerm/utils"
 	"regexp"
 	"strconv"
 	"strings"
@@ -31,10 +31,10 @@ import (
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
 )
 
-func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
-	vmProfile := &pluginsdk.Schema{
+func virtualMachineProfileSchema() *pluginsdk.Schema {
+	return &pluginsdk.Schema{
 		Type:     pluginsdk.TypeList,
-		Required: required,
+		Required: true,
 		ForceNew: true,
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
@@ -107,7 +107,6 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 				"scheduled_event_os_image_timeout": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
-					Default:  "PT15M",
 					ValidateFunc: validation.StringInSlice([]string{
 						"P1T5M",
 					}, false),
@@ -158,11 +157,6 @@ func virtualMachineProfileSchema(required bool) *pluginsdk.Schema {
 			},
 		},
 	}
-
-	if !required {
-		vmProfile.Optional = true
-	}
-	return vmProfile
 }
 
 func galleryApplicationSchema() *pluginsdk.Schema {
@@ -609,16 +603,15 @@ func osProfileSchema() *pluginsdk.Schema {
 							},
 
 							"patch_assessment_mode": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								Default:      string(fleets.LinuxPatchAssessmentModeImageDefault),
-								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxPatchAssessmentMode(), false),
+								Type:     pluginsdk.TypeString,
+								Optional: true,
+								// 'patchSettings.assessmentMode' cannot be set to 'AutomaticByPlatform' as its not supported on Virtual Machine Scale Sets.
+								ValidateFunc: validation.StringInSlice([]string{string(fleets.LinuxPatchAssessmentModeImageDefault)}, false),
 							},
 
 							"patch_mode": {
 								Type:         pluginsdk.TypeString,
 								Optional:     true,
-								Default:      string(fleets.LinuxVMGuestPatchModeImageDefault),
 								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchMode(), false),
 							},
 
@@ -641,6 +634,8 @@ func osProfileSchema() *pluginsdk.Schema {
 											MinItems: 1,
 											Elem: &pluginsdk.Resource{
 												Schema: map[string]*pluginsdk.Schema{
+													// whilst we /could/ flatten this to `certificate_urls` we're intentionally not to keep this
+													// closer to the Windows VMSS resource, which will also take a `store` param
 													"url": {
 														Type:         pluginsdk.TypeString,
 														Required:     true,
@@ -714,17 +709,16 @@ func osProfileSchema() *pluginsdk.Schema {
 							},
 
 							"patch_assessment_mode": {
-								Type:         pluginsdk.TypeString,
-								Optional:     true,
-								Default:      string(fleets.WindowsPatchAssessmentModeImageDefault),
-								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxPatchAssessmentMode(), false),
+								Type:     pluginsdk.TypeString,
+								Optional: true,
+								// 'patchSettings.assessmentMode' cannot be set to 'AutomaticByPlatform' as its not supported on Virtual Machine Scale Sets.
+								ValidateFunc: validation.StringInSlice([]string{string(fleets.WindowsPatchAssessmentModeImageDefault)}, false),
 							},
 
 							"patch_mode": {
 								Type:         pluginsdk.TypeString,
 								Optional:     true,
-								Default:      string(fleets.WindowsVMGuestPatchModeAutomaticByOS),
-								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchMode(), false),
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForWindowsVMGuestPatchMode(), false),
 							},
 
 							"hot_patching_enabled": {
@@ -733,18 +727,16 @@ func osProfileSchema() *pluginsdk.Schema {
 								Default:  false,
 							},
 
-							// It is not supported in VMSS. Need to confirm whether it needs to be exposed.
 							"bypass_platform_safety_checks_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
 								Default:  false,
 							},
 
-							// It is not supported in VMSS. Need to confirm whether it needs to be exposed.
 							"reboot_setting": {
 								Type:         pluginsdk.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForLinuxVMGuestPatchAutomaticByPlatformRebootSetting(), false),
+								ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForWindowsVMGuestPatchAutomaticByPlatformRebootSetting(), false),
 							},
 
 							"provision_vm_agent_enabled": {
@@ -820,10 +812,25 @@ func storageProfileDataDiskSchema() *pluginsdk.Schema {
 		Optional: true,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
+				"create_option": {
+					Type:     pluginsdk.TypeString,
+					Required: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						string(fleets.DiskCreateOptionTypesEmpty),
+						string(fleets.DiskCreateOptionTypesFromImage),
+					}, false),
+				},
+
 				"disk_size_in_gb": {
 					Type:         pluginsdk.TypeInt,
 					Required:     true,
 					ValidateFunc: validation.IntBetween(1, 32767),
+				},
+
+				"lun": {
+					Type:         pluginsdk.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(0, 2000),
 				},
 
 				"caching": {
@@ -833,15 +840,6 @@ func storageProfileDataDiskSchema() *pluginsdk.Schema {
 						// NOTE: because there is a `None` value in the possible values, it's handled in the Create/Update and Read functions.
 						string(fleets.CachingTypesReadOnly),
 						string(fleets.CachingTypesReadWrite),
-					}, false),
-				},
-
-				"create_option": {
-					Type:     pluginsdk.TypeString,
-					Optional: true,
-					ValidateFunc: validation.StringInSlice([]string{
-						string(fleets.DiskCreateOptionTypesEmpty),
-						string(fleets.DiskCreateOptionTypesFromImage),
 					}, false),
 				},
 
@@ -857,15 +855,9 @@ func storageProfileDataDiskSchema() *pluginsdk.Schema {
 					ValidateFunc: computeValidate.DiskEncryptionSetID,
 				},
 
-				"lun": {
-					Type:         pluginsdk.TypeInt,
-					Optional:     true,
-					ValidateFunc: validation.IntBetween(0, 2000),
-				},
-
 				"storage_account_type": {
 					Type:         pluginsdk.TypeString,
-					Required:     true,
+					Optional:     true,
 					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForStorageAccountTypes(), false),
 				},
 
@@ -899,6 +891,7 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 				"delete_option": {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
+					Default:      string(fleets.DiskDeleteOptionTypesDelete),
 					ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForDiskDeleteOptionTypes(), false),
 				},
 
@@ -935,6 +928,7 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 				"storage_account_type": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
+					Default:  string(fleets.StorageAccountTypesPremiumLRS),
 					// NOTE: OS Disks don't support Ultra SSDs or PremiumV2_LRS
 					ValidateFunc: validation.StringInSlice([]string{
 						string(fleets.StorageAccountTypesPremiumLRS),
@@ -1024,6 +1018,10 @@ func expandVirtualMachineProfileModel(inputList []VirtualMachineProfileModel, d 
 			output.SecurityProfile = &fleets.SecurityProfile{}
 		}
 		output.SecurityProfile.SecurityType = pointer.To(fleets.SecurityTypesConfidentialVM)
+		output.SecurityProfile.UefiSettings = &fleets.UefiSettings{
+			SecureBootEnabled: pointer.To(input.SecureBootEnabled),
+			VTpmEnabled:       pointer.To(input.VTpmEnabled),
+		}
 	} else if input.SecureBootEnabled {
 		if output.SecurityProfile == nil {
 			output.SecurityProfile = &fleets.SecurityProfile{}
@@ -1442,7 +1440,7 @@ func expandOSProfileModel(inputList []VirtualMachineProfileModel) *fleets.Virtua
 		if lConfig[0].ComputerNamePrefix != "" {
 			output.ComputerNamePrefix = pointer.To(lConfig[0].ComputerNamePrefix)
 		}
-		output.Secrets = expandOsProfileSecretsModel(lConfig[0].Secret)
+		output.Secrets = expandOsProfileLinuxSecretsModel(lConfig[0].Secret)
 
 		linuxConfig.Ssh = expandSshConfigurationModel(lConfig[0].AdminUsername, lConfig[0].SSHPublicKeys)
 
@@ -1489,7 +1487,7 @@ func expandOSProfileModel(inputList []VirtualMachineProfileModel) *fleets.Virtua
 		}
 		output.WindowsConfiguration = &windowsConfig
 
-		output.Secrets = expandOsProfileSecretsModel(winConfig[0].Secret)
+		output.Secrets = expandOsProfileWindowsSecretsModel(winConfig[0].Secret)
 	}
 
 	return &output
@@ -1669,7 +1667,7 @@ func expandSshConfigurationModel(userName string, publicKeyList []string) *fleet
 	}
 }
 
-func expandOsProfileSecretsModel(inputList []SecretModel) *[]fleets.VaultSecretGroup {
+func expandOsProfileLinuxSecretsModel(inputList []LinuxSecretModel) *[]fleets.VaultSecretGroup {
 	if len(inputList) == 0 {
 		return nil
 	}
@@ -1679,7 +1677,7 @@ func expandOsProfileSecretsModel(inputList []SecretModel) *[]fleets.VaultSecretG
 		input := v
 		output := fleets.VaultSecretGroup{
 			SourceVault:       expandSubResource(input.KeyVaultId),
-			VaultCertificates: expandVaultCertificateModel(input.Certificates),
+			VaultCertificates: expandVaultLinuxCertificateModel(input.Certificate),
 		}
 
 		outputList = append(outputList, output)
@@ -1687,7 +1685,38 @@ func expandOsProfileSecretsModel(inputList []SecretModel) *[]fleets.VaultSecretG
 	return &outputList
 }
 
-func expandVaultCertificateModel(inputList []CertificateModel) *[]fleets.VaultCertificate {
+func expandVaultLinuxCertificateModel(inputList []LinuxCertificateModel) *[]fleets.VaultCertificate {
+	outputList := make([]fleets.VaultCertificate, 0)
+	for _, v := range inputList {
+		input := v
+		output := fleets.VaultCertificate{}
+		if input.Url != "" {
+			output.CertificateURL = pointer.To(input.Url)
+		}
+		outputList = append(outputList, output)
+	}
+	return &outputList
+}
+
+func expandOsProfileWindowsSecretsModel(inputList []WindowsSecretModel) *[]fleets.VaultSecretGroup {
+	if len(inputList) == 0 {
+		return nil
+	}
+
+	outputList := make([]fleets.VaultSecretGroup, 0)
+	for _, v := range inputList {
+		input := v
+		output := fleets.VaultSecretGroup{
+			SourceVault:       expandSubResource(input.KeyVaultId),
+			VaultCertificates: expandVaultWindowsCertificateModel(input.Certificate),
+		}
+
+		outputList = append(outputList, output)
+	}
+	return &outputList
+}
+
+func expandVaultWindowsCertificateModel(inputList []WindowsCertificateModel) *[]fleets.VaultCertificate {
 	outputList := make([]fleets.VaultCertificate, 0)
 	for _, v := range inputList {
 		input := v
@@ -1852,78 +1881,53 @@ func expandImageReference(inputList []SourceImageReferenceModel, imageId string)
 }
 
 func expandOSDiskModel(input *VirtualMachineProfileModel) *fleets.VirtualMachineScaleSetOSDisk {
-	if input == nil {
+	if input == nil || len(input.OsDisk) == 0 {
 		return nil
 	}
 
-	output := fleets.VirtualMachineScaleSetOSDisk{
-		// these have to be hard-coded so there's no point exposing them
-		CreateOption: fleets.DiskCreateOptionTypesFromImage,
-	}
-
+	var osType fleets.OperatingSystemTypes
 	if len(input.OsProfile) > 0 {
 		if len(input.OsProfile[0].LinuxConfiguration) > 0 {
-			output.OsType = pointer.To(fleets.OperatingSystemTypesLinux)
+			osType = fleets.OperatingSystemTypesLinux
 		}
 		if len(input.OsProfile[0].WindowsConfiguration) > 0 {
-			output.OsType = pointer.To(fleets.OperatingSystemTypesWindows)
+			osType = fleets.OperatingSystemTypesWindows
 		}
-	}
-
-	if len(input.OsDisk) == 0 {
-		return &output
 	}
 
 	inputOsDisk := &input.OsDisk[0]
-	output.DiffDiskSettings = expandDiffDiskSettingsModel(inputOsDisk)
-	output.WriteAcceleratorEnabled = pointer.To(inputOsDisk.WriteAcceleratorEnabled)
-
-	if inputOsDisk.StorageAccountType != "" {
-		output.ManagedDisk = &fleets.VirtualMachineScaleSetManagedDiskParameters{
+	output := fleets.VirtualMachineScaleSetOSDisk{
+		DeleteOption:            pointer.To(fleets.DiskDeleteOptionTypes(inputOsDisk.DeleteOption)),
+		OsType:                  pointer.To(osType),
+		WriteAcceleratorEnabled: pointer.To(inputOsDisk.WriteAcceleratorEnabled),
+		ManagedDisk: &fleets.VirtualMachineScaleSetManagedDiskParameters{
 			StorageAccountType: pointer.To(fleets.StorageAccountTypes(inputOsDisk.StorageAccountType)),
-		}
-	}
-	if inputOsDisk.DiskEncryptionSetId != "" {
-		if output.ManagedDisk == nil {
-			output.ManagedDisk = &fleets.VirtualMachineScaleSetManagedDiskParameters{}
-		}
-
-		output.ManagedDisk.DiskEncryptionSet = &fleets.DiskEncryptionSetParameters{
-			Id: pointer.To(inputOsDisk.DiskEncryptionSetId),
-		}
-	}
-	if inputOsDisk.SecurityEncryptionType != "" {
-		if output.ManagedDisk == nil {
-			output.ManagedDisk = &fleets.VirtualMachineScaleSetManagedDiskParameters{}
-		}
-		output.ManagedDisk.SecurityProfile = &fleets.VMDiskSecurityProfile{
-			SecurityEncryptionType: pointer.To(fleets.SecurityEncryptionTypes(inputOsDisk.SecurityEncryptionType)),
-		}
-	}
-	if inputOsDisk.DiskEncryptionSetId != "" {
-		if output.ManagedDisk == nil {
-			output.ManagedDisk = &fleets.VirtualMachineScaleSetManagedDiskParameters{}
-		}
-		if output.ManagedDisk.SecurityProfile == nil {
-			output.ManagedDisk.SecurityProfile = &fleets.VMDiskSecurityProfile{}
-		}
-		output.ManagedDisk.SecurityProfile.DiskEncryptionSet = &fleets.DiskEncryptionSetParameters{
-			Id: pointer.To(inputOsDisk.DiskEncryptionSetId),
-		}
+		},
+		DiffDiskSettings: expandDiffDiskSettingsModel(inputOsDisk),
+		// these have to be hard-coded so there's no point exposing them
+		CreateOption: fleets.DiskCreateOptionTypesFromImage,
 	}
 
 	if inputOsDisk.DiskSizeInGB > 0 {
 		output.DiskSizeGB = pointer.To(inputOsDisk.DiskSizeInGB)
 	}
 
-	caching := string(fleets.CachingTypesNone)
+	caching := fleets.CachingTypesNone
 	if v := inputOsDisk.Caching; v != "" {
-		caching = v
+		caching = fleets.CachingTypes(v)
 	}
-	output.Caching = pointer.To(fleets.CachingTypes(caching))
+	output.Caching = pointer.To(caching)
 
-	if inputOsDisk.DeleteOption != "" {
-		output.DeleteOption = pointer.To(fleets.DiskDeleteOptionTypes(inputOsDisk.DeleteOption))
+	if inputOsDisk.DiskEncryptionSetId != "" {
+		output.ManagedDisk.DiskEncryptionSet = &fleets.DiskEncryptionSetParameters{
+			Id: pointer.To(inputOsDisk.DiskEncryptionSetId),
+		}
+	}
+
+	if inputOsDisk.SecurityEncryptionType != "" {
+		output.ManagedDisk.SecurityProfile = &fleets.VMDiskSecurityProfile{
+			SecurityEncryptionType: pointer.To(fleets.SecurityEncryptionTypes(inputOsDisk.SecurityEncryptionType)),
+		}
 	}
 
 	return &output
@@ -2143,14 +2147,32 @@ func flattenNetworkInterfaceModel(input *fleets.VirtualMachineScaleSetNetworkPro
 	return outputList
 }
 
-func flattenOsProfileSecretsModel(inputList *[]fleets.VaultSecretGroup) []SecretModel {
-	outputList := make([]SecretModel, 0)
+func flattenOsProfileLinuxSecretsModel(inputList *[]fleets.VaultSecretGroup) []LinuxSecretModel {
+	outputList := make([]LinuxSecretModel, 0)
 	if inputList == nil {
 		return outputList
 	}
 	for _, input := range *inputList {
-		output := SecretModel{
-			Certificates: flattenVaultCertificateModel(input.VaultCertificates),
+		output := LinuxSecretModel{
+			Certificate: flattenLinuxVaultCertificateModel(input.VaultCertificates),
+		}
+		if v := input.SourceVault; v != nil {
+			output.KeyVaultId = pointer.From(v.Id)
+		}
+
+		outputList = append(outputList, output)
+	}
+	return outputList
+}
+
+func flattenOsProfileWindowsSecretsModel(inputList *[]fleets.VaultSecretGroup) []WindowsSecretModel {
+	outputList := make([]WindowsSecretModel, 0)
+	if inputList == nil {
+		return outputList
+	}
+	for _, input := range *inputList {
+		output := WindowsSecretModel{
+			Certificate: flattenWindowsVaultCertificateModel(input.VaultCertificates),
 		}
 		if v := input.SourceVault; v != nil {
 			output.KeyVaultId = pointer.From(v.Id)
@@ -2168,7 +2190,15 @@ func flattenOSProfileModel(input *fleets.VirtualMachineScaleSetOSProfile, d *sch
 	}
 
 	output := OSProfileModel{}
-	output.CustomDataBase64 = pointer.From(input.CustomData)
+	if input.CustomData != nil {
+		output.CustomDataBase64 = pointer.From(input.CustomData)
+	} else {
+		if isAdditional {
+			output.CustomDataBase64 = utils.Base64EncodeIfNot(d.Get("additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.custom_data_base64").(string))
+		} else {
+			output.CustomDataBase64 = utils.Base64EncodeIfNot(d.Get("virtual_machine_profile.0.os_profile.0.custom_data_base64").(string))
+		}
+	}
 
 	windowsConfigs := make([]WindowsConfigurationModel, 0)
 	if v := input.WindowsConfiguration; v != nil {
@@ -2181,7 +2211,7 @@ func flattenOSProfileModel(input *fleets.VirtualMachineScaleSetOSProfile, d *sch
 			VMAgentPlatformUpdatesEnabled: pointer.From(v.EnableVMAgentPlatformUpdates),
 			ProvisionVMAgentEnabled:       pointer.From(v.ProvisionVMAgent),
 			TimeZone:                      pointer.From(v.TimeZone),
-			Secret:                        flattenOsProfileSecretsModel(input.Secrets),
+			Secret:                        flattenOsProfileWindowsSecretsModel(input.Secrets),
 		}
 		if isAdditional {
 			windowsConfig.AdminPassword = d.Get("additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.windows_configuration.0.admin_password").(string)
@@ -2210,7 +2240,7 @@ func flattenOSProfileModel(input *fleets.VirtualMachineScaleSetOSProfile, d *sch
 			PasswordAuthenticationEnabled: !pointer.From(v.DisablePasswordAuthentication),
 			VMAgentPlatformUpdatesEnabled: pointer.From(v.EnableVMAgentPlatformUpdates),
 			ProvisionVMAgentEnabled:       pointer.From(v.ProvisionVMAgent),
-			Secret:                        flattenOsProfileSecretsModel(input.Secrets),
+			Secret:                        flattenOsProfileLinuxSecretsModel(input.Secrets),
 		}
 
 		if isAdditional {
@@ -2242,18 +2272,31 @@ func flattenOSProfileModel(input *fleets.VirtualMachineScaleSetOSProfile, d *sch
 	return append(outputList, output), nil
 }
 
-func flattenVaultCertificateModel(inputList *[]fleets.VaultCertificate) []CertificateModel {
-	outputList := make([]CertificateModel, 0)
+func flattenLinuxVaultCertificateModel(inputList *[]fleets.VaultCertificate) []LinuxCertificateModel {
+	outputList := make([]LinuxCertificateModel, 0)
 	if inputList == nil {
 		return outputList
 	}
 
 	for _, input := range *inputList {
-		output := CertificateModel{}
-
-		output.Store = pointer.From(input.CertificateStore)
+		output := LinuxCertificateModel{}
 		output.Url = pointer.From(input.CertificateURL)
 
+		outputList = append(outputList, output)
+	}
+	return outputList
+}
+
+func flattenWindowsVaultCertificateModel(inputList *[]fleets.VaultCertificate) []WindowsCertificateModel {
+	outputList := make([]WindowsCertificateModel, 0)
+	if inputList == nil {
+		return outputList
+	}
+
+	for _, input := range *inputList {
+		output := WindowsCertificateModel{}
+		output.Store = pointer.From(input.CertificateStore)
+		output.Url = pointer.From(input.CertificateURL)
 		outputList = append(outputList, output)
 	}
 	return outputList
@@ -2331,11 +2374,11 @@ func flattenDataDiskModel(inputList *[]fleets.VirtualMachineScaleSetDataDisk) []
 		output.DiskSizeInGB = pointer.From(input.DiskSizeGB)
 		output.WriteAcceleratorEnabled = pointer.From(input.WriteAcceleratorEnabled)
 
-		if v := input.ManagedDisk; v != nil {
-			if v := v.DiskEncryptionSet; v != nil {
+		if md := input.ManagedDisk; md != nil {
+			if v := md.DiskEncryptionSet; v != nil {
 				output.DiskEncryptionSetId = pointer.From(v.Id)
 			}
-			output.StorageAccountType = string(pointer.From(v.StorageAccountType))
+			output.StorageAccountType = string(pointer.From(md.StorageAccountType))
 		}
 
 		outputList = append(outputList, output)
@@ -2365,7 +2408,6 @@ func flattenOSDiskModel(input *fleets.VirtualMachineScaleSetOSDisk) []OSDiskMode
 	}
 
 	output := OSDiskModel{}
-
 	if v := input.DiffDiskSettings; v != nil {
 		output.DiffDiskOption = string(pointer.From(v.Option))
 		output.DiffDiskPlacement = string(pointer.From(v.Placement))
@@ -2376,20 +2418,21 @@ func flattenOSDiskModel(input *fleets.VirtualMachineScaleSetOSDisk) []OSDiskMode
 		caching = string(*v)
 	}
 	output.Caching = caching
+
 	output.DeleteOption = string(pointer.From(input.DeleteOption))
+
 	if input.DiskSizeGB != nil {
 		output.DiskSizeInGB = pointer.From(input.DiskSizeGB)
-		log.Printf("elena output.DiskSizeInGB = pointer.From(input.DiskSizeGB)")
 	}
 
-	if v := input.ManagedDisk; v != nil {
-		if v := v.DiskEncryptionSet; v != nil {
+	if md := input.ManagedDisk; md != nil {
+		if v := md.DiskEncryptionSet; v != nil {
 			output.DiskEncryptionSetId = pointer.From(v.Id)
 		}
-		if sp := v.SecurityProfile; sp != nil {
+		if sp := md.SecurityProfile; sp != nil {
 			output.SecurityEncryptionType = string(pointer.From(sp.SecurityEncryptionType))
 		}
-		output.StorageAccountType = string(pointer.From(v.StorageAccountType))
+		output.StorageAccountType = string(pointer.From(md.StorageAccountType))
 	}
 
 	output.WriteAcceleratorEnabled = pointer.From(input.WriteAcceleratorEnabled)
