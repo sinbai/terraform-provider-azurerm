@@ -313,7 +313,11 @@ resource "azurerm_compute_fleet" "test" {
           key_vault_id = azurerm_key_vault.test.id
           certificate {
             url   = azurerm_key_vault_certificate.first.secret_id
-            store = "testUpdate"
+            store = "testUpdate1"
+          }
+          certificate {
+            url   = azurerm_key_vault_certificate.second.secret_id
+            store = "testUpdate2"
           }
         }
         winrm_listener {
@@ -357,6 +361,14 @@ resource "azurerm_compute_fleet" "test" {
 
 func (r ComputeFleetTestResource) osProfileLinuxBasic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+provider "azurerm" {
+  features {
+    key_vault {
+      purge_soft_deleted_certificates_on_destroy = false
+    }
+  }
+}
+
 %[1]s
 
 resource "azurerm_compute_fleet" "test" {
@@ -375,7 +387,7 @@ resource "azurerm_compute_fleet" "test" {
 
   %[4]s
 }
-`, r.template(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
+`, r.templateWithOutProvider(data, data.Locations.Primary), data.RandomInteger, data.Locations.Primary, r.baseLinuxVirtualMachineProfile())
 }
 
 func (r ComputeFleetTestResource) osProfileLinuxComplete(data acceptance.TestData) string {
@@ -513,6 +525,9 @@ resource "azurerm_compute_fleet" "test" {
           key_vault_id = azurerm_key_vault.test.id
           certificate {
             url = azurerm_key_vault_certificate.first.secret_id
+          }
+ 					certificate {
+            url = azurerm_key_vault_certificate.second.secret_id
           }
         }
       }
