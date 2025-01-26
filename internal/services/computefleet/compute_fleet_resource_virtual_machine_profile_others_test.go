@@ -17,19 +17,23 @@ func TestAccComputeFleet_virtualMachineProfileOthers_bootDiagnosticEnabled(t *te
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.bootDiagnostic(data, data.Locations.Primary, true),
+			Config: r.bootDiagnostic(data, true),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.bootDiagnostic(data, data.Locations.Primary, false),
+			Config: r.bootDiagnostic(data, false),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -39,19 +43,23 @@ func TestAccComputeFleet_virtualMachineProfileOthers_capacityReservationGroup(t 
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.capacityReservationGroup(data, data.Locations.Primary),
+			Config: r.capacityReservationGroup(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.capacityReservationGroupUpdate(data, data.Locations.Primary),
+			Config: r.capacityReservationGroupUpdate(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -61,19 +69,23 @@ func TestAccComputeFleet_virtualMachineProfileOthers_galleryApplication(t *testi
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.galleryApplication(data, data.Locations.Primary, "test"),
+			Config: r.galleryApplication(data, "test"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.galleryApplication(data, data.Locations.Primary, "testUpdate"),
+			Config: r.galleryApplication(data, "testUpdate"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -83,14 +95,14 @@ func TestAccComputeFleet_virtualMachineProfileOthers_licenseType(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.licenseType(data, data.Locations.Primary, "Windows_Client"),
+			Config: r.licenseType(data, "Windows_Client"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.windows_configuration.0.admin_password"),
 		{
-			Config: r.licenseType(data, data.Locations.Primary, "Windows_Server"),
+			Config: r.licenseType(data, "Windows_Server"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -105,19 +117,23 @@ func TestAccComputeFleet_virtualMachineProfileOthers_scheduledEvent(t *testing.T
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.scheduledEvent(data, data.Locations.Primary),
+			Config: r.scheduledEvent(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.scheduledEventUpdate(data, data.Locations.Primary),
+			Config: r.scheduledEventUpdate(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -127,19 +143,23 @@ func TestAccComputeFleet_virtualMachineProfileOthers_securityProfile(t *testing.
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.securityProfile(data, data.Locations.Primary),
+			Config: r.securityProfile(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.securityProfileUpdate(data, data.Locations.Primary),
+			Config: r.securityProfileUpdate(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -149,19 +169,23 @@ func TestAccComputeFleet_virtualMachineProfileOthers_UserData(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.userData(data, data.Locations.Primary, "Hello World"),
+			Config: r.userData(data, "Hello World"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.userData(data, data.Locations.Primary, "Goodbye World"),
+			Config: r.userData(data, "Goodbye World"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -171,23 +195,27 @@ func TestAccComputeFleet_virtualMachineProfileOthers_additionalCapabilities(t *t
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.additionalCapabilities(data, data.Locations.Primary),
+			Config: r.additionalCapabilities(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.additionalCapabilitiesUpdate(data, data.Locations.Primary),
+			Config: r.additionalCapabilitiesUpdate(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
-func (r ComputeFleetTestResource) bootDiagnostic(data acceptance.TestData, location string, enabled bool) string {
+func (r ComputeFleetTestResource) bootDiagnostic(data acceptance.TestData, enabled bool) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -205,6 +233,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_DS1_v2"
   }
 
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version                      = "2020-11-01"
     boot_diagnostic_enabled                  = %[4]t
@@ -256,10 +285,10 @@ resource "azurerm_storage_account" "test" {
   account_replication_type        = "LRS"
   allow_nested_items_to_be_public = false
 }
-`, r.template(data, location), data.RandomInteger, location, enabled, data.RandomString)
+`, r.template(data), data.RandomInteger, data.Locations.Primary, enabled, data.RandomString)
 }
 
-func (r ComputeFleetTestResource) capacityReservationGroup(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) capacityReservationGroup(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -294,6 +323,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_D2s_v3"
   }
 
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -334,10 +364,10 @@ resource "azurerm_compute_fleet" "test" {
     depends_on = [azurerm_capacity_reservation.test]
   }
 }
-`, r.template(data, location), data.RandomInteger, location)
+`, r.template(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r ComputeFleetTestResource) capacityReservationGroupUpdate(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) capacityReservationGroupUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -382,6 +412,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_D2s_v3"
   }
 
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -422,10 +453,10 @@ resource "azurerm_compute_fleet" "test" {
     depends_on = [azurerm_capacity_reservation.test]
   }
 }
-`, r.template(data, location), data.RandomInteger, location)
+`, r.template(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r ComputeFleetTestResource) galleryApplication(data acceptance.TestData, location string, tag string) string {
+func (r ComputeFleetTestResource) galleryApplication(data acceptance.TestData, tag string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -508,6 +539,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_D2s_v3"
   }
 
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -556,10 +588,10 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
 }
-`, r.template(data, location), data.RandomInteger, location, data.RandomString, tag)
+`, r.template(data), data.RandomInteger, data.Locations.Primary, data.RandomString, tag)
 }
 
-func (r ComputeFleetTestResource) licenseType(data acceptance.TestData, location string, lType string) string {
+func (r ComputeFleetTestResource) licenseType(data acceptance.TestData, lType string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -577,6 +609,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_D2s_v3"
   }
 
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -624,10 +657,10 @@ resource "azurerm_compute_fleet" "test" {
     license_type = "%[4]s"
   }
 }
-`, r.template(data, location), data.RandomInteger, location, lType)
+`, r.template(data), data.RandomInteger, data.Locations.Primary, lType)
 }
 
-func (r ComputeFleetTestResource) scheduledEvent(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) scheduledEvent(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -645,6 +678,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_D1_v2"
   }
 
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -688,10 +722,10 @@ resource "azurerm_compute_fleet" "test" {
     scheduled_event_os_image_timeout    = "PT15M"
   }
 }
-`, r.template(data, location), data.RandomInteger, location)
+`, r.template(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r ComputeFleetTestResource) scheduledEventUpdate(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) scheduledEventUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -709,6 +743,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_D1_v2"
   }
 
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -751,10 +786,10 @@ resource "azurerm_compute_fleet" "test" {
     ScheduledEventTerminationTimeout = "PT15M"
   }
 }
-`, r.template(data, location), data.RandomInteger, location)
+`, r.template(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r ComputeFleetTestResource) userData(data acceptance.TestData, location string, userDta string) string {
+func (r ComputeFleetTestResource) userData(data acceptance.TestData, userDta string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -772,6 +807,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_D1_v2"
   }
 
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -813,10 +849,10 @@ resource "azurerm_compute_fleet" "test" {
     user_data_base64 = base64encode("%[4]s")
   }
 }
-`, r.template(data, location), data.RandomInteger, location, userDta)
+`, r.template(data), data.RandomInteger, data.Locations.Primary, userDta)
 }
 
-func (r ComputeFleetTestResource) securityProfile(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) securityProfile(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -834,6 +870,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_B1ls"
   }
 
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version        = "2020-11-01"
     encryption_at_host_enabled = true
@@ -885,10 +922,10 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
 }
-`, r.template(data, location), data.RandomInteger, location)
+`, r.template(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r ComputeFleetTestResource) securityProfileUpdate(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) securityProfileUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -906,6 +943,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_B1ls"
   }
 
+  compute_api_version = "2023-09-01"
   virtual_machine_profile {
     network_api_version        = "2020-11-01"
     encryption_at_host_enabled = false
@@ -957,10 +995,10 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
 }
-`, r.template(data, location), data.RandomInteger, location)
+`, r.template(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r ComputeFleetTestResource) additionalCapabilities(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) additionalCapabilities(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -981,6 +1019,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_D2s_v3"
   }
 
+  compute_api_version = "2024-07-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -1020,10 +1059,10 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
 }
-`, r.template(data, location), data.RandomInteger, location)
+`, r.template(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r ComputeFleetTestResource) additionalCapabilitiesUpdate(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) additionalCapabilitiesUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1044,6 +1083,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_D2s_v3"
   }
 
+  compute_api_version = "2023-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -1096,5 +1136,5 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
 }
-`, r.template(data, location), data.RandomInteger, location)
+`, r.template(data), data.RandomInteger, data.Locations.Primary)
 }

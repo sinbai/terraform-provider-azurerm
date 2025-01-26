@@ -17,12 +17,14 @@ func TestAccComputeFleet_virtualMachineProfileDataDisk_basic(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.dataDiskBasic(data, data.Locations.Primary),
+			Config: r.dataDiskBasic(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -32,12 +34,14 @@ func TestAccComputeFleet_virtualMachineProfileDataDisk_complete(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.dataDiskComplete(data, data.Locations.Primary),
+			Config: r.dataDiskComplete(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -47,40 +51,47 @@ func TestAccComputeFleet_virtualMachineProfileDataDisk_update(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.dataDiskComplete(data, data.Locations.Primary),
+			Config: r.dataDiskComplete(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.dataDiskCompleteUpdate(data, data.Locations.Primary),
+			Config: r.dataDiskCompleteUpdate(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.dataDiskBasic(data, data.Locations.Primary),
+			Config: r.dataDiskBasic(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.dataDiskComplete(data, data.Locations.Primary),
+			Config: r.dataDiskComplete(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
-func (r ComputeFleetTestResource) dataDiskBasic(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) dataDiskBasic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
-
 
 resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
@@ -96,6 +107,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_D1_v2"
   }
 
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -140,11 +152,59 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
   }
+
+  additional_location_profile {
+    location = "%[4]s"
+    virtual_machine_profile_override {
+      network_api_version = "2020-11-01"
+      source_image_reference {
+        publisher = "Canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts"
+        version   = "latest"
+      }
+
+      os_disk {
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
+      }
+
+      data_disk {
+        create_option   = "Empty"
+        disk_size_in_gb = 10
+        lun             = 0
+      }
+
+      os_profile {
+        linux_configuration {
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password
+          password_authentication_enabled = true
+        }
+      }
+
+      network_interface {
+        name    = "networkProTest"
+        primary = true
+        ip_configuration {
+          name      = "TestIPConfiguration"
+          subnet_id = azurerm_subnet.linux_test.id
+          primary   = true
+          public_ip_address {
+            name                    = "TestPublicIPConfiguration"
+            domain_name_label       = "test-domain-label"
+            idle_timeout_in_minutes = 4
+          }
+        }
+      }
+    }
+  }
 }
-`, r.template(data, location), data.RandomInteger, location)
+`, r.baseAndAdditionalLocationWindowsTemplate(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
 }
 
-func (r ComputeFleetTestResource) dataDiskComplete(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) dataDiskComplete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 %[2]s
@@ -163,6 +223,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_M8ms"
   }
 
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -212,11 +273,63 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
   }
+  additional_location_profile {
+    location = "%[4]s"
+    virtual_machine_profile_override {
+      network_api_version = "2020-11-01"
+      source_image_reference {
+        publisher = "Canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts"
+        version   = "latest"
+      }
+
+      os_disk {
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
+      }
+
+      data_disk {
+        create_option             = "Empty"
+        disk_size_in_gb           = 10
+        lun                       = 0
+        caching                   = "ReadOnly"
+        delete_option             = "Delete"
+        disk_encryption_set_id    = azurerm_disk_encryption_set.linux_test.id
+        storage_account_type      = "Premium_LRS"
+        write_accelerator_enabled = true
+      }
+
+      os_profile {
+        linux_configuration {
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password
+          password_authentication_enabled = true
+        }
+      }
+
+      network_interface {
+        name    = "networkProTest"
+        primary = true
+        ip_configuration {
+          name      = "TestIPConfiguration"
+          subnet_id = azurerm_subnet.linux_test.id
+          primary   = true
+          public_ip_address {
+            name                    = "TestPublicIPConfiguration"
+            domain_name_label       = "test-domain-label"
+            idle_timeout_in_minutes = 4
+          }
+        }
+      }
+    }
+  }
 }
-`, r.diskEncryptionSetResourceDependencies(data), r.templateWithOutProvider(data, location), data.RandomInteger, location)
+`, r.diskEncryptionSetResourceDependencies(data), r.baseAndAdditionalLocationLinuxTemplateWithOutProvider(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r ComputeFleetTestResource) dataDiskCompleteUpdate(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) dataDiskCompleteUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 %[2]s
@@ -235,6 +348,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_M8ms"
   }
 
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -284,13 +398,66 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
   }
+  additional_location_profile {
+    location = "%[4]s"
+    virtual_machine_profile_override {
+      network_api_version = "2020-11-01"
+      source_image_reference {
+        publisher = "Canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts"
+        version   = "latest"
+      }
 
+      os_disk {
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
+      }
+
+      data_disk {
+        create_option             = "Empty"
+        disk_size_in_gb           = 11
+        lun                       = 1
+        caching                   = "ReadWrite"
+        delete_option             = "Detach"
+        disk_encryption_set_id    = azurerm_disk_encryption_set.linux_test.id
+        storage_account_type      = "Premium_ZRS"
+        write_accelerator_enabled = false
+      }
+
+      os_profile {
+        linux_configuration {
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password
+          password_authentication_enabled = true
+        }
+      }
+
+      network_interface {
+        name    = "networkProTest"
+        primary = true
+        ip_configuration {
+          name      = "TestIPConfiguration"
+          subnet_id = azurerm_subnet.linux_test.id
+          primary   = true
+          public_ip_address {
+            name                    = "TestPublicIPConfiguration"
+            domain_name_label       = "test-domain-label"
+            idle_timeout_in_minutes = 4
+          }
+        }
+      }
+    }
+  }
   depends_on = [
     "azurerm_role_assignment.disk-encryption-read-keyvault",
     "azurerm_key_vault_access_policy.disk-encryption",
+    "azurerm_role_assignment.linux-test-disk-encryption-read-keyvault",
+    "azurerm_key_vault_access_policy.linux-test-disk-encryption",
   ]
 }
-`, r.diskEncryptionSetResourceDependencies(data), r.templateWithOutProvider(data, location), data.RandomInteger, location)
+`, r.diskEncryptionSetResourceDependencies(data), r.baseAndAdditionalLocationLinuxTemplateWithOutProvider(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
 }
 
 func (r ComputeFleetTestResource) diskEncryptionSetResourceDependencies(data acceptance.TestData) string {
@@ -386,6 +553,88 @@ resource "azurerm_role_assignment" "disk-encryption-read-keyvault" {
   scope                = azurerm_key_vault.test.id
   role_definition_name = "Reader"
   principal_id         = azurerm_disk_encryption_set.test.identity.0.principal_id
+}
+
+
+resource "azurerm_key_vault" "linux_test" {
+  name                        = "acctestkv%[1]s"
+  location                    = azurerm_resource_group.linux_test.location
+  resource_group_name         = azurerm_resource_group.linux_test.name
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  sku_name                    = "standard"
+  purge_protection_enabled    = true
+  enabled_for_disk_encryption = true
+}
+
+resource "azurerm_key_vault_access_policy" "linux-test-service-principal" {
+  key_vault_id = azurerm_key_vault.linux_test.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azurerm_client_config.current.object_id
+
+  key_permissions = [
+    "Create",
+    "Delete",
+    "Get",
+    "Purge",
+    "Update",
+    "GetRotationPolicy",
+  ]
+
+  secret_permissions = [
+    "Get",
+    "Delete",
+    "Set",
+  ]
+}
+
+resource "azurerm_key_vault_key" "linux_test" {
+  name         = "examplekey"
+  key_vault_id = azurerm_key_vault.linux_test.id
+  key_type     = "RSA"
+  key_size     = 2048
+
+  key_opts = [
+    "decrypt",
+    "encrypt",
+    "sign",
+    "unwrapKey",
+    "verify",
+    "wrapKey",
+  ]
+
+  depends_on = ["azurerm_key_vault_access_policy.linux-test-service-principal"]
+}
+
+resource "azurerm_disk_encryption_set" "linux_test" {
+  name                = "acctestdes-%[2]d"
+  resource_group_name = azurerm_resource_group.linux_test.name
+  location            = azurerm_resource_group.linux_test.location
+  key_vault_key_id    = azurerm_key_vault_key.linux_test.id
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+resource "azurerm_key_vault_access_policy" "linux-test-disk-encryption" {
+  key_vault_id = azurerm_key_vault.linux_test.id
+
+  key_permissions = [
+    "Get",
+    "WrapKey",
+    "UnwrapKey",
+    "GetRotationPolicy",
+  ]
+
+  tenant_id = azurerm_disk_encryption_set.linux_test.identity.0.tenant_id
+  object_id = azurerm_disk_encryption_set.linux_test.identity.0.principal_id
+}
+
+
+resource "azurerm_role_assignment" "linux-test-disk-encryption-read-keyvault" {
+  scope                = azurerm_key_vault.linux_test.id
+  role_definition_name = "Reader"
+  principal_id         = azurerm_disk_encryption_set.linux_test.identity.0.principal_id
 }
 `, data.RandomString, data.RandomInteger)
 }

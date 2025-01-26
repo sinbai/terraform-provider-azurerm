@@ -124,9 +124,6 @@ func virtualMachineProfileSchema() *pluginsdk.Schema {
 					Default:  false,
 				},
 
-				// `source_image_id` should conflict with `source_image_reference`,
-				// since `virtualMachineProfileSchema` is shared by `virtual_machine_profile` and `virtual_machine_profile_override,
-				// so check this in CustomizeDiff()
 				"source_image_id": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
@@ -1454,7 +1451,7 @@ func expandOSProfileModel(inputList []VirtualMachineProfileModel) *fleets.Virtua
 			EnableVMAgentPlatformUpdates: pointer.To(winConfig[0].VMAgentPlatformUpdatesEnabled),
 			ProvisionVMAgent:             pointer.To(winConfig[0].ProvisionVMAgentEnabled),
 			WinRM:                        expandWinRM(winConfig[0].WinRM),
-			PatchSettings:                &fleets.PatchSettings{},
+			PatchSettings:                &fleets.PatchSettings{EnableHotpatching: pointer.To(winConfig[0].HotPatchingEnabled)},
 		}
 		if winConfig[0].AdminUsername != "" {
 			output.AdminUsername = pointer.To(winConfig[0].AdminUsername)
@@ -1553,7 +1550,7 @@ func validateWindowsSetting(inputList []VirtualMachineProfileModel, d *schema.Re
 			}
 
 			if hotPatchingEnabled {
-				return fmt.Errorf("`hot_patching_enabled` field is not supported unless you are using one of the following hot patching enable images, `2022-datacenter-azure-edition`, `2022-datacenter-azure-edition-core-smalldisk`, `2022-datacenter-azure-edition-hotpatch` or `2022-datacenter-azure-edition-hotpatch-smalldisk`")
+				return fmt.Errorf("`hot_patching_enabled` field is not supported unless you are using one of the following hot patching enable images, `2022-datacenter-azure-edition-core`, `2022-datacenter-azure-edition-core-smalldisk`, `2022-datacenter-azure-edition-hotpatch` or `2022-datacenter-azure-edition-hotpatch-smalldisk`")
 			}
 		}
 	}
@@ -1854,6 +1851,7 @@ func expandImageReference(inputList []SourceImageReferenceModel, imageId string)
 			}
 		}
 
+		// Shared Image Gallery with Cross-Tenant Sharing
 		// With Version            : "/sharedGalleries/galleryUniqueName/images/myGalleryImageName/versions/(major.minor.patch | latest)"
 		// Versionless(e.g. latest): "/sharedGalleries/galleryUniqueName/images/myGalleryImageName"
 		if _, errors := validation.Any(computeValidate.SharedGalleryImageID, computeValidate.SharedGalleryImageVersionID)(imageId, "source_image_id"); len(errors) == 0 {
@@ -1863,6 +1861,8 @@ func expandImageReference(inputList []SourceImageReferenceModel, imageId string)
 		}
 
 		return &fleets.ImageReference{
+			// Standard Shared Image ID: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/galleries/{galleryName}/images/{imageDefinitionName}/versions/{imageVersion}
+			// Standard Image ID: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/images/{imageName}
 			Id: pointer.To(imageId),
 		}
 	}

@@ -341,9 +341,6 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 			Default:  false,
 		},
 
-		// NOTE: requires registration to use:
-		// $ az feature show --namespace Microsoft.Compute --name UltraSSDWithVMSS
-		// $ az provider register -n Microsoft.Compute
 		"additional_capabilities_ultra_ssd_enabled": {
 			Type:     pluginsdk.TypeBool,
 			Optional: true,
@@ -661,7 +658,6 @@ func vmAttributesSchema() *pluginsdk.Schema {
 					},
 				},
 
-				// todo: need to verify behavior of "Optional parameter. Either Min or Max is required if specified"
 				"local_storage_in_gib": {
 					Type:     pluginsdk.TypeList,
 					Optional: true,
@@ -843,6 +839,9 @@ func (r ComputeFleetResource) Create() sdk.ResourceFunc {
 				},
 				PlatformFaultDomainCount: pointer.To(model.PlatformFaultDomainCount),
 			}
+			if model.ComputeApiVersion != "" {
+				computeProfile.ComputeApiVersion = pointer.To(model.ComputeApiVersion)
+			}
 
 			baseVirtualMachineProfileValue, err := expandVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData, false)
 			if err != nil {
@@ -850,10 +849,6 @@ func (r ComputeFleetResource) Create() sdk.ResourceFunc {
 			}
 			computeProfile.BaseVirtualMachineProfile = pointer.From(baseVirtualMachineProfileValue)
 			properties.Properties.ComputeProfile = computeProfile
-
-			if model.ComputeApiVersion != "" {
-				computeProfile.ComputeApiVersion = pointer.To(model.ComputeApiVersion)
-			}
 
 			if err := client.CreateOrUpdateThenPoll(ctx, id, properties); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
@@ -945,7 +940,6 @@ func (r ComputeFleetResource) Update() sdk.ResourceFunc {
 				properties.Properties.AdditionalLocationsProfile = additionalLocationsProfileValue
 			}
 
-			// changing the properties of `virtual_machine_profile` means deleting and recreating.
 			if metadata.ResourceData.HasChange("virtual_machine_profile") {
 				baseVirtualMachineProfileValue, err := expandVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData, false)
 				if err != nil {
@@ -1050,8 +1044,7 @@ func (r ComputeFleetResource) Read() sdk.ResourceFunc {
 					}
 					state.VirtualMachineProfile = baseVirtualMachineProfileValue
 
-					// Since the default value returned by API will be the latest supported computeApiVersion by Compute Fleet, get the `compute_api_version` from config.
-					state.ComputeApiVersion = metadata.ResourceData.Get("compute_api_version").(string)
+					state.ComputeApiVersion = pointer.From(props.ComputeProfile.ComputeApiVersion)
 					state.PlatformFaultDomainCount = pointer.From(props.ComputeProfile.PlatformFaultDomainCount)
 
 					state.RegularPriorityProfile = flattenRegularPriorityProfileModel(props.RegularPriorityProfile)
@@ -1435,7 +1428,7 @@ func expandVMAttributesModel(inputList []VMAttributesModel) *fleets.VMAttributes
 		NetworkInterfaceCount:     expandVMAttributeMinMaxIntegerModel(input.NetworkInterfaceCount),
 		RdmaNetworkInterfaceCount: expandVMAttributeMinMaxIntegerModel(input.RdmaNetworkInterfaceCount),
 		RdmaSupport:               pointer.To(fleets.VMAttributeSupport(input.RdmaSupport)),
-		VMCategories:              expandVMCategorys(input.VMCategories),
+		VMCategories:              expandVMCategories(input.VMCategories),
 	}
 
 	if len(input.ExcludedVMSizes) > 0 {
@@ -1475,7 +1468,7 @@ func expandVMAttributeMinMaxDoubleModel(inputList []VMAttributeMinMaxDoubleModel
 	return &output
 }
 
-func expandVMCategorys(inputList []string) *[]fleets.VMCategory {
+func expandVMCategories(inputList []string) *[]fleets.VMCategory {
 	if len(inputList) == 0 {
 		return nil
 	}
