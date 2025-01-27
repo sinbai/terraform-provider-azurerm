@@ -216,8 +216,9 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   %[4]s
+
   additional_location_profile {
-    location = "%[4]s"
+    location = "%[5]s"
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       source_image_reference {
@@ -354,7 +355,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   additional_location_profile {
-    location = "%[4]s"
+    location = "%[5]s"
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       source_image_reference {
@@ -540,7 +541,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   additional_location_profile {
-    location = "%[4]s"
+    location = "%[5]s"
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       source_image_reference {
@@ -655,8 +656,9 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   %[4]s
+
   additional_location_profile {
-    location = "%[4]s"
+    location = "%[5]s"
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       source_image_reference {
@@ -736,7 +738,7 @@ resource "azurerm_compute_fleet" "test" {
         admin_username                        = local.admin_username
         admin_password                        = local.admin_password
         password_authentication_enabled       = true
-        ssh_public_keys                       = [local.first_public_key]
+        admin_ssh_keys                       = [local.first_public_key]
         provision_vm_agent_enabled            = true
         vm_agent_platform_updates_enabled     = true
         patch_mode                            = "AutomaticByPlatform"
@@ -779,7 +781,7 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
   additional_location_profile {
-    location = "%[4]s"
+    location = "%[5]s"
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       source_image_reference {
@@ -801,7 +803,7 @@ resource "azurerm_compute_fleet" "test" {
           admin_username                        = local.admin_username
           admin_password                        = local.admin_password
           password_authentication_enabled       = true
-          ssh_public_keys                       = [local.first_public_key]
+          admin_ssh_keys                       = [local.first_public_key]
           provision_vm_agent_enabled            = true
           vm_agent_platform_updates_enabled     = true
           patch_mode                            = "AutomaticByPlatform"
@@ -888,7 +890,7 @@ resource "azurerm_compute_fleet" "test" {
         admin_username                    = local.admin_username
         admin_password                    = local.admin_password
         password_authentication_enabled   = false
-        ssh_public_keys                   = [local.first_public_key]
+        admin_ssh_keys                   = [local.first_public_key]
         provision_vm_agent_enabled        = true
         vm_agent_platform_updates_enabled = false
         patch_mode                        = "ImageDefault"
@@ -935,7 +937,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   additional_location_profile {
-    location = "%[4]s"
+    location = "%[5]s"
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       source_image_reference {
@@ -957,7 +959,7 @@ resource "azurerm_compute_fleet" "test" {
           admin_username                    = local.admin_username
           admin_password                    = local.admin_password
           password_authentication_enabled   = false
-          ssh_public_keys                   = [local.first_public_key]
+          admin_ssh_keys                   = [local.first_public_key]
           provision_vm_agent_enabled        = true
           vm_agent_platform_updates_enabled = false
           patch_mode                        = "ImageDefault"
@@ -1150,7 +1152,7 @@ resource "azurerm_key_vault_certificate" "second" {
 }
 
 resource "azurerm_key_vault" "linux_test" {
-  name                = "acctestkeyvault%[1]s"
+  name                = "acctestkeyvaultlinux%[1]s"
   location            = azurerm_resource_group.linux_test.location
   resource_group_name = azurerm_resource_group.linux_test.name
   tenant_id           = data.azurerm_client_config.current.tenant_id

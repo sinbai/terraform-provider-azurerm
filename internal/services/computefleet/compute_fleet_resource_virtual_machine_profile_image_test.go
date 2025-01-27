@@ -312,8 +312,6 @@ resource "azurerm_linux_virtual_machine" "linux-test-source" {
 
 func (r ComputeFleetTestResource) imageFromSourceImageReference(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-
-
 %[1]s
 
 resource "azurerm_compute_fleet" "test" {
@@ -334,7 +332,7 @@ resource "azurerm_compute_fleet" "test" {
   %[4]s
 
   additional_location_profile {
-    location = "%[4]s"
+    location = "%[5]s"
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       source_image_reference {
@@ -467,8 +465,6 @@ resource "azurerm_compute_fleet" "test" {
 
 func (r ComputeFleetTestResource) imageFromImageId(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-
-
 %[1]s
 
 resource "azurerm_image" "test" {
@@ -476,6 +472,13 @@ resource "azurerm_image" "test" {
   location                  = azurerm_resource_group.test.location
   resource_group_name       = azurerm_resource_group.test.name
   source_virtual_machine_id = azurerm_linux_virtual_machine.source.id
+}
+
+resource "azurerm_image" "linux_test" {
+  name                      = "testlinux"
+  location                  = azurerm_resource_group.linux_test.location
+  resource_group_name       = azurerm_resource_group.linux_test.name
+  source_virtual_machine_id = azurerm_linux_virtual_machine.linux-test-source.id
 }
 
 resource "azurerm_compute_fleet" "image_id" {
@@ -529,7 +532,7 @@ resource "azurerm_compute_fleet" "image_id" {
     location = "%[4]s"
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
-      source_image_id     = azurerm_image.test.id
+      source_image_id     = azurerm_image.linux_test.id
 
       os_disk {
         caching              = "ReadWrite"
@@ -913,8 +916,6 @@ resource "azurerm_compute_fleet" "image_id" {
 
 func (r ComputeFleetTestResource) imageFromCommunitySharedImageGallery(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-
-
 %[1]s
 
 resource "azurerm_image" "test" {
@@ -1108,8 +1109,6 @@ resource "azurerm_compute_fleet" "image_id" {
 
 func (r ComputeFleetTestResource) imageFromCommunitySharedImageGalleryVersion(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-
-
 %[1]s
 
 resource "azurerm_image" "test" {

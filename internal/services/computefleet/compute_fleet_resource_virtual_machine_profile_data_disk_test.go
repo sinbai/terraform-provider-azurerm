@@ -274,7 +274,7 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
   additional_location_profile {
-    location = "%[4]s"
+    location = "%[5]s"
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       source_image_reference {
@@ -326,7 +326,7 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
 }
-`, r.diskEncryptionSetResourceDependencies(data), r.baseAndAdditionalLocationLinuxTemplateWithOutProvider(data), data.RandomInteger, data.Locations.Primary)
+`, r.diskEncryptionSetResourceDependencies(data), r.baseAndAdditionalLocationLinuxTemplateWithOutProvider(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
 }
 
 func (r ComputeFleetTestResource) dataDiskCompleteUpdate(data acceptance.TestData) string {
@@ -399,7 +399,7 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
   additional_location_profile {
-    location = "%[4]s"
+    location = "%[5]s"
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       source_image_reference {
@@ -557,7 +557,7 @@ resource "azurerm_role_assignment" "disk-encryption-read-keyvault" {
 
 
 resource "azurerm_key_vault" "linux_test" {
-  name                        = "acctestkv%[1]s"
+  name                        = "acctestkvlinux%[1]s"
   location                    = azurerm_resource_group.linux_test.location
   resource_group_name         = azurerm_resource_group.linux_test.name
   tenant_id                   = data.azurerm_client_config.current.tenant_id

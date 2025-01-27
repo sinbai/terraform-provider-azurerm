@@ -46,12 +46,12 @@ func TestAccComputeFleet_requiresImport(t *testing.T) {
 	})
 }
 
-func TestAccComputeFleet_completeWithoutVMSSAndVmAttributes(t *testing.T) {
+func TestAccComputeFleet_completeWithoutVMSS(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.completeWithoutVMSSAndVmAttributes(data),
+			Config: r.completeWithoutVMSS(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -71,6 +71,10 @@ func TestAccComputeFleet_update(t *testing.T) {
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		//data.ImportStep(
+		//			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+		//			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
+		//	})
 		{
 			Config: r.completeWithoutVMSSAndVmAttributesUpdate(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -78,6 +82,10 @@ func TestAccComputeFleet_update(t *testing.T) {
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		//data.ImportStep(
+		//			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+		//			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
+		//	})
 		{
 			Config: r.completeWithoutVMSSAndVmAttributes(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -85,6 +93,10 @@ func TestAccComputeFleet_update(t *testing.T) {
 			),
 		},
 		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		//data.ImportStep(
+		//			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+		//			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
+		//	})
 	})
 }
 
@@ -98,21 +110,39 @@ func TestAccComputeFleet_vmAttributes(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password", "compute_api_version"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
 			Config: r.vmAttributesAppend(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password", "compute_api_version"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
 			Config: r.vmAttributesUpdate(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password", "compute_api_version"),
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+	})
+}
+
+func TestAccComputeFleet_completeWithoutVMSSAndVmAttributes(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.completeWithoutVMSSAndVmAttributes(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		//data.ImportStep(
+		//			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+		//			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
+		//	})
 	})
 }
 
@@ -266,20 +296,25 @@ resource "azurerm_compute_fleet" "test" {
 
   %[4]s
 
+  additional_location_profile {
+    location = "%[5]s"
+		%[6]s
+	}
+
   vm_attributes {
     memory_in_gib {
-      max = 10
-      min = 1
+      max = 150
+      min = 50
     }
     vcpu_count {
-      max = 10
-      min = 1
+      max = 150
+      min = 50
     }
   }
 
   compute_api_version = "2024-03-01"
 }
-`, r.template(data), data.RandomInteger, data.Locations.Primary, r.basicBaseLinuxVirtualMachineProfile())
+`, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, r.basicBaseLinuxVirtualMachineProfile(), data.Locations.Secondary, r.additionalLocationBasicVirtualMachineProfile())
 }
 
 func (r ComputeFleetTestResource) vmAttributesAppend(data acceptance.TestData) string {
@@ -297,7 +332,12 @@ resource "azurerm_compute_fleet" "test" {
     capacity            = 2
   }
 
-  %[4]s
+	%[4]s
+
+  additional_location_profile {
+    location = "%[5]s"
+		%[6]s
+	}
 
   vm_attributes {
     memory_in_gib {
@@ -349,7 +389,7 @@ resource "azurerm_compute_fleet" "test" {
 
   compute_api_version = "2024-03-01"
 }
-`, r.template(data), data.RandomInteger, data.Locations.Primary, r.basicBaseLinuxVirtualMachineProfile())
+`, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, r.basicBaseLinuxVirtualMachineProfile(), data.Locations.Secondary, r.additionalLocationBasicVirtualMachineProfile())
 }
 
 func (r ComputeFleetTestResource) vmAttributesUpdate(data acceptance.TestData) string {
@@ -367,7 +407,12 @@ resource "azurerm_compute_fleet" "test" {
     capacity            = 2
   }
 
-  %[4]s
+	%[4]s
+
+  additional_location_profile {
+    location = "%[5]s"
+		%[6]s
+	}
 
   vm_attributes {
     memory_in_gib {
@@ -419,7 +464,7 @@ resource "azurerm_compute_fleet" "test" {
 
   compute_api_version = "2024-03-01"
 }
-`, r.template(data), data.RandomInteger, data.Locations.Primary, r.basicBaseLinuxVirtualMachineProfile())
+`, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, r.basicBaseLinuxVirtualMachineProfile(), data.Locations.Secondary, r.additionalLocationBasicVirtualMachineProfile())
 }
 
 func (r ComputeFleetTestResource) basicBaseLinuxVirtualMachineProfile() string {
@@ -815,6 +860,127 @@ resource "azurerm_lb_backend_address_pool" "windows_test" {
 `, r.templateWithOutProvider(data), data.RandomInteger, data.Locations.Secondary)
 }
 
+func (r ComputeFleetTestResource) completeWithoutVMSS(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+	%[1]s
+
+resource "azurerm_marketplace_agreement" "barracuda" {
+  publisher = "micro-focus"
+  offer     = "arcsight-logger"
+  plan      = "arcsight_logger_72_byol"
+}
+
+resource "azurerm_user_assigned_identity" "test" {
+  name                = "acctest%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+}
+
+resource "azurerm_user_assigned_identity" "test2" {
+  name                = "acctest2%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+}
+
+resource "azurerm_compute_fleet" "test" {
+  name                        = "acctest-fleet-%[2]d"
+  resource_group_name         = azurerm_resource_group.test.name
+  location                    = "%[3]s"
+  platform_fault_domain_count = 1
+  compute_api_version         = "2024-03-01"
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.test.id]
+  }
+
+  plan {
+    name           = "arcsight_logger_72_byol"
+    product        = "arcsight-logger"
+    publisher      = "micro-focus"
+    promotion_code = "test"
+  }
+
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
+  }
+
+  regular_priority_profile {
+    capacity     = 0
+    min_capacity = 0
+  }
+
+  vm_sizes_profile {
+    name =  "Standard_F64s_v2" 
+  }
+ 
+   vm_attributes {
+    memory_in_gib {
+      max = 150
+      min = 50
+    }
+    vcpu_count {
+      max = 150
+      min = 50
+    }
+  }
+
+  virtual_machine_profile {
+    network_api_version = "2024-01-01"
+    source_image_reference {
+      publisher = "micro-focus"
+      offer     = "arcsight-logger"
+      sku       = "arcsight_logger_72_byol"
+      version   = "7.2.0"
+    }
+
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    data_disk {
+      caching              = "ReadWrite"
+      disk_size_in_gb      = 900
+      create_option        = "FromImage"
+      lun                  = 0
+      storage_account_type = "Standard_LRS"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
+      }
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name                                   = "TestIPConfiguration"
+        subnet_id                              = azurerm_subnet.test.id
+        primary                                = true
+        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.test.id]
+      }
+    }
+  }
+
+  tags = {
+    Hello = "There"
+    World = "Example"
+  }
+  zones = ["1", "2", "3"]
+
+  depends_on = [azurerm_marketplace_agreement.barracuda]
+}
+	`, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary)
+}
+
 func (r ComputeFleetTestResource) completeWithoutVMSSAndVmAttributes(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 	%[1]s
@@ -868,9 +1034,8 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   vm_sizes_profile {
-    name = "Standard_DS1_v2"
+    name = "Standard_DS1_v2" #Standard_F64s_v2
   }
-
 
   virtual_machine_profile {
     network_api_version = "2024-01-01"

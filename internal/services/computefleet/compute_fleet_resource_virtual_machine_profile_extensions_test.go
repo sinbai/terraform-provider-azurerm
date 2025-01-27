@@ -122,11 +122,8 @@ resource "azurerm_compute_fleet" "test" {
       linux_configuration {
         computer_name_prefix = "prefix"
         admin_username       = local.admin_username
-
-        admin_ssh_key {
-          username   = local.admin_username
-          public_key = local.first_public_key
-        }
+password_authentication_enabled = false
+        admin_ssh_keys = [local.first_public_key]
       }
     }
     network_interface {
@@ -173,11 +170,8 @@ resource "azurerm_compute_fleet" "test" {
         linux_configuration {
           computer_name_prefix = "prefix"
           admin_username       = local.admin_username
-
-          admin_ssh_key {
-            username   = local.admin_username
-            public_key = local.first_public_key
-          }
+password_authentication_enabled = false
+         admin_ssh_keys                 = [local.first_public_key]
         }
       }
       network_interface {
@@ -247,11 +241,8 @@ resource "azurerm_compute_fleet" "test" {
       linux_configuration {
         computer_name_prefix = "prefix"
         admin_username       = local.admin_username
-
-        admin_ssh_key {
-          username   = local.admin_username
-          public_key = local.first_public_key
-        }
+password_authentication_enabled = false
+       admin_ssh_keys                 = [local.first_public_key]
       }
     }
     network_interface {
@@ -330,11 +321,8 @@ resource "azurerm_compute_fleet" "test" {
         linux_configuration {
           computer_name_prefix = "prefix"
           admin_username       = local.admin_username
-
-          admin_ssh_key {
-            username   = local.admin_username
-            public_key = local.first_public_key
-          }
+password_authentication_enabled = false
+          admin_ssh_keys                 = [local.first_public_key]
         }
       }
       network_interface {
@@ -406,7 +394,7 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
 }
-`, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, data.RandomString, data.Locations.Secondary)
+`, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
 }
 
 func (r ComputeFleetTestResource) extensionsCompleteUpdate(data acceptance.TestData) string {
@@ -435,11 +423,8 @@ resource "azurerm_compute_fleet" "test" {
       linux_configuration {
         computer_name_prefix = "prefix"
         admin_username       = local.admin_username
-
-        admin_ssh_key {
-          username   = local.admin_username
-          public_key = local.first_public_key
-        }
+password_authentication_enabled = false
+        admin_ssh_keys                 = [local.first_public_key]
       }
     }
     network_interface {
@@ -518,11 +503,8 @@ resource "azurerm_compute_fleet" "test" {
         linux_configuration {
           computer_name_prefix = "prefix"
           admin_username       = local.admin_username
-
-          admin_ssh_key {
-            username   = local.admin_username
-            public_key = local.first_public_key
-          }
+password_authentication_enabled = false
+         admin_ssh_keys                 = [local.first_public_key]
         }
       }
       network_interface {
@@ -595,5 +577,5 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
 }
-`, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, data.RandomString, data.Locations.Secondary)
+`, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
 }

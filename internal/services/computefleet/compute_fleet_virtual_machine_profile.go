@@ -566,7 +566,7 @@ func osProfileSchema() *pluginsdk.Schema {
 								ValidateFunc: validatePasswordComplexityLinux,
 							},
 
-							"ssh_public_keys": {
+							"admin_ssh_keys": {
 								Type:     pluginsdk.TypeList,
 								Optional: true,
 								Elem: &pluginsdk.Schema{
@@ -981,7 +981,7 @@ func storageProfileSourceImageReferenceSchema() *pluginsdk.Schema {
 	}
 }
 
-func expandVirtualMachineProfileModel(inputList []VirtualMachineProfileModel, d *schema.ResourceData, isAdditional bool) (*fleets.BaseVirtualMachineProfile, error) {
+func expandVirtualMachineProfileModel(inputList []VirtualMachineProfileModel, d *schema.ResourceData, isAdditional bool, withVMAttributes bool) (*fleets.BaseVirtualMachineProfile, error) {
 	if len(inputList) == 0 {
 		return nil, nil
 	}
@@ -1061,7 +1061,7 @@ func expandVirtualMachineProfileModel(inputList []VirtualMachineProfileModel, d 
 
 	storageProfile := &fleets.VirtualMachineScaleSetStorageProfile{
 		ImageReference: expandImageReference(input.SourceImageReference, input.SourceImageId),
-		OsDisk:         expandOSDiskModel(input),
+		OsDisk:         expandOSDiskModel(input, withVMAttributes, isAdditional),
 	}
 
 	dataDisks, err := expandDataDiskModel(input.DataDisks)
@@ -1408,7 +1408,7 @@ func expandOSProfileModel(inputList []VirtualMachineProfileModel) *fleets.Virtua
 			DisablePasswordAuthentication: pointer.To(!lConfig[0].PasswordAuthenticationEnabled),
 			ProvisionVMAgent:              pointer.To(lConfig[0].ProvisionVMAgentEnabled),
 			EnableVMAgentPlatformUpdates:  pointer.To(lConfig[0].VMAgentPlatformUpdatesEnabled),
-			Ssh:                           expandSshConfigurationModel(lConfig[0].AdminUsername, lConfig[0].SSHPublicKeys),
+			Ssh:                           expandSshConfigurationModel(lConfig[0].AdminUsername, lConfig[0].AdminSSHKeys),
 			PatchSettings:                 &fleets.LinuxPatchSettings{},
 		}
 
@@ -1439,7 +1439,7 @@ func expandOSProfileModel(inputList []VirtualMachineProfileModel) *fleets.Virtua
 		}
 		output.Secrets = expandOsProfileLinuxSecretsModel(lConfig[0].Secret)
 
-		linuxConfig.Ssh = expandSshConfigurationModel(lConfig[0].AdminUsername, lConfig[0].SSHPublicKeys)
+		linuxConfig.Ssh = expandSshConfigurationModel(lConfig[0].AdminUsername, lConfig[0].AdminSSHKeys)
 
 		output.LinuxConfiguration = &linuxConfig
 	}
@@ -1880,11 +1880,7 @@ func expandImageReference(inputList []SourceImageReferenceModel, imageId string)
 	}
 }
 
-func expandOSDiskModel(input *VirtualMachineProfileModel) *fleets.VirtualMachineScaleSetOSDisk {
-	if input == nil || len(input.OsDisk) == 0 {
-		return nil
-	}
-
+func expandOSDiskModel(input *VirtualMachineProfileModel, withVMAttributes bool, isAdditional bool) *fleets.VirtualMachineScaleSetOSDisk {
 	var osType fleets.OperatingSystemTypes
 	if len(input.OsProfile) > 0 {
 		if len(input.OsProfile[0].LinuxConfiguration) > 0 {
@@ -1893,6 +1889,18 @@ func expandOSDiskModel(input *VirtualMachineProfileModel) *fleets.VirtualMachine
 		if len(input.OsProfile[0].WindowsConfiguration) > 0 {
 			osType = fleets.OperatingSystemTypesWindows
 		}
+	}
+
+	if input == nil || len(input.OsDisk) == 0 {
+		// For base VMSS, when `os_disk` is not specified and `vm_attributes` is specified, `OsType` and `CreateOption` are required
+		if withVMAttributes && !isAdditional {
+			return &fleets.VirtualMachineScaleSetOSDisk{
+				OsType: pointer.To(osType),
+				// these have to be hard-coded so there's no point exposing them
+				CreateOption: fleets.DiskCreateOptionTypesFromImage,
+			}
+		}
+		return nil
 	}
 
 	inputOsDisk := &input.OsDisk[0]
@@ -2260,9 +2268,9 @@ func flattenOSProfileModel(input *fleets.VirtualMachineScaleSetOSProfile, d *sch
 
 		flattenedSSHPublicKeys, err := flattenAdminSshKeyModel(v.Ssh)
 		if err != nil {
-			return nil, fmt.Errorf("flattening `linux_configuration.0.admin_ssh_key`: %+v", err)
+			return nil, fmt.Errorf("flattening `linux_configuration.0.admin_ssh_keys`: %+v", err)
 		}
-		linuxConfig.SSHPublicKeys = flattenedSSHPublicKeys
+		linuxConfig.AdminSSHKeys = flattenedSSHPublicKeys
 
 		linuxConfigs = append(linuxConfigs, linuxConfig)
 	}
@@ -2462,7 +2470,7 @@ func flattenExtensionModel(input *fleets.VirtualMachineScaleSetExtensionProfile,
 			output.ForceExtensionExecutionOnChange = pointer.From(props.ForceUpdateTag)
 			// Sensitive data isn't returned, so we get it from config
 			if isAdditional {
-				output.ProtectedSettingsJson = metadata.ResourceData.Get("additional_location_profile.0.virtual_machine_profile.0.extension." + strconv.Itoa(i) + ".protected_settings_json").(string)
+				output.ProtectedSettingsJson = metadata.ResourceData.Get("additional_location_profile.0.virtual_machine_profile_override.0.extension." + strconv.Itoa(i) + ".protected_settings_json").(string)
 			} else {
 				output.ProtectedSettingsJson = metadata.ResourceData.Get("virtual_machine_profile.0.extension." + strconv.Itoa(i) + ".protected_settings_json").(string)
 			}

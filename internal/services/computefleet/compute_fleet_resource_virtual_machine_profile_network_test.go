@@ -22,7 +22,9 @@ func TestAccComputeFleet_virtualMachineProfileNetwork_basic(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password"),
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -376,7 +378,7 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
   additional_location_profile {
-    location = "%[4]s"
+    location = "%[5]s"
     virtual_machine_profile_override {
       network_api_version = "2022-11-01"
       os_profile {
@@ -552,7 +554,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   additional_location_profile {
-    location = "%[4]s"
+    location = "%[5]s"
     virtual_machine_profile_override {
       network_api_version = "2022-11-01"
       os_profile {
@@ -824,7 +826,7 @@ resource "azurerm_public_ip" "linux_test_gwtest" {
   sku                 = "Standard"
 }
 
-resource "azurerm_application_gateway" "linux_test_test" {
+resource "azurerm_application_gateway" "linux_test" {
   name                = "acctestgw-%[1]d"
   location            = azurerm_resource_group.linux_test.location
   resource_group_name = azurerm_resource_group.linux_test.name

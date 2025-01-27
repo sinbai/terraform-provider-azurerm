@@ -260,7 +260,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   additional_location_profile {
-    location = "%[4]s"
+    location = "%[5]s"
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       secure_boot_enabled = true
@@ -384,7 +384,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   additional_location_profile {
-    location = "%[4]s"
+    location = "%[5]s"
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       secure_boot_enabled = true

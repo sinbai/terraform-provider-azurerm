@@ -158,7 +158,7 @@ type LinuxConfigurationModel struct {
 	BypassPlatformSafetyChecksEnabled bool               `tfschema:"bypass_platform_safety_checks_enabled"`
 	RebootSetting                     string             `tfschema:"reboot_setting"`
 	ProvisionVMAgentEnabled           bool               `tfschema:"provision_vm_agent_enabled"`
-	SSHPublicKeys                     []string           `tfschema:"ssh_public_keys"`
+	AdminSSHKeys                      []string           `tfschema:"admin_ssh_keys"`
 }
 
 type LinuxSecretModel struct {
@@ -826,7 +826,7 @@ func (r ComputeFleetResource) Create() sdk.ResourceFunc {
 			}
 			properties.Identity = expandedIdentity
 
-			additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, model.AdditionalCapabilitiesUltraSSDEnabled, metadata.ResourceData)
+			additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, metadata.ResourceData)
 			if err != nil {
 				return err
 			}
@@ -843,7 +843,7 @@ func (r ComputeFleetResource) Create() sdk.ResourceFunc {
 				computeProfile.ComputeApiVersion = pointer.To(model.ComputeApiVersion)
 			}
 
-			baseVirtualMachineProfileValue, err := expandVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData, false)
+			baseVirtualMachineProfileValue, err := expandVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData, false, len(model.VMAttributes) > 0)
 			if err != nil {
 				return err
 			}
@@ -933,7 +933,7 @@ func (r ComputeFleetResource) Update() sdk.ResourceFunc {
 			}
 
 			if metadata.ResourceData.HasChange("additional_location_profile") {
-				additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, model.AdditionalCapabilitiesUltraSSDEnabled, metadata.ResourceData)
+				additionalLocationsProfileValue, err := expandAdditionalLocationProfileModel(model.AdditionalLocationProfile, metadata.ResourceData)
 				if err != nil {
 					return err
 				}
@@ -941,7 +941,7 @@ func (r ComputeFleetResource) Update() sdk.ResourceFunc {
 			}
 
 			if metadata.ResourceData.HasChange("virtual_machine_profile") {
-				baseVirtualMachineProfileValue, err := expandVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData, false)
+				baseVirtualMachineProfileValue, err := expandVirtualMachineProfileModel(model.VirtualMachineProfile, metadata.ResourceData, false, len(model.VMAttributes) > 0)
 				if err != nil {
 					return err
 				}
@@ -1572,7 +1572,7 @@ func expandVMSizeProfileModel(inputList []VMSizeProfileModel) *[]fleets.VMSizePr
 	return &outputList
 }
 
-func expandAdditionalLocationProfileModel(inputList []AdditionalLocationProfileModel, ultraSSDEnabled bool, d *schema.ResourceData) (*fleets.AdditionalLocationsProfile, error) {
+func expandAdditionalLocationProfileModel(inputList []AdditionalLocationProfileModel, d *schema.ResourceData) (*fleets.AdditionalLocationsProfile, error) {
 	if len(inputList) == 0 {
 		return nil, nil
 	}
@@ -1585,7 +1585,7 @@ func expandAdditionalLocationProfileModel(inputList []AdditionalLocationProfileM
 			Location: input.Location,
 		}
 
-		virtualMachineProfileOverrideValue, err := expandVirtualMachineProfileModel(input.VirtualMachineProfileOverride, d, true)
+		virtualMachineProfileOverrideValue, err := expandVirtualMachineProfileModel(input.VirtualMachineProfileOverride, d, true, true)
 		if err != nil {
 			return nil, err
 		}
