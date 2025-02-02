@@ -120,10 +120,10 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-password_authentication_enabled = false
-        admin_ssh_keys = [local.first_public_key]
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        password_authentication_enabled = false
+        admin_ssh_keys                  = [local.first_public_key]
       }
     }
     network_interface {
@@ -168,10 +168,10 @@ password_authentication_enabled = false
       network_api_version = "2020-11-01"
       os_profile {
         linux_configuration {
-          computer_name_prefix = "prefix"
-          admin_username       = local.admin_username
-password_authentication_enabled = false
-         admin_ssh_keys                 = [local.first_public_key]
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          password_authentication_enabled = false
+          admin_ssh_keys                  = [local.first_public_key]
         }
       }
       network_interface {
@@ -239,10 +239,10 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-password_authentication_enabled = false
-       admin_ssh_keys                 = [local.first_public_key]
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        password_authentication_enabled = false
+        admin_ssh_keys                  = [local.first_public_key]
       }
     }
     network_interface {
@@ -319,10 +319,10 @@ password_authentication_enabled = false
       network_api_version = "2020-11-01"
       os_profile {
         linux_configuration {
-          computer_name_prefix = "prefix"
-          admin_username       = local.admin_username
-password_authentication_enabled = false
-          admin_ssh_keys                 = [local.first_public_key]
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          password_authentication_enabled = false
+          admin_ssh_keys                  = [local.first_public_key]
         }
       }
       network_interface {
@@ -421,10 +421,10 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-password_authentication_enabled = false
-        admin_ssh_keys                 = [local.first_public_key]
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        password_authentication_enabled = false
+        admin_ssh_keys                  = [local.first_public_key]
       }
     }
     network_interface {
@@ -501,10 +501,10 @@ password_authentication_enabled = false
       network_api_version = "2020-11-01"
       os_profile {
         linux_configuration {
-          computer_name_prefix = "prefix"
-          admin_username       = local.admin_username
-password_authentication_enabled = false
-         admin_ssh_keys                 = [local.first_public_key]
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          password_authentication_enabled = false
+          admin_ssh_keys                  = [local.first_public_key]
         }
       }
       network_interface {

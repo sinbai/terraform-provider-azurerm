@@ -738,7 +738,7 @@ resource "azurerm_compute_fleet" "test" {
         admin_username                        = local.admin_username
         admin_password                        = local.admin_password
         password_authentication_enabled       = true
-        admin_ssh_keys                       = [local.first_public_key]
+        admin_ssh_keys                        = [local.first_public_key]
         provision_vm_agent_enabled            = true
         vm_agent_platform_updates_enabled     = true
         patch_mode                            = "AutomaticByPlatform"
@@ -803,7 +803,7 @@ resource "azurerm_compute_fleet" "test" {
           admin_username                        = local.admin_username
           admin_password                        = local.admin_password
           password_authentication_enabled       = true
-          admin_ssh_keys                       = [local.first_public_key]
+          admin_ssh_keys                        = [local.first_public_key]
           provision_vm_agent_enabled            = true
           vm_agent_platform_updates_enabled     = true
           patch_mode                            = "AutomaticByPlatform"
@@ -890,7 +890,7 @@ resource "azurerm_compute_fleet" "test" {
         admin_username                    = local.admin_username
         admin_password                    = local.admin_password
         password_authentication_enabled   = false
-        admin_ssh_keys                   = [local.first_public_key]
+        admin_ssh_keys                    = [local.first_public_key]
         provision_vm_agent_enabled        = true
         vm_agent_platform_updates_enabled = false
         patch_mode                        = "ImageDefault"
@@ -959,7 +959,7 @@ resource "azurerm_compute_fleet" "test" {
           admin_username                    = local.admin_username
           admin_password                    = local.admin_password
           password_authentication_enabled   = false
-          admin_ssh_keys                   = [local.first_public_key]
+          admin_ssh_keys                    = [local.first_public_key]
           provision_vm_agent_enabled        = true
           vm_agent_platform_updates_enabled = false
           patch_mode                        = "ImageDefault"

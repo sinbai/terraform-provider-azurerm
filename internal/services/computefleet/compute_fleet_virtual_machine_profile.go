@@ -987,11 +987,39 @@ func expandVirtualMachineProfileModel(inputList []VirtualMachineProfileModel, d 
 	}
 	input := &inputList[0]
 	output := fleets.BaseVirtualMachineProfile{
-		OsProfile:              expandOSProfileModel(inputList),
-		ApplicationProfile:     expandApplicationProfile(input.GalleryApplicationProfile),
-		CapacityReservation:    expandCapacityReservation(input.CapacityReservationGroupId),
-		DiagnosticsProfile:     expandExtensionModel(input.BootDiagnosticEnabled, input.BootDiagnosticStorageAccountEndpoint),
-		ScheduledEventsProfile: expandScheduledEventsProfile(input),
+		OsProfile:          expandOSProfileModel(inputList),
+		ApplicationProfile: expandApplicationProfileModel(input.GalleryApplicationProfile),
+		DiagnosticsProfile: &fleets.DiagnosticsProfile{
+			BootDiagnostics: &fleets.BootDiagnostics{
+				Enabled:    pointer.To(input.BootDiagnosticEnabled),
+				StorageUri: pointer.To(input.BootDiagnosticStorageAccountEndpoint),
+			},
+		},
+	}
+
+	if input.ScheduledEventTerminationTimeout != "" {
+		output.ScheduledEventsProfile = &fleets.ScheduledEventsProfile{
+			TerminateNotificationProfile: &fleets.TerminateNotificationProfile{
+				Enable:           pointer.To(true),
+				NotBeforeTimeout: pointer.To(input.ScheduledEventTerminationTimeout),
+			},
+		}
+	}
+
+	if input.ScheduledEventOsImageTimeout != "" {
+		if output.ScheduledEventsProfile == nil {
+			output.ScheduledEventsProfile = &fleets.ScheduledEventsProfile{}
+		}
+		output.ScheduledEventsProfile.OsImageNotificationProfile = &fleets.OSImageNotificationProfile{
+			Enable:           pointer.To(true),
+			NotBeforeTimeout: pointer.To(input.ScheduledEventOsImageTimeout),
+		}
+	}
+
+	if input.CapacityReservationGroupId != "" {
+		output.CapacityReservation = &fleets.CapacityReservationProfile{
+			CapacityReservationGroup: expandSubResource(input.CapacityReservationGroupId),
+		}
 	}
 
 	if isAdditional {
@@ -1044,7 +1072,7 @@ func expandVirtualMachineProfileModel(inputList []VirtualMachineProfileModel, d 
 		NetworkInterfaceConfigurations: expandNetworkInterfaceModel(input.NetworkInterface),
 	}
 
-	extensionProfileValue, err := expandExtensionProfileModel(input.Extension, input.ExtensionsTimeBudget)
+	extensionProfileValue, err := expandExtensionModel(input.Extension, input.ExtensionsTimeBudget)
 	if err != nil {
 		return nil, err
 	}
@@ -1075,7 +1103,7 @@ func expandVirtualMachineProfileModel(inputList []VirtualMachineProfileModel, d 
 	return &output, nil
 }
 
-func expandApplicationProfile(inputList []GalleryApplicationModel) *fleets.ApplicationProfile {
+func expandApplicationProfileModel(inputList []GalleryApplicationModel) *fleets.ApplicationProfile {
 	if len(inputList) == 0 {
 		return nil
 	}
@@ -1102,16 +1130,6 @@ func expandApplicationProfile(inputList []GalleryApplicationModel) *fleets.Appli
 
 	return &fleets.ApplicationProfile{
 		GalleryApplications: &outputList,
-	}
-}
-
-func expandCapacityReservation(input string) *fleets.CapacityReservationProfile {
-	if input == "" {
-		return nil
-	}
-
-	return &fleets.CapacityReservationProfile{
-		CapacityReservationGroup: expandSubResource(input),
 	}
 }
 
@@ -1142,20 +1160,7 @@ func expandSubResources(inputList []string) *[]fleets.SubResource {
 	return &outputList
 }
 
-func expandExtensionModel(enabled bool, endpoint string) *fleets.DiagnosticsProfile {
-	bootDiagnostics := fleets.BootDiagnostics{
-		Enabled:    pointer.To(enabled),
-		StorageUri: pointer.To(endpoint),
-	}
-
-	output := fleets.DiagnosticsProfile{
-		BootDiagnostics: pointer.To(bootDiagnostics),
-	}
-
-	return &output
-}
-
-func expandExtensionProfileModel(inputList []ExtensionModel, timeBudget string) (*fleets.VirtualMachineScaleSetExtensionProfile, error) {
+func expandExtensionModel(inputList []ExtensionModel, timeBudget string) (*fleets.VirtualMachineScaleSetExtensionProfile, error) {
 	if len(inputList) == 0 {
 		return nil, nil
 	}
@@ -1170,11 +1175,18 @@ func expandExtensionProfileModel(inputList []ExtensionModel, timeBudget string) 
 		}
 
 		propertiesValue := fleets.VirtualMachineScaleSetExtensionProperties{
-			AutoUpgradeMinorVersion:       pointer.To(v.AutoUpgradeMinorVersionEnabled),
-			SuppressFailures:              pointer.To(v.FailureSuppressionEnabled),
-			EnableAutomaticUpgrade:        pointer.To(v.AutomaticUpgradeEnabled),
-			ProtectedSettingsFromKeyVault: expandKeyVaultSecretReferenceModel(v.ProtectedSettingsFromKeyVault),
+			AutoUpgradeMinorVersion: pointer.To(v.AutoUpgradeMinorVersionEnabled),
+			SuppressFailures:        pointer.To(v.FailureSuppressionEnabled),
+			EnableAutomaticUpgrade:  pointer.To(v.AutomaticUpgradeEnabled),
 		}
+
+		if len(v.ProtectedSettingsFromKeyVault) > 0 {
+			propertiesValue.ProtectedSettingsFromKeyVault = &fleets.KeyVaultSecretReference{
+				SecretURL:   v.ProtectedSettingsFromKeyVault[0].SecretUrl,
+				SourceVault: pointer.From(expandSubResource(v.ProtectedSettingsFromKeyVault[0].SourceVaultId)),
+			}
+		}
+
 		if v.ForceExtensionExecutionOnChange != "" {
 			propertiesValue.ForceUpdateTag = pointer.To(v.ForceExtensionExecutionOnChange)
 		}
@@ -1224,77 +1236,47 @@ func expandExtensionProfileModel(inputList []ExtensionModel, timeBudget string) 
 	return &output, nil
 }
 
-func expandKeyVaultSecretReferenceModel(inputList []ProtectedSettingsFromKeyVaultModel) *fleets.KeyVaultSecretReference {
-	if len(inputList) == 0 {
-		return nil
-	}
-	input := &inputList[0]
-	output := fleets.KeyVaultSecretReference{
-		SecretURL:   input.SecretUrl,
-		SourceVault: pointer.From(expandSubResource(input.SourceVaultId)),
-	}
-
-	return &output
-}
-
-func expandApiEntityReferenceModel(input string) *fleets.ApiEntityReference {
-	if input == "" {
-		return nil
-	}
-
-	return &fleets.ApiEntityReference{
-		Id: pointer.To(input),
-	}
-}
-
 func expandNetworkInterfaceModel(inputList []NetworkInterfaceModel) *[]fleets.VirtualMachineScaleSetNetworkConfiguration {
 	outputList := make([]fleets.VirtualMachineScaleSetNetworkConfiguration, 0)
 	for _, v := range inputList {
-		input := v
 		output := fleets.VirtualMachineScaleSetNetworkConfiguration{
-			Name:       input.Name,
-			Properties: expandNetworkConfigurationPropertiesModel(input),
+			Name: v.Name,
+			Properties: &fleets.VirtualMachineScaleSetNetworkConfigurationProperties{
+				EnableAcceleratedNetworking: pointer.To(v.AcceleratedNetworkingEnabled),
+				EnableIPForwarding:          pointer.To(v.IPForwardingEnabled),
+				NetworkSecurityGroup:        expandSubResource(v.NetworkSecurityGroupId),
+				Primary:                     pointer.To(v.Primary),
+			},
 		}
+
+		if len(v.DnsServers) > 0 {
+			output.Properties.DnsSettings = &fleets.VirtualMachineScaleSetNetworkConfigurationDnsSettings{
+				DnsServers: pointer.To(v.DnsServers),
+			}
+		}
+
+		auxiliaryMode := fleets.NetworkInterfaceAuxiliaryModeNone
+		if v.AuxiliaryMode != "" {
+			auxiliaryMode = fleets.NetworkInterfaceAuxiliaryMode(v.AuxiliaryMode)
+
+		}
+		output.Properties.AuxiliaryMode = pointer.To(auxiliaryMode)
+
+		if v.DeleteOption != "" {
+			output.Properties.DeleteOption = pointer.To(fleets.DeleteOptions(v.DeleteOption))
+		}
+
+		auxiliarySku := fleets.NetworkInterfaceAuxiliarySkuNone
+		if v.AuxiliarySku != "" {
+			auxiliarySku = fleets.NetworkInterfaceAuxiliarySku(v.AuxiliarySku)
+		}
+		output.Properties.AuxiliarySku = pointer.To(auxiliarySku)
+
+		output.Properties.IPConfigurations = pointer.From(expandIPConfigurationModel(v.IPConfiguration))
 
 		outputList = append(outputList, output)
 	}
 	return &outputList
-}
-
-func expandNetworkConfigurationPropertiesModel(input NetworkInterfaceModel) *fleets.VirtualMachineScaleSetNetworkConfigurationProperties {
-	output := fleets.VirtualMachineScaleSetNetworkConfigurationProperties{
-		EnableAcceleratedNetworking: pointer.To(input.AcceleratedNetworkingEnabled),
-		EnableIPForwarding:          pointer.To(input.IPForwardingEnabled),
-		NetworkSecurityGroup:        expandSubResource(input.NetworkSecurityGroupId),
-		Primary:                     pointer.To(input.Primary),
-	}
-
-	if len(input.DnsServers) > 0 {
-		output.DnsSettings = &fleets.VirtualMachineScaleSetNetworkConfigurationDnsSettings{
-			DnsServers: pointer.To(input.DnsServers),
-		}
-	}
-
-	auxiliaryMode := fleets.NetworkInterfaceAuxiliaryModeNone
-	if input.AuxiliaryMode != "" {
-		auxiliaryMode = fleets.NetworkInterfaceAuxiliaryMode(input.AuxiliaryMode)
-
-	}
-	output.AuxiliaryMode = pointer.To(auxiliaryMode)
-
-	if input.DeleteOption != "" {
-		output.DeleteOption = pointer.To(fleets.DeleteOptions(input.DeleteOption))
-	}
-
-	auxiliarySku := fleets.NetworkInterfaceAuxiliarySkuNone
-	if input.AuxiliarySku != "" {
-		auxiliarySku = fleets.NetworkInterfaceAuxiliarySku(input.AuxiliarySku)
-	}
-	output.AuxiliarySku = pointer.To(auxiliarySku)
-
-	output.IPConfigurations = pointer.From(expandIPConfigurationModel(input.IPConfiguration))
-
-	return &output
 }
 
 func expandIPConfigurationModel(inputList []IPConfigurationModel) *[]fleets.VirtualMachineScaleSetIPConfiguration {
@@ -1309,8 +1291,13 @@ func expandIPConfigurationModel(inputList []IPConfigurationModel) *[]fleets.Virt
 				LoadBalancerBackendAddressPools:       expandSubResources(input.LoadBalancerBackendAddressPoolIds),
 				Primary:                               pointer.To(input.Primary),
 				PublicIPAddressConfiguration:          expandPublicIPAddressModel(input.PublicIPAddress),
-				Subnet:                                expandApiEntityReferenceModel(input.SubnetId),
 			},
+		}
+
+		if input.SubnetId != "" {
+			output.Properties.Subnet = &fleets.ApiEntityReference{
+				Id: pointer.To(input.SubnetId),
+			}
 		}
 
 		if input.Version != "" {
@@ -1330,10 +1317,22 @@ func expandPublicIPAddressModel(inputList []PublicIPAddressModel) *fleets.Virtua
 	output := fleets.VirtualMachineScaleSetPublicIPAddressConfiguration{
 		Name: input.Name,
 		Properties: &fleets.VirtualMachineScaleSetPublicIPAddressConfigurationProperties{
-			DnsSettings:    expandPublicIPAddressDnsSettings(input.DomainNameLabel, input.DomainNameLabelScope),
 			IPTags:         expandIPTagModel(input.IPTag),
 			PublicIPPrefix: expandSubResource(input.PublicIPPrefix),
 		},
+	}
+
+	if input.DomainNameLabel != "" {
+		output.Properties.DnsSettings = &fleets.VirtualMachineScaleSetPublicIPAddressConfigurationDnsSettings{
+			DomainNameLabel: input.DomainNameLabel,
+		}
+	}
+
+	if input.DomainNameLabelScope != "" {
+		if output.Properties.DnsSettings == nil {
+			output.Properties.DnsSettings = &fleets.VirtualMachineScaleSetPublicIPAddressConfigurationDnsSettings{}
+		}
+		output.Properties.DnsSettings.DomainNameLabelScope = pointer.To(fleets.DomainNameLabelScopeTypes(input.DomainNameLabelScope))
 	}
 
 	if v := input.SkuName; v != "" {
@@ -1352,22 +1351,6 @@ func expandPublicIPAddressModel(inputList []PublicIPAddressModel) *fleets.Virtua
 	}
 	if input.Version != "" {
 		output.Properties.PublicIPAddressVersion = pointer.To(fleets.IPVersion(input.Version))
-	}
-
-	return &output
-}
-
-func expandPublicIPAddressDnsSettings(domainNameLabel string, domainNameLabelScope string) *fleets.VirtualMachineScaleSetPublicIPAddressConfigurationDnsSettings {
-	if domainNameLabel == "" && domainNameLabelScope == "" {
-		return nil
-	}
-	output := fleets.VirtualMachineScaleSetPublicIPAddressConfigurationDnsSettings{}
-	if domainNameLabel != "" {
-		output.DomainNameLabel = domainNameLabel
-	}
-
-	if domainNameLabelScope != "" {
-		output.DomainNameLabelScope = pointer.To(fleets.DomainNameLabelScopeTypes(domainNameLabelScope))
 	}
 
 	return &output
@@ -1408,7 +1391,6 @@ func expandOSProfileModel(inputList []VirtualMachineProfileModel) *fleets.Virtua
 			DisablePasswordAuthentication: pointer.To(!lConfig[0].PasswordAuthenticationEnabled),
 			ProvisionVMAgent:              pointer.To(lConfig[0].ProvisionVMAgentEnabled),
 			EnableVMAgentPlatformUpdates:  pointer.To(lConfig[0].VMAgentPlatformUpdatesEnabled),
-			Ssh:                           expandSshConfigurationModel(lConfig[0].AdminUsername, lConfig[0].AdminSSHKeys),
 			PatchSettings:                 &fleets.LinuxPatchSettings{},
 		}
 
@@ -1439,20 +1421,54 @@ func expandOSProfileModel(inputList []VirtualMachineProfileModel) *fleets.Virtua
 		}
 		output.Secrets = expandOsProfileLinuxSecretsModel(lConfig[0].Secret)
 
-		linuxConfig.Ssh = expandSshConfigurationModel(lConfig[0].AdminUsername, lConfig[0].AdminSSHKeys)
+		if lConfig[0].AdminUsername != "" || len(lConfig[0].AdminSSHKeys) > 0 {
+			publicKeys := make([]fleets.SshPublicKey, 0)
+			for _, v := range lConfig[0].AdminSSHKeys {
+				output := fleets.SshPublicKey{
+					Path: pointer.To(fmt.Sprintf("/home/%s/.ssh/authorized_keys", lConfig[0].AdminUsername)),
+				}
+				if v != "" {
+					output.KeyData = pointer.To(v)
+				}
+				publicKeys = append(publicKeys, output)
+			}
+
+			linuxConfig.Ssh = &fleets.SshConfiguration{
+				PublicKeys: pointer.To(publicKeys),
+			}
+		}
 
 		output.LinuxConfiguration = &linuxConfig
 	}
 
 	if winConfig := osProfile.WindowsConfiguration; len(winConfig) > 0 {
 		windowsConfig := fleets.WindowsConfiguration{
-			AdditionalUnattendContent:    expandAdditionalUnattendContentModel(winConfig[0].AdditionalUnattendContent),
+			AdditionalUnattendContent:    expandAdditionalUnAttendContentModel(winConfig[0].AdditionalUnattendContent),
 			EnableAutomaticUpdates:       pointer.To(winConfig[0].AutomaticUpdatesEnabled),
 			EnableVMAgentPlatformUpdates: pointer.To(winConfig[0].VMAgentPlatformUpdatesEnabled),
 			ProvisionVMAgent:             pointer.To(winConfig[0].ProvisionVMAgentEnabled),
-			WinRM:                        expandWinRM(winConfig[0].WinRM),
-			PatchSettings:                &fleets.PatchSettings{EnableHotpatching: pointer.To(winConfig[0].HotPatchingEnabled)},
+			PatchSettings: &fleets.PatchSettings{
+				EnableHotpatching: pointer.To(winConfig[0].HotPatchingEnabled),
+			},
 		}
+
+		if winRm := winConfig[0].WinRM; len(winRm) > 0 {
+			listenerList := make([]fleets.WinRMListener, 0)
+			for _, v := range winRm {
+				output := fleets.WinRMListener{
+					Protocol: pointer.To(fleets.ProtocolTypes(v.Protocol)),
+				}
+
+				if v.CertificateUrl != "" {
+					output.CertificateURL = pointer.To(v.CertificateUrl)
+				}
+				listenerList = append(listenerList, output)
+			}
+			windowsConfig.WinRM = &fleets.WinRMConfiguration{
+				Listeners: pointer.To(listenerList),
+			}
+		}
+
 		if winConfig[0].AdminUsername != "" {
 			output.AdminUsername = pointer.To(winConfig[0].AdminUsername)
 		}
@@ -1643,27 +1659,6 @@ func isValidHotPatchSourceImageReference(referenceInput []SourceImageReferenceMo
 	return false
 }
 
-func expandSshConfigurationModel(userName string, publicKeyList []string) *fleets.SshConfiguration {
-	if userName == "" || len(publicKeyList) == 0 {
-		return nil
-	}
-
-	publicKeys := make([]fleets.SshPublicKey, 0)
-	for _, v := range publicKeyList {
-		output := fleets.SshPublicKey{
-			Path: pointer.To(fmt.Sprintf("/home/%s/.ssh/authorized_keys", userName)),
-		}
-		if v != "" {
-			output.KeyData = pointer.To(v)
-		}
-		publicKeys = append(publicKeys, output)
-	}
-
-	return &fleets.SshConfiguration{
-		PublicKeys: pointer.To(publicKeys),
-	}
-}
-
 func expandOsProfileLinuxSecretsModel(inputList []LinuxSecretModel) *[]fleets.VaultSecretGroup {
 	if len(inputList) == 0 {
 		return nil
@@ -1671,25 +1666,22 @@ func expandOsProfileLinuxSecretsModel(inputList []LinuxSecretModel) *[]fleets.Va
 
 	outputList := make([]fleets.VaultSecretGroup, 0)
 	for _, v := range inputList {
-		input := v
 		output := fleets.VaultSecretGroup{
-			SourceVault:       expandSubResource(input.KeyVaultId),
-			VaultCertificates: expandVaultLinuxCertificateModel(input.Certificate),
+			SourceVault: expandSubResource(v.KeyVaultId),
 		}
 
-		outputList = append(outputList, output)
-	}
-	return &outputList
-}
-
-func expandVaultLinuxCertificateModel(inputList []LinuxCertificateModel) *[]fleets.VaultCertificate {
-	outputList := make([]fleets.VaultCertificate, 0)
-	for _, v := range inputList {
-		input := v
-		output := fleets.VaultCertificate{}
-		if input.Url != "" {
-			output.CertificateURL = pointer.To(input.Url)
+		if len(v.Certificate) > 0 {
+			vcs := make([]fleets.VaultCertificate, 0)
+			for _, v := range v.Certificate {
+				vc := fleets.VaultCertificate{}
+				if v.Url != "" {
+					vc.CertificateURL = pointer.To(v.Url)
+					vcs = append(vcs, vc)
+				}
+			}
+			output.VaultCertificates = &vcs
 		}
+
 		outputList = append(outputList, output)
 	}
 	return &outputList
@@ -1702,10 +1694,24 @@ func expandOsProfileWindowsSecretsModel(inputList []WindowsSecretModel) *[]fleet
 
 	outputList := make([]fleets.VaultSecretGroup, 0)
 	for _, v := range inputList {
-		input := v
 		output := fleets.VaultSecretGroup{
-			SourceVault:       expandSubResource(input.KeyVaultId),
-			VaultCertificates: expandVaultWindowsCertificateModel(input.Certificate),
+			SourceVault: expandSubResource(v.KeyVaultId),
+		}
+
+		if len(v.Certificate) > 0 {
+			vcs := make([]fleets.VaultCertificate, 0)
+			for _, v := range v.Certificate {
+				vc := fleets.VaultCertificate{}
+				if v.Store != "" {
+					vc.CertificateStore = pointer.To(v.Store)
+				}
+				if v.Url != "" {
+					vc.CertificateURL = pointer.To(v.Url)
+				}
+				vcs = append(vcs, vc)
+			}
+
+			output.VaultCertificates = &vcs
 		}
 
 		outputList = append(outputList, output)
@@ -1713,25 +1719,7 @@ func expandOsProfileWindowsSecretsModel(inputList []WindowsSecretModel) *[]fleet
 	return &outputList
 }
 
-func expandVaultWindowsCertificateModel(inputList []WindowsCertificateModel) *[]fleets.VaultCertificate {
-	outputList := make([]fleets.VaultCertificate, 0)
-	for _, v := range inputList {
-		input := v
-		output := fleets.VaultCertificate{}
-
-		if input.Store != "" {
-			output.CertificateStore = pointer.To(input.Store)
-		}
-
-		if input.Url != "" {
-			output.CertificateURL = pointer.To(input.Url)
-		}
-		outputList = append(outputList, output)
-	}
-	return &outputList
-}
-
-func expandAdditionalUnattendContentModel(inputList []AdditionalUnattendContentModel) *[]fleets.AdditionalUnattendContent {
+func expandAdditionalUnAttendContentModel(inputList []AdditionalUnattendContentModel) *[]fleets.AdditionalUnattendContent {
 	if len(inputList) == 0 {
 		return nil
 	}
@@ -1750,52 +1738,6 @@ func expandAdditionalUnattendContentModel(inputList []AdditionalUnattendContentM
 		outputList = append(outputList, output)
 	}
 	return &outputList
-}
-
-func expandWinRM(inputList []WinRMModel) *fleets.WinRMConfiguration {
-	if len(inputList) == 0 {
-		return nil
-	}
-
-	listenerList := make([]fleets.WinRMListener, 0)
-	for _, v := range inputList {
-		input := v
-		output := fleets.WinRMListener{
-			Protocol: pointer.To(fleets.ProtocolTypes(input.Protocol)),
-		}
-
-		if input.CertificateUrl != "" {
-			output.CertificateURL = pointer.To(input.CertificateUrl)
-		}
-		listenerList = append(listenerList, output)
-	}
-
-	return &fleets.WinRMConfiguration{
-		Listeners: pointer.To(listenerList),
-	}
-}
-
-func expandScheduledEventsProfile(input *VirtualMachineProfileModel) *fleets.ScheduledEventsProfile {
-	if input == nil || (input.ScheduledEventTerminationTimeout == "" && input.ScheduledEventOsImageTimeout == "") {
-		return nil
-	}
-
-	outPut := &fleets.ScheduledEventsProfile{}
-	if input.ScheduledEventTerminationTimeout != "" {
-		outPut.TerminateNotificationProfile = &fleets.TerminateNotificationProfile{
-			Enable:           pointer.To(true),
-			NotBeforeTimeout: pointer.To(input.ScheduledEventTerminationTimeout),
-		}
-	}
-
-	if input.ScheduledEventOsImageTimeout != "" {
-		outPut.OsImageNotificationProfile = &fleets.OSImageNotificationProfile{
-			Enable:           pointer.To(true),
-			NotBeforeTimeout: pointer.To(input.ScheduledEventOsImageTimeout),
-		}
-	}
-
-	return outPut
 }
 
 func expandDataDiskModel(inputList []DataDiskModel) (*[]fleets.VirtualMachineScaleSetDataDisk, error) {
@@ -1911,9 +1853,23 @@ func expandOSDiskModel(input *VirtualMachineProfileModel, withVMAttributes bool,
 		ManagedDisk: &fleets.VirtualMachineScaleSetManagedDiskParameters{
 			StorageAccountType: pointer.To(fleets.StorageAccountTypes(inputOsDisk.StorageAccountType)),
 		},
-		DiffDiskSettings: expandDiffDiskSettingsModel(inputOsDisk),
 		// these have to be hard-coded so there's no point exposing them
 		CreateOption: fleets.DiskCreateOptionTypesFromImage,
+	}
+
+	if inputOsDisk != nil {
+		if inputOsDisk.DiffDiskOption != "" {
+			output.DiffDiskSettings = &fleets.DiffDiskSettings{
+				Option: pointer.To(fleets.DiffDiskOptions(inputOsDisk.DiffDiskOption)),
+			}
+		}
+
+		if inputOsDisk.DiffDiskPlacement != "" {
+			if output.DiffDiskSettings == nil {
+				output.DiffDiskSettings = &fleets.DiffDiskSettings{}
+			}
+			output.DiffDiskSettings.Placement = pointer.To(fleets.DiffDiskPlacement(inputOsDisk.DiffDiskPlacement))
+		}
 	}
 
 	if inputOsDisk.DiskSizeInGB > 0 {
@@ -1936,22 +1892,6 @@ func expandOSDiskModel(input *VirtualMachineProfileModel, withVMAttributes bool,
 		output.ManagedDisk.SecurityProfile = &fleets.VMDiskSecurityProfile{
 			SecurityEncryptionType: pointer.To(fleets.SecurityEncryptionTypes(inputOsDisk.SecurityEncryptionType)),
 		}
-	}
-
-	return &output
-}
-
-func expandDiffDiskSettingsModel(input *OSDiskModel) *fleets.DiffDiskSettings {
-	if input == nil || (input.DiffDiskOption == "" && input.DiffDiskPlacement == "") {
-		return nil
-	}
-
-	output := fleets.DiffDiskSettings{}
-	if input.DiffDiskOption != "" {
-		output.Option = pointer.To(fleets.DiffDiskOptions(input.DiffDiskOption))
-	}
-	if input.DiffDiskPlacement != "" {
-		output.Placement = pointer.To(fleets.DiffDiskPlacement(input.DiffDiskPlacement))
 	}
 
 	return &output
@@ -2551,6 +2491,37 @@ func flattenIPConfigurationModel(inputList []fleets.VirtualMachineScaleSetIPConf
 		outputList = append(outputList, output)
 	}
 	return outputList
+}
+
+func flattenPublicIPAddressModel(input *fleets.VirtualMachineScaleSetPublicIPAddressConfiguration) []PublicIPAddressModel {
+	outputList := make([]PublicIPAddressModel, 0)
+	if input == nil {
+		return outputList
+	}
+	output := PublicIPAddressModel{
+		Name: input.Name,
+	}
+
+	if v := input.Sku; v != nil {
+		if v.Name != nil && v.Tier != nil {
+			output.SkuName = fmt.Sprintf("%s_%s", pointer.From(v.Name), pointer.From(v.Tier))
+		}
+	}
+
+	if props := input.Properties; props != nil {
+		output.DeleteOption = string(pointer.From(props.DeleteOption))
+		if v := props.DnsSettings; v != nil {
+			output.DomainNameLabel = v.DomainNameLabel
+			output.DomainNameLabelScope = string(pointer.From(v.DomainNameLabelScope))
+		}
+		output.IdleTimeoutInMinutes = pointer.From(props.IdleTimeoutInMinutes)
+		output.Version = string(pointer.From(props.PublicIPAddressVersion))
+
+		if v := props.IPTags; v != nil {
+			output.IPTag = flattenIPTagModel(v)
+		}
+	}
+	return append(outputList, output)
 }
 
 func validateAdminUsernameLinux(input interface{}, key string) (warnings []string, errors []error) {

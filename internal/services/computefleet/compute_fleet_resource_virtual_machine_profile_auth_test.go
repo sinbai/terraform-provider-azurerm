@@ -351,7 +351,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix            = "prefix"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
-        admin_ssh_keys                 = [local.first_public_key]
+        admin_ssh_keys                  = [local.first_public_key]
       }
     }
 
@@ -386,7 +386,7 @@ resource "azurerm_compute_fleet" "test" {
           computer_name_prefix            = "prefix"
           admin_username                  = local.admin_username
           password_authentication_enabled = false
-          admin_ssh_keys                 = [local.first_public_key]
+          admin_ssh_keys                  = [local.first_public_key]
         }
       }
 
@@ -442,7 +442,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix            = "prefix"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
-        admin_ssh_keys                 = [local.second_public_key]
+        admin_ssh_keys                  = [local.second_public_key]
       }
     }
 
@@ -476,7 +476,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix            = "prefix"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
-        admin_ssh_keys                 = [local.second_public_key]
+        admin_ssh_keys                  = [local.second_public_key]
       }
     }
 
@@ -531,7 +531,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix            = "prefix"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
-        admin_ssh_keys                 = [local.first_public_key, local.second_public_key]
+        admin_ssh_keys                  = [local.first_public_key, local.second_public_key]
       }
     }
     network_interface {
@@ -563,7 +563,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix            = "prefix"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
-        admin_ssh_keys                 = [local.first_public_key, local.second_public_key]
+        admin_ssh_keys                  = [local.first_public_key, local.second_public_key]
       }
     }
     network_interface {
@@ -617,7 +617,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix            = "prefix"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
-        admin_ssh_keys                 = [local.second_public_key, local.first_public_key]
+        admin_ssh_keys                  = [local.second_public_key, local.first_public_key]
       }
     }
     network_interface {
@@ -649,7 +649,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix            = "prefix"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
-        admin_ssh_keys                 = [local.second_public_key, local.first_public_key]
+        admin_ssh_keys                  = [local.second_public_key, local.first_public_key]
       }
     }
     network_interface {
@@ -703,7 +703,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix = "prefix"
         admin_username       = local.admin_username
         admin_password       = local.admin_password
-        admin_ssh_keys      = [local.first_public_key]
+        admin_ssh_keys       = [local.first_public_key]
       }
     }
 
@@ -736,7 +736,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix = "prefix"
         admin_username       = local.admin_username
         admin_password       = local.admin_password
-        admin_ssh_keys      = [local.first_public_key]
+        admin_ssh_keys       = [local.first_public_key]
       }
     }
 
@@ -791,7 +791,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix = "prefix"
         admin_username       = local.admin_username
         admin_password       = local.admin_password_update
-        admin_ssh_keys      = [local.second_public_key]
+        admin_ssh_keys       = [local.second_public_key]
       }
     }
 
@@ -824,7 +824,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix = "prefix"
         admin_username       = local.admin_username
         admin_password       = local.admin_password_update
-        admin_ssh_keys      = [local.second_public_key]
+        admin_ssh_keys       = [local.second_public_key]
       }
     }
 
@@ -880,7 +880,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix            = "prefix"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
-        admin_ssh_keys                 = [local.first_ed25519_public_key]
+        admin_ssh_keys                  = [local.first_ed25519_public_key]
       }
     }
 
@@ -914,7 +914,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix            = "prefix"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
-        admin_ssh_keys                 = [local.first_ed25519_public_key]
+        admin_ssh_keys                  = [local.first_ed25519_public_key]
       }
     }
 
@@ -970,7 +970,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix            = "prefix"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
-        admin_ssh_keys                 = [local.second_ed25519_public_key]
+        admin_ssh_keys                  = [local.second_ed25519_public_key]
       }
     }
 
@@ -1004,7 +1004,7 @@ resource "azurerm_compute_fleet" "test" {
         computer_name_prefix            = "prefix"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
-        admin_ssh_keys                 = [local.second_ed25519_public_key]
+        admin_ssh_keys                  = [local.second_ed25519_public_key]
       }
     }
 

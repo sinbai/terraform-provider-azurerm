@@ -1650,37 +1650,6 @@ func flattenSubResourceId(inputList []fleets.SubResource) []string {
 	return outputList
 }
 
-func flattenPublicIPAddressModel(input *fleets.VirtualMachineScaleSetPublicIPAddressConfiguration) []PublicIPAddressModel {
-	outputList := make([]PublicIPAddressModel, 0)
-	if input == nil {
-		return outputList
-	}
-	output := PublicIPAddressModel{
-		Name: input.Name,
-	}
-
-	if v := input.Sku; v != nil {
-		if v.Name != nil && v.Tier != nil {
-			output.SkuName = fmt.Sprintf("%s_%s", pointer.From(v.Name), pointer.From(v.Tier))
-		}
-	}
-
-	if props := input.Properties; props != nil {
-		output.DeleteOption = string(pointer.From(props.DeleteOption))
-		if v := props.DnsSettings; v != nil {
-			output.DomainNameLabel = v.DomainNameLabel
-			output.DomainNameLabelScope = string(pointer.From(v.DomainNameLabelScope))
-		}
-		output.IdleTimeoutInMinutes = pointer.From(props.IdleTimeoutInMinutes)
-		output.Version = string(pointer.From(props.PublicIPAddressVersion))
-
-		if v := props.IPTags; v != nil {
-			output.IPTag = flattenIPTagModel(v)
-		}
-	}
-	return append(outputList, output)
-}
-
 func flattenIPTagModel(inputList *[]fleets.VirtualMachineScaleSetIPTag) []IPTagModel {
 	outputList := make([]IPTagModel, 0)
 	if inputList == nil {
