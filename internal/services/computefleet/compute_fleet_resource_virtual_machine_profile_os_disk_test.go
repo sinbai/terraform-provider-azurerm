@@ -17,7 +17,7 @@ func TestAccComputeFleet_virtualMachineProfileOsDisk_basic(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.osDiskBasic(data, data.Locations.Primary),
+			Config: r.osDiskBasic(data, data.Locations.Primary, data.Locations.Secondary, "Standard_D1_v2"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -34,7 +34,8 @@ func TestAccComputeFleet_virtualMachineProfileOsDisk_complete(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.osDiskComplete(data, data.Locations.Primary),
+			// HardCode location is due to the limitation that VM size could be supported in two regions at the same time
+			Config: r.osDiskComplete(data, "westeurope", "centralus"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -51,7 +52,7 @@ func TestAccComputeFleet_virtualMachineProfileOsDisk_update(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.osDiskComplete(data, "westeurope"),
+			Config: r.osDiskComplete(data, "westeurope", "centralus"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -61,7 +62,7 @@ func TestAccComputeFleet_virtualMachineProfileOsDisk_update(t *testing.T) {
 			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
 			// Limited regional availability for some storage account type
-			Config: r.osDiskCompleteUpdate(data, "westeurope"),
+			Config: r.osDiskCompleteUpdate(data, "westeurope", "centralus"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -70,7 +71,7 @@ func TestAccComputeFleet_virtualMachineProfileOsDisk_update(t *testing.T) {
 			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
 			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.osDiskBasic(data, "westeurope"),
+			Config: r.osDiskBasic(data, "westeurope", "centralus", "Standard_F2s_v2"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -79,7 +80,7 @@ func TestAccComputeFleet_virtualMachineProfileOsDisk_update(t *testing.T) {
 			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
 			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 		{
-			Config: r.osDiskComplete(data, "westeurope"),
+			Config: r.osDiskComplete(data, "westeurope", "centralus"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -90,8 +91,9 @@ func TestAccComputeFleet_virtualMachineProfileOsDisk_update(t *testing.T) {
 	})
 }
 
-func (r ComputeFleetTestResource) osDiskBasic(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) osDiskBasic(data acceptance.TestData, primaryLocation string, secondaryLocation string, vmSize string) string {
 	return fmt.Sprintf(`
+
 %[1]s
 
 resource "azurerm_compute_fleet" "test" {
@@ -100,13 +102,14 @@ resource "azurerm_compute_fleet" "test" {
   location                    = "%[3]s"
   platform_fault_domain_count = 1
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
-    name = "Standard_F4s_v2"
+    name = "%[5]s"
   }
 
   compute_api_version = "2024-03-01"
@@ -146,6 +149,7 @@ resource "azurerm_compute_fleet" "test" {
       version   = "latest"
     }
   }
+
   additional_location_profile {
     location = "%[4]s"
     virtual_machine_profile_override {
@@ -186,10 +190,10 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
 }
-`, r.osDiskTemplate(data, location), data.RandomInteger, location, data.Locations.Secondary)
+`, r.osDiskTemplate(data, primaryLocation, secondaryLocation), data.RandomInteger, primaryLocation, secondaryLocation, vmSize)
 }
 
-func (r ComputeFleetTestResource) osDiskComplete(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) osDiskComplete(data acceptance.TestData, primaryLocation string, secondaryLocation string) string {
 	return fmt.Sprintf(`
 %[1]s
 %[2]s
@@ -200,16 +204,18 @@ resource "azurerm_compute_fleet" "test" {
   location                    = "%[4]s"
   platform_fault_domain_count = 1
 
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
   }
 
   vm_sizes_profile {
-    name = "Standard_DC8ads_v5"
+    name = "Standard_DC8eds_v5"
   }
 
   compute_api_version = "2024-03-01"
+
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     secure_boot_enabled = true
@@ -261,6 +267,7 @@ resource "azurerm_compute_fleet" "test" {
 
   additional_location_profile {
     location = "%[5]s"
+
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       secure_boot_enabled = true
@@ -310,27 +317,36 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
   }
+
+  depends_on = [
+    "azurerm_role_assignment.disk-encryption-read-keyvault",
+    "azurerm_key_vault_access_policy.disk-encryption",
+    "azurerm_role_assignment.linux-test-disk-encryption-read-keyvault",
+    "azurerm_key_vault_access_policy.linux-test-disk-encryption"
+  ]
 }
-`, r.diskEncryptionSetResourceDependencies(data), r.osDiskTemplateWithOutProvider(data, location), data.RandomInteger, location, data.Locations.Secondary)
+`, r.osDiskDiskEncryptionSetResourceDependencies(data), r.osDiskTemplateWithOutProvider(data, primaryLocation, secondaryLocation), data.RandomInteger, primaryLocation, secondaryLocation)
 }
 
-func (r ComputeFleetTestResource) osDiskCompleteUpdate(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) osDiskCompleteUpdate(data acceptance.TestData, primaryLocation string, secondaryLocation string) string {
 	return fmt.Sprintf(`
 %[1]s
 %[2]s
+
 resource "azurerm_compute_fleet" "test" {
   name                        = "acctest-fleet-%[3]d"
   resource_group_name         = azurerm_resource_group.test.name
   location                    = "%[4]s"
   platform_fault_domain_count = 1
 
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
   }
 
   vm_sizes_profile {
-    name = "Standard_DC8ads_v5"
+    name = "Standard_DC8eds_v5"
   }
 
   compute_api_version = "2024-03-01"
@@ -434,11 +450,17 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
   }
+     depends_on = [
+    "azurerm_role_assignment.disk-encryption-read-keyvault",
+    "azurerm_key_vault_access_policy.disk-encryption",
+    "azurerm_role_assignment.linux-test-disk-encryption-read-keyvault",
+    "azurerm_key_vault_access_policy.linux-test-disk-encryption"
+  ]
 }
-`, r.diskEncryptionSetResourceDependencies(data), r.osDiskTemplateWithOutProvider(data, location), data.RandomInteger, location, data.Locations.Secondary)
+`, r.osDiskDiskEncryptionSetResourceDependencies(data), r.osDiskTemplateWithOutProvider(data, primaryLocation, secondaryLocation), data.RandomInteger, primaryLocation, secondaryLocation)
 }
 
-func (r ComputeFleetTestResource) osDiskTemplate(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) osDiskTemplate(data acceptance.TestData, primaryLocation string, secondaryLocation string) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
@@ -446,10 +468,10 @@ provider "azurerm" {
 
 %[1]s
 
-`, r.osDiskTemplateWithOutProvider(data, location), data.RandomInteger, location, data.Locations.Secondary)
+`, r.osDiskTemplateWithOutProvider(data, primaryLocation, secondaryLocation), data.RandomInteger, primaryLocation, secondaryLocation)
 }
 
-func (r ComputeFleetTestResource) osDiskTemplateWithOutProvider(data acceptance.TestData, location string) string {
+func (r ComputeFleetTestResource) osDiskTemplateWithOutProvider(data acceptance.TestData, primaryLocation string, secondaryLocation string) string {
 	return fmt.Sprintf(`
 locals {
   first_public_key          = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+wWK73dCr+jgQOAxNsHAnNNNMEMWOHYEccp6wJm2gotpr9katuF/ZAdou5AaW1C61slRkHRkpRRX9FA9CYBiitZgvCCz+3nWNN7l/Up54Zps/pHWGZLHNJZRYyAB6j5yVLMVHIHriY49d/GZTZVNB8GoJv9Gakwc/fuEZYYl4YDFiGMBP///TzlI4jhiJzjKnEvqPFki5p2ZRJqcbCiF4pJrxUQR/RXqVFQdbRLZgYfJ8xGB878RENq3yQ39d8dVOkq4edbkzwcUmwwwkYVPIoDGsYLaRHnG+To7FvMeyO7xDVQkMKzopTQV8AuKpyvpqu0a9pWOMaiCyDytO7GGN you@me.com"
@@ -552,5 +574,182 @@ resource "azurerm_lb_backend_address_pool" "linux_test" {
   loadbalancer_id = azurerm_lb.linux_test.id
 }
 
-`, data.RandomInteger, location, data.Locations.Secondary)
+`, data.RandomInteger, primaryLocation, secondaryLocation)
+}
+
+func (r ComputeFleetTestResource) osDiskDiskEncryptionSetResourceDependencies(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {
+    key_vault {
+      purge_soft_delete_on_destroy       = false
+      purge_soft_deleted_keys_on_destroy = false
+    }
+  }
+}
+
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_key_vault" "test" {
+  name                        = "acctestkv%[1]s"
+  location                    = azurerm_resource_group.test.location
+  resource_group_name         = azurerm_resource_group.test.name
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  sku_name                    = "standard"
+  purge_protection_enabled    = true
+  enabled_for_disk_encryption = true
+}
+
+resource "azurerm_key_vault_access_policy" "service-principal" {
+  key_vault_id = azurerm_key_vault.test.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azurerm_client_config.current.object_id
+
+  key_permissions = [
+    "Create",
+    "Delete",
+    "Recover",
+    "Get",
+    "Purge",
+    "Update",
+    "GetRotationPolicy",
+  ]
+
+  secret_permissions = [
+    "Get",
+    "Delete",
+    "Set",
+  ]
+}
+
+resource "azurerm_key_vault_key" "test" {
+  name         = "examplekey"
+  key_vault_id = azurerm_key_vault.test.id
+  key_type     = "RSA"
+  key_size     = 2048
+
+  key_opts = [
+    "decrypt",
+    "encrypt",
+    "sign",
+    "unwrapKey",
+    "verify",
+    "wrapKey",
+  ]
+
+  depends_on = ["azurerm_key_vault_access_policy.service-principal"]
+}
+
+resource "azurerm_disk_encryption_set" "test" {
+  name                = "acctestdes-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+  key_vault_key_id    = azurerm_key_vault_key.test.id
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+resource "azurerm_key_vault_access_policy" "disk-encryption" {
+  key_vault_id = azurerm_key_vault.test.id
+
+  key_permissions = [
+    "Get",
+    "WrapKey",
+    "UnwrapKey",
+    "GetRotationPolicy",
+  ]
+
+  tenant_id = azurerm_disk_encryption_set.test.identity.0.tenant_id
+  object_id = azurerm_disk_encryption_set.test.identity.0.principal_id
+}
+
+resource "azurerm_role_assignment" "disk-encryption-read-keyvault" {
+  scope                = azurerm_key_vault.test.id
+  role_definition_name = "Reader"
+  principal_id         = azurerm_disk_encryption_set.test.identity.0.principal_id
+}
+
+resource "azurerm_key_vault" "linux_test" {
+  name                        = "acctestkvlinux%[1]s"
+  location                    = azurerm_resource_group.linux_test.location
+  resource_group_name         = azurerm_resource_group.linux_test.name
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  sku_name                    = "standard"
+  purge_protection_enabled    = true
+  enabled_for_disk_encryption = true
+}
+
+resource "azurerm_key_vault_access_policy" "linux-test-service-principal" {
+  key_vault_id = azurerm_key_vault.linux_test.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azurerm_client_config.current.object_id
+
+  key_permissions = [
+    "Create",
+    "Delete",
+ "Recover",
+    "Get",
+    "Purge",
+    "Update",
+    "GetRotationPolicy",
+  ]
+
+  secret_permissions = [
+    "Get",
+    "Delete",
+    "Set",
+  ]
+}
+
+resource "azurerm_key_vault_key" "linux_test" {
+  name         = "examplekey"
+  key_vault_id = azurerm_key_vault.linux_test.id
+  key_type     = "RSA"
+  key_size     = 2048
+
+  key_opts = [
+    "decrypt",
+    "encrypt",
+    "sign",
+    "unwrapKey",
+    "verify",
+    "wrapKey",
+  ]
+
+  depends_on = ["azurerm_key_vault_access_policy.linux-test-service-principal"]
+}
+
+resource "azurerm_disk_encryption_set" "linux_test" {
+  name                = "acctestdes-%[2]d"
+  resource_group_name = azurerm_resource_group.linux_test.name
+  location            = azurerm_resource_group.linux_test.location
+  key_vault_key_id    = azurerm_key_vault_key.linux_test.id
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+resource "azurerm_key_vault_access_policy" "linux-test-disk-encryption" {
+  key_vault_id = azurerm_key_vault.linux_test.id
+
+  key_permissions = [
+    "Get",
+    "WrapKey",
+    "UnwrapKey",
+    "GetRotationPolicy",
+  ]
+
+  tenant_id = azurerm_disk_encryption_set.linux_test.identity.0.tenant_id
+  object_id = azurerm_disk_encryption_set.linux_test.identity.0.principal_id
+}
+
+resource "azurerm_role_assignment" "linux-test-disk-encryption-read-keyvault" {
+  scope                = azurerm_key_vault.linux_test.id
+  role_definition_name = "Reader"
+  principal_id         = azurerm_disk_encryption_set.linux_test.identity.0.principal_id
+}
+`, data.RandomString, data.RandomInteger)
 }

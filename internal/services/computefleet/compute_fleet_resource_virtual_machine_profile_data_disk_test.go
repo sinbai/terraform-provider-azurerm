@@ -100,7 +100,7 @@ resource "azurerm_compute_fleet" "test" {
 
   regular_priority_profile {
     capacity     = 1
-    min_capacity = 1
+    min_capacity = 0
   }
 
   vm_sizes_profile {
@@ -201,7 +201,7 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
 }
-`, r.baseAndAdditionalLocationWindowsTemplate(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
+`, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
 }
 
 func (r ComputeFleetTestResource) dataDiskComplete(data acceptance.TestData) string {
@@ -465,7 +465,6 @@ func (r ComputeFleetTestResource) diskEncryptionSetResourceDependencies(data acc
 provider "azurerm" {
   features {
     key_vault {
-      recover_soft_deleted_key_vaults    = false
       purge_soft_delete_on_destroy       = false
       purge_soft_deleted_keys_on_destroy = false
     }
@@ -492,6 +491,7 @@ resource "azurerm_key_vault_access_policy" "service-principal" {
   key_permissions = [
     "Create",
     "Delete",
+"Recover",
     "Get",
     "Purge",
     "Update",
@@ -574,6 +574,7 @@ resource "azurerm_key_vault_access_policy" "linux-test-service-principal" {
   key_permissions = [
     "Create",
     "Delete",
+"Recover",
     "Get",
     "Purge",
     "Update",
