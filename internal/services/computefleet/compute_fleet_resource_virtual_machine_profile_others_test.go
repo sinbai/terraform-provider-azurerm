@@ -365,13 +365,25 @@ resource "azurerm_capacity_reservation" "test" {
   }
 }
 
+resource "azurerm_capacity_reservation_group" "linux_test" {
+  name                = "acctest-ccrg-%[2]d"
+  resource_group_name = azurerm_resource_group.linux_test.name
+  location            = azurerm_resource_group.linux_test.location
+}
+
+resource "azurerm_capacity_reservation" "linux_test" {
+  name                          = "acctest-ccr-%[2]d"
+  capacity_reservation_group_id = azurerm_capacity_reservation_group.linux_test.id
+  sku {
+    name     = "Standard_F2"
+    capacity = 1
+  }
+}
 
 resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
-
-  capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
 
   regular_priority_profile {
     capacity     = 1
@@ -385,6 +397,8 @@ resource "azurerm_compute_fleet" "test" {
   compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
+    capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
+
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -461,9 +475,10 @@ resource "azurerm_compute_fleet" "test" {
           }
         }
       }
-      depends_on = [azurerm_capacity_reservation.test]
+      
     }
   }
+  depends_on = [azurerm_capacity_reservation.test, azurerm_capacity_reservation.linux_test]
 }
 `, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
 }
@@ -501,8 +516,6 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  capacity_reservation_group_id = azurerm_capacity_reservation_group.test2.id
-
   regular_priority_profile {
     capacity     = 1
     min_capacity = 1
@@ -513,8 +526,11 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   compute_api_version = "2024-03-01"
+
   virtual_machine_profile {
     network_api_version = "2020-11-01"
+    capacity_reservation_group_id = azurerm_capacity_reservation_group.test2.id
+
     source_image_reference {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -988,6 +1004,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   compute_api_version = "2024-03-01"
+
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
