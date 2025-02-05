@@ -774,22 +774,26 @@ func osProfileSchema() *pluginsdk.Schema {
 							"time_zone": {
 								Type:         pluginsdk.TypeString,
 								Optional:     true,
+								ForceNew:     true,
 								ValidateFunc: validation.StringIsNotEmpty,
 							},
 
 							"winrm_listener": {
 								Type:     pluginsdk.TypeSet,
 								Optional: true,
+								ForceNew: true,
 								Elem: &pluginsdk.Resource{
 									Schema: map[string]*pluginsdk.Schema{
 										"protocol": {
 											Type:         pluginsdk.TypeString,
 											Required:     true,
+											ForceNew:     true,
 											ValidateFunc: validation.StringInSlice(fleets.PossibleValuesForProtocolTypes(), false),
 										},
 										"certificate_url": {
 											Type:         pluginsdk.TypeString,
 											Optional:     true,
+											ForceNew:     true,
 											ValidateFunc: keyVaultValidate.NestedItemId,
 										},
 									},
@@ -1552,7 +1556,7 @@ func validateWindowsSetting(inputList []VirtualMachineProfileModel, d *schema.Re
 				return fmt.Errorf("when referencing a hot patching enabled image the `extension` field must always contain a `application health extension`")
 			}
 			if !hotPatchingEnabled {
-				return fmt.Errorf("when referencing a hot patching enabled image the `hotpatching_enabled` field must always be set to `true`")
+				return fmt.Errorf("when referencing a hot patching enabled image the `hot_patching_enabled` field must always be set to `true`")
 			}
 		} else {
 			// not a hot patching enabled image verify Automatic VM Guest Patching settings

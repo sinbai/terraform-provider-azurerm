@@ -450,7 +450,7 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
   }
-     depends_on = [
+  depends_on = [
     "azurerm_role_assignment.disk-encryption-read-keyvault",
     "azurerm_key_vault_access_policy.disk-encryption",
     "azurerm_role_assignment.linux-test-disk-encryption-read-keyvault",
@@ -689,7 +689,7 @@ resource "azurerm_key_vault_access_policy" "linux-test-service-principal" {
   key_permissions = [
     "Create",
     "Delete",
- "Recover",
+    "Recover",
     "Get",
     "Purge",
     "Update",

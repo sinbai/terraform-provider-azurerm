@@ -356,9 +356,10 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 				Schema: map[string]*pluginsdk.Schema{
 					"location": commonschema.LocationWithoutForceNew(),
 
-					// The behavior of the API is when `virtual_machine_profile_override` is not specified but only location is specified then the `virtual_machine_profile` will be used.
-					// However, it is not possible to have two VNets with the same resource id in different regions under the same subscription. Confirmed with service team that this is an API bug, they will return a friendly error later, they will show user-friendly error message later.
-					// So, set `virtual_machine_profile_override` is required here.
+					// If `virtual_machine_profile_override` is not specified, the API expects to use the configuration override of `virtual_machine_profile`.
+					// However, since it is not possible to have two VNets with the same resource ID in different regions under the same subscription, the API returns an error that the VNet is not found.
+					// After confirming with service team, they promised to show a user-friendly error message later.
+					// Since not specifying `virtual_machine_profile_override` currently does not work, setting `virtual_machine_profile_override` is required.
 					"virtual_machine_profile_override": virtualMachineProfileSchema(),
 				},
 			},
@@ -855,6 +856,7 @@ func (r ComputeFleetResource) Create() sdk.ResourceFunc {
 			}
 
 			metadata.SetID(id)
+
 			return nil
 		},
 	}
@@ -889,7 +891,8 @@ func (r ComputeFleetResource) Update() sdk.ResourceFunc {
 			}
 
 			properties := existing.Model
-			//  Since the behavior of fleet API for updating resource means deleting and recreating, set `admin_password` as API requires `osProfile.adminPassword` when updating resource but the GET API does not return the `osProfile.adminPassword`
+
+			// API requires `osProfile.adminPassword` when updating resource but the GET API does not return the sensitive data `osProfile.adminPassword`
 			if props := properties.Properties; props != nil {
 				if len(model.VirtualMachineProfile[0].OsProfile[0].LinuxConfiguration) > 0 {
 					if v := props.ComputeProfile.BaseVirtualMachineProfile.OsProfile; v != nil {
@@ -948,9 +951,6 @@ func (r ComputeFleetResource) Update() sdk.ResourceFunc {
 				properties.Properties.ComputeProfile.BaseVirtualMachineProfile = pointer.From(baseVirtualMachineProfileValue)
 			}
 
-			if metadata.ResourceData.HasChange("platform_fault_domain_count") {
-				properties.Properties.ComputeProfile.PlatformFaultDomainCount = pointer.To(model.PlatformFaultDomainCount)
-			}
 			if metadata.ResourceData.HasChange("compute_api_version") {
 				properties.Properties.ComputeProfile.ComputeApiVersion = pointer.To(model.ComputeApiVersion)
 			}
@@ -973,10 +973,6 @@ func (r ComputeFleetResource) Update() sdk.ResourceFunc {
 
 			if metadata.ResourceData.HasChange("tags") {
 				properties.Tags = &model.Tags
-			}
-
-			if metadata.ResourceData.HasChange("zones") {
-				properties.Zones = &model.Zones
 			}
 
 			if err := client.CreateOrUpdateThenPoll(ctx, *id, *properties); err != nil {

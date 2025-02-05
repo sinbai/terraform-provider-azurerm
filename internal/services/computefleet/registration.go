@@ -17,6 +17,13 @@ func (r Registration) Name() string {
 	return "Compute Fleet"
 }
 
+// WebsiteCategories returns a list of categories which can be used for the sidebar
+func (r Registration) WebsiteCategories() []string {
+	return []string{
+		"Compute Fleet",
+	}
+}
+
 // DataSources returns a list of Data Sources supported by this Service
 func (r Registration) DataSources() []sdk.DataSource {
 	return []sdk.DataSource{}
@@ -26,12 +33,5 @@ func (r Registration) DataSources() []sdk.DataSource {
 func (r Registration) Resources() []sdk.Resource {
 	return []sdk.Resource{
 		ComputeFleetResource{},
-	}
-}
-
-// WebsiteCategories returns a list of categories which can be used for the sidebar
-func (r Registration) WebsiteCategories() []string {
-	return []string{
-		"Compute Fleet",
 	}
 }

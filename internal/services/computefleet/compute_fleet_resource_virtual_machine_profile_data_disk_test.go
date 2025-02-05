@@ -491,7 +491,7 @@ resource "azurerm_key_vault_access_policy" "service-principal" {
   key_permissions = [
     "Create",
     "Delete",
-"Recover",
+    "Recover",
     "Get",
     "Purge",
     "Update",
@@ -574,7 +574,7 @@ resource "azurerm_key_vault_access_policy" "linux-test-service-principal" {
   key_permissions = [
     "Create",
     "Delete",
-"Recover",
+    "Recover",
     "Get",
     "Purge",
     "Update",

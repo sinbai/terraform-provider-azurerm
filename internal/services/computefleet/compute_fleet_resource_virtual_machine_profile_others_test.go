@@ -279,47 +279,47 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
   }
-}
 
-additional_location_profile {
-  location = "%[6]s"
-  virtual_machine_profile_override {
-    network_api_version                      = "2020-11-01"
-    boot_diagnostic_enabled                  = %[4]t
-    boot_diagnostic_storage_account_endpoint = azurerm_storage_account.linux_test.primary_blob_endpoint
+  additional_location_profile {
+    location = "%[6]s"
+    virtual_machine_profile_override {
+      network_api_version                      = "2020-11-01"
+      boot_diagnostic_enabled                  = %[4]t
+      boot_diagnostic_storage_account_endpoint = azurerm_storage_account.linux_test.primary_blob_endpoint
 
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts-gen2"
-      version   = "latest"
-    }
-
-    os_disk {
-      storage_account_type = "Standard_LRS"
-      caching              = "ReadWrite"
-    }
-
-    os_profile {
-      linux_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        admin_password                  = local.admin_password
-        password_authentication_enabled = true
+      source_image_reference {
+        publisher = "Canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts-gen2"
+        version   = "latest"
       }
-    }
 
-    network_interface {
-      name    = "networkProTest"
-      primary = true
-      ip_configuration {
-        name      = "TestIPConfiguration"
-        subnet_id = azurerm_subnet.linux_test.id
-        primary   = true
-        public_ip_address {
-          name                    = "TestPublicIPConfiguration"
-          domain_name_label       = "test-domain-label"
-          idle_timeout_in_minutes = 4
+      os_disk {
+        storage_account_type = "Standard_LRS"
+        caching              = "ReadWrite"
+      }
+
+      os_profile {
+        linux_configuration {
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password
+          password_authentication_enabled = true
+        }
+      }
+
+      network_interface {
+        name    = "networkProTest"
+        primary = true
+        ip_configuration {
+          name      = "TestIPConfiguration"
+          subnet_id = azurerm_subnet.linux_test.id
+          primary   = true
+          public_ip_address {
+            name                    = "TestPublicIPConfiguration"
+            domain_name_label       = "test-domain-label"
+            idle_timeout_in_minutes = 4
+          }
         }
       }
     }

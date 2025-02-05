@@ -543,14 +543,18 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   spot_priority_profile {
-    min_capacity     = 0
-    maintain_enabled = false
-    capacity         = 0
+    allocation_strategy     = "PriceCapacityOptimized"
+    eviction_policy         = "Delete"
+    max_hourly_price_per_vm = -1
+    min_capacity            = 0
+    maintain_enabled        = false
+    capacity                = 0
   }
 
   regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+    allocation_strategy = "LowestPrice"
+    capacity            = 0
+    min_capacity        = 0
   }
 
   vm_sizes_profile {
@@ -696,14 +700,18 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   spot_priority_profile {
-    min_capacity     = 0
-    maintain_enabled = false
-    capacity         = 1
+    allocation_strategy     = "PriceCapacityOptimized"
+    eviction_policy         = "Delete"
+    max_hourly_price_per_vm = -1
+    min_capacity            = 0
+    maintain_enabled        = false
+    capacity                = 1
   }
 
   regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+    allocation_strategy = "LowestPrice"
+    capacity            = 0
+    min_capacity        = 0
   }
 
   vm_sizes_profile {
@@ -885,7 +893,7 @@ virtual_machine_profile {
 }
 # ignore_changes as when os_disk block is not specified the API return default values for caching, delete_option, disk_size_in_gb and storage_account_type
 lifecycle {
-	iignore_changes = [virtual_machine_profile.0.os_disk, additional_location_profile.virtual_machine_profile_override.0.os_disk]
+	ignore_changes = [virtual_machine_profile.0.os_disk, additional_location_profile[0].virtual_machine_profile_override.0.os_disk]
 }
 `)
 }
