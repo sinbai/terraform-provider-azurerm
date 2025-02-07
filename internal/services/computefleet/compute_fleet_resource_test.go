@@ -32,6 +32,21 @@ func TestAccComputeFleet_basic(t *testing.T) {
 	})
 }
 
+func TestAccComputeFleet_baseAndAdditionalLocationBasic(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.baseAndAdditionalLocationBasic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
+	})
+}
+
 func TestAccComputeFleet_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
@@ -439,6 +454,73 @@ resource "azurerm_compute_fleet" "test" {
   }
 }
 `, r.template(data), data.RandomInteger, data.Locations.Primary)
+}
+
+func (r ComputeFleetTestResource) baseAndAdditionalLocationBasic(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+
+%[1]s
+
+resource "azurerm_compute_fleet" "test" {
+  name                = "acctest-fleet-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+
+  virtual_machine_profile {
+    network_api_version = "2020-11-01"
+    source_image_reference {
+      offer     = "0001-com-ubuntu-server-focal"
+      publisher = "canonical"
+      sku       = "20_04-lts-gen2"
+      version   = "latest"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
+      }
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        subnet_id = azurerm_subnet.test.id
+        primary   = true
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+  }
+
+	additional_location_profile {
+			location = "%[4]s"
+		  %[5]s
+	}
+
+  # ignore_changes os_disk as os_disk block is not specified the API return default values for caching, delete_option, disk_size_in_gb and storage_account_type
+  # ignore_changes compute_api_version as the default value returned by API will be the latest supported computeApiVersion if it is not specified
+  lifecycle {
+    ignore_changes = [compute_api_version, virtual_machine_profile.0.os_disk]
+  }
+}
+`, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary, r.additionalLocationBasicVirtualMachineProfile())
 }
 
 func (r ComputeFleetTestResource) requiresImport(data acceptance.TestData) string {
@@ -915,6 +997,7 @@ virtual_machine_profile_override {
 			computer_name_prefix = "prefix"
 			admin_username       = local.admin_username
 			admin_password       = local.admin_password
+password_authentication_enabled = true
 		}
 	}
 

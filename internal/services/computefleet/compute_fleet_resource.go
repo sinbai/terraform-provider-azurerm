@@ -356,10 +356,6 @@ func (r ComputeFleetResource) Arguments() map[string]*pluginsdk.Schema {
 				Schema: map[string]*pluginsdk.Schema{
 					"location": commonschema.LocationWithoutForceNew(),
 
-					// If `virtual_machine_profile_override` is not specified, the API expects to use the configuration override of `virtual_machine_profile`.
-					// However, since it is not possible to have two VNets with the same resource ID in different regions under the same subscription, the API returns an error that the VNet is not found.
-					// After confirming with service team, they promised to show a user-friendly error message later.
-					// Since not specifying `virtual_machine_profile_override` currently does not work, setting `virtual_machine_profile_override` is required.
 					"virtual_machine_profile_override": virtualMachineProfileSchema(),
 				},
 			},
@@ -1314,6 +1310,10 @@ func (r ComputeFleetResource) CustomizeDiff() sdk.ResourceFunc {
 				if len(osProfile.WindowsConfiguration) > 0 && len(osProfile.LinuxConfiguration) > 0 ||
 					len(osProfile.WindowsConfiguration) == 0 && len(osProfile.LinuxConfiguration) == 0 {
 					return fmt.Errorf("only one of `linux_configuration` and `windows_configuration` in `virtual_machine_profile_override` must be specified")
+				}
+
+				if state.VirtualMachineProfile[0].CapacityReservationGroupId != "" && state.AdditionalLocationProfile[0].VirtualMachineProfileOverride[0].CapacityReservationGroupId == "" {
+					return fmt.Errorf("`virtual_machine_profile_override.0.capacity_reservation_group_id` is required when `virtual_machine_profile.0.capacity_reservation_group_id` is specified")
 				}
 			}
 

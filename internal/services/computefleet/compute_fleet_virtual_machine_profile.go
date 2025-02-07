@@ -108,7 +108,7 @@ func virtualMachineProfileSchema() *pluginsdk.Schema {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
 					ValidateFunc: validation.StringInSlice([]string{
-						"P1T5M",
+						"PT15M",
 					}, false),
 				},
 
@@ -578,7 +578,7 @@ func osProfileSchema() *pluginsdk.Schema {
 							"password_authentication_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
-								Default:  true,
+								Default:  false,
 							},
 
 							"provision_vm_agent_enabled": {
@@ -702,7 +702,7 @@ func osProfileSchema() *pluginsdk.Schema {
 							"vm_agent_platform_updates_enabled": {
 								Type:     pluginsdk.TypeBool,
 								Optional: true,
-								Default:  true,
+								Default:  false,
 							},
 
 							"patch_assessment_mode": {
@@ -1051,24 +1051,28 @@ func expandVirtualMachineProfileModel(inputList []VirtualMachineProfileModel, d 
 			SecureBootEnabled: pointer.To(input.SecureBootEnabled),
 			VTpmEnabled:       pointer.To(input.VTpmEnabled),
 		}
-	} else if input.SecureBootEnabled {
-		if output.SecurityProfile == nil {
-			output.SecurityProfile = &fleets.SecurityProfile{}
+	} else {
+		if input.SecureBootEnabled {
+			if output.SecurityProfile == nil {
+				output.SecurityProfile = &fleets.SecurityProfile{}
+			}
+			output.SecurityProfile.UefiSettings = &fleets.UefiSettings{
+				SecureBootEnabled: pointer.To(input.SecureBootEnabled),
+			}
+			output.SecurityProfile.SecurityType = pointer.To(fleets.SecurityTypesTrustedLaunch)
 		}
-		output.SecurityProfile.UefiSettings = &fleets.UefiSettings{
-			SecureBootEnabled: pointer.To(input.SecureBootEnabled),
-		}
-		output.SecurityProfile.SecurityType = pointer.To(fleets.SecurityTypesTrustedLaunch)
-	} else if input.VTpmEnabled {
-		if output.SecurityProfile == nil {
-			output.SecurityProfile = &fleets.SecurityProfile{}
-		}
-		if output.SecurityProfile.UefiSettings == nil {
-			output.SecurityProfile.UefiSettings = &fleets.UefiSettings{}
-		}
-		output.SecurityProfile.UefiSettings.VTpmEnabled = pointer.To(input.VTpmEnabled)
 
-		output.SecurityProfile.SecurityType = pointer.To(fleets.SecurityTypesTrustedLaunch)
+		if input.VTpmEnabled {
+			if output.SecurityProfile == nil {
+				output.SecurityProfile = &fleets.SecurityProfile{}
+			}
+			if output.SecurityProfile.UefiSettings == nil {
+				output.SecurityProfile.UefiSettings = &fleets.UefiSettings{}
+			}
+			output.SecurityProfile.UefiSettings.VTpmEnabled = pointer.To(input.VTpmEnabled)
+
+			output.SecurityProfile.SecurityType = pointer.To(fleets.SecurityTypesTrustedLaunch)
+		}
 	}
 
 	output.NetworkProfile = &fleets.VirtualMachineScaleSetNetworkProfile{

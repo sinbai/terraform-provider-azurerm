@@ -408,6 +408,11 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
 
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
     network_interface {
       name    = "networkProTest"
       primary = true
@@ -423,6 +428,7 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
   }
+
   additional_location_profile {
     location = "%[4]s"
     virtual_machine_profile_override {
@@ -441,6 +447,11 @@ resource "azurerm_compute_fleet" "test" {
           admin_password                  = local.admin_password
           password_authentication_enabled = true
         }
+      }
+
+      os_disk {
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
       }
 
       network_interface {
@@ -620,7 +631,7 @@ resource "azurerm_image" "linux_test" {
 }
 
 resource "azurerm_shared_image_gallery" "linux_test" {
-  name                = "acctestsig%[2]d"
+  name                = "acctestsiglinux%[2]d"
   resource_group_name = "${azurerm_resource_group.linux_test.name}"
   location            = "${azurerm_resource_group.linux_test.location}"
 }
@@ -796,7 +807,7 @@ resource "azurerm_image" "linux_test" {
 }
 
 resource "azurerm_shared_image_gallery" "linux_test" {
-  name                = "acctestsig%[2]d"
+  name                = "acctestsiglinux%[2]d"
   resource_group_name = "${azurerm_resource_group.linux_test.name}"
   location            = "${azurerm_resource_group.linux_test.location}"
 }
@@ -880,7 +891,7 @@ resource "azurerm_compute_fleet" "image_id" {
     location = "%[4]s"
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
-      source_image_id     = azurerm_shared_image_version.test.id
+      source_image_id     = azurerm_shared_image_version.linux_test.id
 
       os_disk {
         caching              = "ReadWrite"
@@ -978,7 +989,7 @@ resource "azurerm_image" "linux_test" {
 }
 
 resource "azurerm_shared_image_gallery" "linux_test" {
-  name                = "acctestsig%[2]d"
+  name                = "acctestsiglinux%[2]d"
   resource_group_name = "${azurerm_resource_group.linux_test.name}"
   location            = "${azurerm_resource_group.linux_test.location}"
 
@@ -1172,7 +1183,7 @@ resource "azurerm_image" "linux_test" {
 }
 
 resource "azurerm_shared_image_gallery" "linux_test" {
-  name                = "acctestsig%[2]d"
+  name                = "acctestsiglinux%[2]d"
   resource_group_name = "${azurerm_resource_group.linux_test.name}"
   location            = "${azurerm_resource_group.linux_test.location}"
 

@@ -625,7 +625,7 @@ provider "azurerm" {
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "test" {
-  name                   = "acctestkv%[5]s"
+  name                   = "acctestkv1%[5]s"
   location               = azurerm_resource_group.test.location
   resource_group_name    = azurerm_resource_group.test.name
   tenant_id              = data.azurerm_client_config.current.tenant_id
@@ -651,7 +651,7 @@ resource "azurerm_key_vault_secret" "test" {
 }
 
 resource "azurerm_key_vault" "linux_test" {
-  name                   = "acctestkv%[5]s"
+  name                   = "acctestkv2%[5]s"
   location               = azurerm_resource_group.linux_test.location
   resource_group_name    = azurerm_resource_group.linux_test.name
   tenant_id              = data.azurerm_client_config.current.tenant_id
@@ -819,7 +819,7 @@ provider "azurerm" {
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "test" {
-  name                   = "acctestkv%[5]s"
+  name                   = "acctestkv1%[5]s"
   location               = azurerm_resource_group.test.location
   resource_group_name    = azurerm_resource_group.test.name
   tenant_id              = data.azurerm_client_config.current.tenant_id
@@ -845,7 +845,7 @@ resource "azurerm_key_vault_secret" "test" {
 }
 
 resource "azurerm_key_vault" "linux_test" {
-  name                   = "acctestkv%[5]s"
+  name                   = "acctestkv2%[5]s"
   location               = azurerm_resource_group.linux_test.location
   resource_group_name    = azurerm_resource_group.linux_test.name
   tenant_id              = data.azurerm_client_config.current.tenant_id
@@ -872,7 +872,7 @@ resource "azurerm_key_vault_secret" "linux_test" {
 
 
 resource "azurerm_key_vault" "test2" {
-  name                   = "acctestkv2%[5]s"
+  name                   = "acctestkv12%[5]s"
   location               = azurerm_resource_group.test.location
   resource_group_name    = azurerm_resource_group.test.name
   tenant_id              = data.azurerm_client_config.current.tenant_id
@@ -898,7 +898,7 @@ resource "azurerm_key_vault_secret" "test2" {
 }
 
 resource "azurerm_key_vault" "linux_test2" {
-  name                   = "acctestkv2%[5]s"
+  name                   = "acctestkv22%[5]s"
   location               = azurerm_resource_group.linux_test.location
   resource_group_name    = azurerm_resource_group.linux_test.name
   tenant_id              = data.azurerm_client_config.current.tenant_id

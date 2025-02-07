@@ -164,9 +164,9 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       windows_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
       }
     }
 
@@ -200,9 +200,9 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         windows_configuration {
-          computer_name_prefix = "prefix"
-          admin_username       = local.admin_username
-          admin_password       = local.admin_password
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password
         }
       }
 
@@ -257,9 +257,9 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       windows_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password_update
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password_update
       }
     }
 
@@ -293,9 +293,9 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         windows_configuration {
-          computer_name_prefix = "prefix"
-          admin_username       = local.admin_username
-          admin_password       = local.admin_password_update
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password_update
         }
       }
 
@@ -459,36 +459,38 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   additional_location_profile {
-    location            = "%[4]s"
-    network_api_version = "2020-11-01"
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts"
-      version   = "latest"
-    }
-    os_disk {
-      caching              = "ReadWrite"
-      storage_account_type = "Standard_LRS"
-    }
-    os_profile {
-      linux_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        password_authentication_enabled = false
-        admin_ssh_keys                  = [local.second_public_key]
+    location = "%[4]s"
+    virtual_machine_profile_override {
+      network_api_version = "2020-11-01"
+      source_image_reference {
+        publisher = "Canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts"
+        version   = "latest"
       }
-    }
+      os_disk {
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
+      }
+      os_profile {
+        linux_configuration {
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          password_authentication_enabled = false
+          admin_ssh_keys                  = [local.second_public_key]
+        }
+      }
 
-    network_interface {
-      name = "networkProTest"
-      ip_configuration {
-        name                                   = "ipConfigTest"
-        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
-        primary                                = true
-        subnet_id                              = azurerm_subnet.linux_test.id
+      network_interface {
+        name = "networkProTest"
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.linux_test.id
+        }
+        primary = true
       }
-      primary = true
     }
   }
 }
@@ -545,36 +547,39 @@ resource "azurerm_compute_fleet" "test" {
       primary = true
     }
   }
+
   additional_location_profile {
-    location            = "%[4]s"
-    network_api_version = "2020-11-01"
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts"
-      version   = "latest"
-    }
-    os_disk {
-      caching              = "ReadWrite"
-      storage_account_type = "Standard_LRS"
-    }
-    os_profile {
-      linux_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        password_authentication_enabled = false
-        admin_ssh_keys                  = [local.first_public_key, local.second_public_key]
+    location = "%[4]s"
+    virtual_machine_profile_override {
+      network_api_version = "2020-11-01"
+      source_image_reference {
+        publisher = "Canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts"
+        version   = "latest"
       }
-    }
-    network_interface {
-      name = "networkProTest"
-      ip_configuration {
-        name                                   = "ipConfigTest"
-        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
-        primary                                = true
-        subnet_id                              = azurerm_subnet.linux_test.id
+      os_disk {
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
       }
-      primary = true
+      os_profile {
+        linux_configuration {
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          password_authentication_enabled = false
+          admin_ssh_keys                  = [local.first_public_key, local.second_public_key]
+        }
+      }
+      network_interface {
+        name = "networkProTest"
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.linux_test.id
+        }
+        primary = true
+      }
     }
   }
 }
@@ -632,35 +637,37 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
   additional_location_profile {
-    location            = "%[4]s"
-    network_api_version = "2020-11-01"
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts"
-      version   = "latest"
-    }
-    os_disk {
-      caching              = "ReadWrite"
-      storage_account_type = "Standard_LRS"
-    }
-    os_profile {
-      linux_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        password_authentication_enabled = false
-        admin_ssh_keys                  = [local.second_public_key, local.first_public_key]
+    location = "%[4]s"
+    virtual_machine_profile_override {
+      network_api_version = "2020-11-01"
+      source_image_reference {
+        publisher = "Canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts"
+        version   = "latest"
       }
-    }
-    network_interface {
-      name = "networkProTest"
-      ip_configuration {
-        name                                   = "ipConfigTest"
-        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
-        primary                                = true
-        subnet_id                              = azurerm_subnet.linux_test.id
+      os_disk {
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
       }
-      primary = true
+      os_profile {
+        linux_configuration {
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          password_authentication_enabled = false
+          admin_ssh_keys                  = [local.second_public_key, local.first_public_key]
+        }
+      }
+      network_interface {
+        name = "networkProTest"
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.linux_test.id
+        }
+        primary = true
+      }
     }
   }
 }
@@ -700,10 +707,11 @@ resource "azurerm_compute_fleet" "test" {
     }
     os_profile {
       linux_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
-        admin_ssh_keys       = [local.first_public_key]
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        admin_ssh_keys                  = [local.first_public_key]
+        password_authentication_enabled = true
       }
     }
 
@@ -719,36 +727,39 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
   additional_location_profile {
-    location            = "%[4]s"
-    network_api_version = "2020-11-01"
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts"
-      version   = "latest"
-    }
-    os_disk {
-      caching              = "ReadWrite"
-      storage_account_type = "Standard_LRS"
-    }
-    os_profile {
-      linux_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
-        admin_ssh_keys       = [local.first_public_key]
+    location = "%[4]s"
+    virtual_machine_profile_override {
+      network_api_version = "2020-11-01"
+      source_image_reference {
+        publisher = "Canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts"
+        version   = "latest"
       }
-    }
+      os_disk {
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
+      }
+      os_profile {
+        linux_configuration {
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password
+          admin_ssh_keys                  = [local.first_public_key]
+          password_authentication_enabled = true
+        }
+      }
 
-    network_interface {
-      name = "networkProTest"
-      ip_configuration {
-        name                                   = "ipConfigTest"
-        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
-        primary                                = true
-        subnet_id                              = azurerm_subnet.linux_test.id
+      network_interface {
+        name = "networkProTest"
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.linux_test.id
+        }
+        primary = true
       }
-      primary = true
     }
   }
 }
@@ -788,10 +799,11 @@ resource "azurerm_compute_fleet" "test" {
     }
     os_profile {
       linux_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password_update
-        admin_ssh_keys       = [local.second_public_key]
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password_update
+        admin_ssh_keys                  = [local.second_public_key]
+        password_authentication_enabled = true
       }
     }
 
@@ -807,36 +819,39 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
   additional_location_profile {
-    location            = "%[4]s"
-    network_api_version = "2020-11-01"
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts"
-      version   = "latest"
-    }
-    os_disk {
-      caching              = "ReadWrite"
-      storage_account_type = "Standard_LRS"
-    }
-    os_profile {
-      linux_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password_update
-        admin_ssh_keys       = [local.second_public_key]
+    location = "%[4]s"
+    virtual_machine_profile_override {
+      network_api_version = "2020-11-01"
+      source_image_reference {
+        publisher = "Canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts"
+        version   = "latest"
       }
-    }
+      os_disk {
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
+      }
+      os_profile {
+        linux_configuration {
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password_update
+          admin_ssh_keys                  = [local.second_public_key]
+          password_authentication_enabled = true
+        }
+      }
 
-    network_interface {
-      name = "networkProTest"
-      ip_configuration {
-        name                                   = "ipConfigTest"
-        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
-        primary                                = true
-        subnet_id                              = azurerm_subnet.linux_test.id
+      network_interface {
+        name = "networkProTest"
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.linux_test.id
+        }
+        primary = true
       }
-      primary = true
     }
   }
 }
@@ -896,37 +911,40 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
   additional_location_profile {
-    location            = "%[4]s"
-    network_api_version = "2020-11-01"
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts"
-      version   = "latest"
-    }
-    os_disk {
-      caching              = "ReadWrite"
-      storage_account_type = "Standard_LRS"
-    }
 
-    os_profile {
-      linux_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        password_authentication_enabled = false
-        admin_ssh_keys                  = [local.first_ed25519_public_key]
+    location = "%[4]s"
+    virtual_machine_profile_override {
+      network_api_version = "2020-11-01"
+      source_image_reference {
+        publisher = "Canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts"
+        version   = "latest"
       }
-    }
+      os_disk {
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
+      }
 
-    network_interface {
-      name = "networkProTest"
-      ip_configuration {
-        name                                   = "ipConfigTest"
-        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
-        primary                                = true
-        subnet_id                              = azurerm_subnet.linux_test.id
+      os_profile {
+        linux_configuration {
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          password_authentication_enabled = false
+          admin_ssh_keys                  = [local.first_ed25519_public_key]
+        }
       }
-      primary = true
+
+      network_interface {
+        name = "networkProTest"
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.linux_test.id
+        }
+        primary = true
+      }
     }
   }
 }
@@ -986,37 +1004,39 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
   additional_location_profile {
-    location            = "%[4]s"
-    network_api_version = "2020-11-01"
-    source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts"
-      version   = "latest"
-    }
-    os_disk {
-      caching              = "ReadWrite"
-      storage_account_type = "Standard_LRS"
-    }
-
-    os_profile {
-      linux_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        password_authentication_enabled = false
-        admin_ssh_keys                  = [local.second_ed25519_public_key]
+    location = "%[4]s"
+    virtual_machine_profile_override {
+      network_api_version = "2020-11-01"
+      source_image_reference {
+        publisher = "Canonical"
+        offer     = "0001-com-ubuntu-server-jammy"
+        sku       = "22_04-lts"
+        version   = "latest"
       }
-    }
-
-    network_interface {
-      name = "networkProTest"
-      ip_configuration {
-        name                                   = "ipConfigTest"
-        load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
-        primary                                = true
-        subnet_id                              = azurerm_subnet.linux_test.id
+      os_disk {
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
       }
-      primary = true
+
+      os_profile {
+        linux_configuration {
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          password_authentication_enabled = false
+          admin_ssh_keys                  = [local.second_ed25519_public_key]
+        }
+      }
+
+      network_interface {
+        name = "networkProTest"
+        ip_configuration {
+          name                                   = "ipConfigTest"
+          load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.linux_test.id]
+          primary                                = true
+          subnet_id                              = azurerm_subnet.linux_test.id
+        }
+        primary = true
+      }
     }
   }
 }

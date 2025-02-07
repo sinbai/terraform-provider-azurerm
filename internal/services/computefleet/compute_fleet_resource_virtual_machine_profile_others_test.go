@@ -354,13 +354,14 @@ resource "azurerm_capacity_reservation_group" "test" {
   name                = "acctest-ccrg-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
+
 }
 
 resource "azurerm_capacity_reservation" "test" {
   name                          = "acctest-ccr-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
   sku {
-    name     = "Standard_F2"
+    name     = "Standard_DC8eds_v5"
     capacity = 1
   }
 }
@@ -369,15 +370,17 @@ resource "azurerm_capacity_reservation_group" "linux_test" {
   name                = "acctest-ccrg-%[2]d"
   resource_group_name = azurerm_resource_group.linux_test.name
   location            = azurerm_resource_group.linux_test.location
+
 }
 
 resource "azurerm_capacity_reservation" "linux_test" {
   name                          = "acctest-ccr-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.linux_test.id
   sku {
-    name     = "Standard_F2"
+    name     = "Standard_DC8eds_v5"
     capacity = 1
   }
+  
 }
 
 resource "azurerm_compute_fleet" "test" {
@@ -391,12 +394,12 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   vm_sizes_profile {
-    name = "Standard_D2s_v3"
+    name = "Standard_DC8eds_v5"
   }
 
   compute_api_version = "2024-03-01"
   virtual_machine_profile {
-    network_api_version = "2020-11-01"
+    network_api_version           = "2020-11-01"
     capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
 
     source_image_reference {
@@ -439,6 +442,8 @@ resource "azurerm_compute_fleet" "test" {
   additional_location_profile {
     location = "%[4]s"
     virtual_machine_profile_override {
+      capacity_reservation_group_id = azurerm_capacity_reservation_group.linux_test.id
+
       network_api_version = "2020-11-01"
       source_image_reference {
         publisher = "Canonical"
@@ -475,7 +480,7 @@ resource "azurerm_compute_fleet" "test" {
           }
         }
       }
-      
+
     }
   }
   depends_on = [azurerm_capacity_reservation.test, azurerm_capacity_reservation.linux_test]
@@ -491,30 +496,75 @@ resource "azurerm_capacity_reservation_group" "test" {
   name                = "acctest-ccrg-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
+
 }
 
 resource "azurerm_capacity_reservation" "test" {
   name                          = "acctest-ccr-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
   sku {
-    name     = "Standard_F2"
+    name     = "Standard_DC8eds_v5"
     capacity = 1
   }
+  
+}
+
+resource "azurerm_capacity_reservation_group" "test2" {
+  name                = "acctest-ccrg2-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
+
 }
 
 resource "azurerm_capacity_reservation" "test2" {
   name                          = "acctest-ccr2-%[2]d"
-  capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
+  capacity_reservation_group_id = azurerm_capacity_reservation_group.test2.id
   sku {
-    name     = "Standard_F2"
+    name     = "Standard_DC8eds_v5"
     capacity = 1
   }
+  
+}
+
+resource "azurerm_capacity_reservation_group" "linux_test" {
+  name                = "acctest-ccrg-%[2]d"
+  resource_group_name = azurerm_resource_group.linux_test.name
+  location            = azurerm_resource_group.linux_test.location
+
+}
+
+resource "azurerm_capacity_reservation" "linux_test" {
+  name                          = "acctest-ccr-%[2]d"
+  capacity_reservation_group_id = azurerm_capacity_reservation_group.linux_test.id
+  sku {
+    name     = "Standard_DC8eds_v5"
+    capacity = 1
+  }
+  
+}
+
+resource "azurerm_capacity_reservation_group" "linux_test2" {
+  name                = "acctest-ccrg2-%[2]d"
+  resource_group_name = azurerm_resource_group.linux_test.name
+  location            = azurerm_resource_group.linux_test.location
+
+}
+
+resource "azurerm_capacity_reservation" "linux_test2" {
+  name                          = "acctest-ccr2-%[2]d"
+  capacity_reservation_group_id = azurerm_capacity_reservation_group.linux_test2.id
+  sku {
+    name     = "Standard_DC8eds_v5"
+    capacity = 1
+  }
+  
 }
 
 resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
+  zones = ["1"]
 
   regular_priority_profile {
     capacity     = 1
@@ -522,13 +572,13 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   vm_sizes_profile {
-    name = "Standard_D2s_v3"
+    name = "Standard_DC8eds_v5"
   }
 
   compute_api_version = "2024-03-01"
 
   virtual_machine_profile {
-    network_api_version = "2020-11-01"
+    network_api_version           = "2020-11-01"
     capacity_reservation_group_id = azurerm_capacity_reservation_group.test2.id
 
     source_image_reference {
@@ -571,7 +621,8 @@ resource "azurerm_compute_fleet" "test" {
   additional_location_profile {
     location = "%[4]s"
     virtual_machine_profile_override {
-      network_api_version = "2020-11-01"
+      network_api_version           = "2020-11-01"
+      capacity_reservation_group_id = azurerm_capacity_reservation_group.linux_test2.id
       source_image_reference {
         publisher = "Canonical"
         offer     = "0001-com-ubuntu-server-jammy"
@@ -609,7 +660,7 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
   }
-  depends_on = [azurerm_capacity_reservation.test]
+  depends_on = [azurerm_capacity_reservation.test, azurerm_capacity_reservation.linux_test]
 }
 `, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
 }
@@ -901,10 +952,9 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       windows_configuration {
-        computer_name_prefix = "testvm"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
-
+        computer_name_prefix            = "testvm"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         automatic_updates_enabled  = true
         provision_vm_agent_enabled = true
         time_zone                  = "W. Europe Standard Time"
@@ -950,10 +1000,9 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         windows_configuration {
-          computer_name_prefix = "testvm"
-          admin_username       = local.admin_username
-          admin_password       = local.admin_password
-
+          computer_name_prefix            = "testvm"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password
           automatic_updates_enabled  = true
           provision_vm_agent_enabled = true
           time_zone                  = "W. Europe Standard Time"
@@ -1021,10 +1070,9 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix = "testvm-%[2]d"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
-
+        computer_name_prefix            = "testvm-%[2]d"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -1066,10 +1114,9 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix = "testvm-%[2]d"
-          admin_username       = local.admin_username
-          admin_password       = local.admin_password
-
+          computer_name_prefix            = "testvm-%[2]d"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password
           password_authentication_enabled = true
         }
       }
@@ -1132,10 +1179,9 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix = "testvm-%[2]d"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
-
+        computer_name_prefix            = "testvm-%[2]d"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -1155,7 +1201,7 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
 
-    ScheduledEventTerminationTimeout = "PT15M"
+    scheduled_event_termination_timeout = "PT15M"
   }
 
   additional_location_profile {
@@ -1176,10 +1222,9 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix = "testvm-%[2]d"
-          admin_username       = local.admin_username
-          admin_password       = local.admin_password
-
+          computer_name_prefix            = "testvm-%[2]d"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password
           password_authentication_enabled = true
         }
       }
@@ -1199,7 +1244,7 @@ resource "azurerm_compute_fleet" "test" {
         }
       }
 
-      ScheduledEventTerminationTimeout = "PT15M"
+      scheduled_event_termination_timeout = "PT15M"
     }
   }
 }
@@ -1241,10 +1286,9 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix = "testvm-%[2]d"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
-
+        computer_name_prefix            = "testvm-%[2]d"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
         password_authentication_enabled = true
       }
     }
@@ -1284,10 +1328,9 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix = "testvm-%[2]d"
-          admin_username       = local.admin_username
-          admin_password       = local.admin_password
-
+          computer_name_prefix            = "testvm-%[2]d"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password
           password_authentication_enabled = true
         }
       }
@@ -1577,7 +1620,7 @@ resource "azurerm_compute_fleet" "test" {
   location                                    = "%[3]s"
   additional_capabilities_ultra_ssd_enabled   = false
   additional_capabilities_hibernation_enabled = false
-  zones                                       = ["1"]
+  zones                                       = ["1","2","3"]
 
   regular_priority_profile {
     capacity     = 1
@@ -1683,7 +1726,7 @@ resource "azurerm_compute_fleet" "test" {
   location                                    = "%[3]s"
   additional_capabilities_ultra_ssd_enabled   = true
   additional_capabilities_hibernation_enabled = true
-  zones                                       = ["1"]
+   zones                                       = ["1","2","3"]
 
   regular_priority_profile {
     capacity     = 1

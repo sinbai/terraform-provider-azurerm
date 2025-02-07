@@ -223,9 +223,10 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
       }
     }
     network_interface {
@@ -275,9 +276,10 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix = "prefix"
-          admin_username       = local.admin_username
-          admin_password       = local.admin_password
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password
+          password_authentication_enabled = true
         }
       }
       network_interface {
@@ -357,9 +359,10 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix = "prefix"
-        admin_username       = local.admin_username
-        admin_password       = local.admin_password
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
       }
     }
     network_interface {
@@ -408,9 +411,10 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix = "prefix"
-          admin_username       = local.admin_username
-          admin_password       = local.admin_password
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password
+          password_authentication_enabled = true
         }
       }
       network_interface {
