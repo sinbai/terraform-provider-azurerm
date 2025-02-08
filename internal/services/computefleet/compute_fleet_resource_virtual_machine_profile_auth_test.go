@@ -164,9 +164,9 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       windows_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        admin_password                  = local.admin_password
+        computer_name_prefix = "prefix"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
       }
     }
 
@@ -200,9 +200,9 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         windows_configuration {
-          computer_name_prefix            = "prefix"
-          admin_username                  = local.admin_username
-          admin_password                  = local.admin_password
+          computer_name_prefix = "prefix"
+          admin_username       = local.admin_username
+          admin_password       = local.admin_password
         }
       }
 
@@ -257,9 +257,9 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       windows_configuration {
-        computer_name_prefix            = "prefix"
-        admin_username                  = local.admin_username
-        admin_password                  = local.admin_password_update
+        computer_name_prefix = "prefix"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password_update
       }
     }
 
@@ -293,9 +293,9 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         windows_configuration {
-          computer_name_prefix            = "prefix"
-          admin_username                  = local.admin_username
-          admin_password                  = local.admin_password_update
+          computer_name_prefix = "prefix"
+          admin_username       = local.admin_username
+          admin_password       = local.admin_password_update
         }
       }
 

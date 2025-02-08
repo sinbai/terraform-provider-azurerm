@@ -108,6 +108,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   compute_api_version = "2024-03-01"
+
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {

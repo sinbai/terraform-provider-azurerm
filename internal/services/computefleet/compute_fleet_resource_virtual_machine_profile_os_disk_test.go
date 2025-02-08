@@ -143,7 +143,7 @@ resource "azurerm_compute_fleet" "test" {
     os_disk {}
 
     source_image_reference {
-      publisher = "Canonical"
+      publisher = "canonical"
       offer     = "0001-com-ubuntu-server-jammy"
       sku       = "22_04-lts"
       version   = "latest"
@@ -182,7 +182,7 @@ resource "azurerm_compute_fleet" "test" {
       os_disk {}
 
       source_image_reference {
-        publisher = "Canonical"
+        publisher = "canonical"
         offer     = "0001-com-ubuntu-server-jammy"
         sku       = "22_04-lts"
         version   = "latest"
@@ -229,6 +229,7 @@ resource "azurerm_compute_fleet" "test" {
         password_authentication_enabled = true
       }
     }
+
     network_interface {
       name    = "networkProTest"
       primary = true
@@ -259,7 +260,7 @@ resource "azurerm_compute_fleet" "test" {
     }
 
     source_image_reference {
-      publisher = "Canonical"
+      publisher = "canonical"
       offer     = "0001-com-ubuntu-confidential-vm-jammy"
       sku       = "22_04-lts-cvm"
       version   = "latest"
@@ -312,7 +313,7 @@ resource "azurerm_compute_fleet" "test" {
       }
 
       source_image_reference {
-        publisher = "Canonical"
+        publisher = "canonical"
         offer     = "0001-com-ubuntu-confidential-vm-jammy"
         sku       = "22_04-lts-cvm"
         version   = "latest"
@@ -368,12 +369,10 @@ resource "azurerm_compute_fleet" "test" {
     network_interface {
       name    = "networkProTest"
       primary = true
-
       ip_configuration {
         name      = "TestIPConfiguration"
         primary   = true
         subnet_id = azurerm_subnet.test.id
-
         public_ip_address {
           name                    = "TestPublicIPConfiguration"
           domain_name_label       = "test-domain-label"
@@ -395,9 +394,9 @@ resource "azurerm_compute_fleet" "test" {
     }
 
     source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-confidential-vm-jammy"
-      sku       = "22_04-lts-cvm"
+      publisher = "canonical"
+      offer     = "0001-com-ubuntu-confidential-vm-focal"
+      sku       = "20_04-lts-cvm"
       version   = "latest"
     }
   }
@@ -447,13 +446,14 @@ resource "azurerm_compute_fleet" "test" {
       }
 
       source_image_reference {
-        publisher = "Canonical"
-        offer     = "0001-com-ubuntu-confidential-vm-jammy"
-        sku       = "22_04-lts-cvm"
+        publisher = "canonical"
+        offer     = "0001-com-ubuntu-confidential-vm-focal"
+        sku       = "20_04-lts-cvm"
         version   = "latest"
       }
     }
   }
+
   depends_on = [
     "azurerm_role_assignment.disk-encryption-read-keyvault",
     "azurerm_key_vault_access_policy.disk-encryption",

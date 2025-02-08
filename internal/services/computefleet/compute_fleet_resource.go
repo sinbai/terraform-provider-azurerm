@@ -1293,6 +1293,17 @@ func (r ComputeFleetResource) CustomizeDiff() sdk.ResourceFunc {
 				if !ultraSSDEnabled && storageAccountType == string(fleets.StorageAccountTypesUltraSSDLRS) {
 					return fmt.Errorf("`UltraSSD_LRS` storage account type can be used only when `additional_capabilities_ultra_ssd_enabled` is enalbed")
 				}
+
+				if v[0].CreateOption == string(fleets.DiskCreateOptionTypesEmpty) {
+					if v[0].DiskSizeInGB == 0 {
+						return fmt.Errorf("`disk_size_in_gb` is required when`create_option` is `Empty`")
+					}
+
+					lunExist := metadata.ResourceDiff.GetRawConfig().AsValueMap()["virtual_machine_profile"].AsValueSlice()[0].AsValueMap()["data_disk"].AsValueSlice()[0].AsValueMap()["lun"]
+					if lunExist.IsNull() {
+						return fmt.Errorf("`lun` is required when`create_option` is `Empty`")
+					}
+				}
 			}
 
 			vmProfile := state.VirtualMachineProfile[0]
@@ -1315,6 +1326,19 @@ func (r ComputeFleetResource) CustomizeDiff() sdk.ResourceFunc {
 				if state.VirtualMachineProfile[0].CapacityReservationGroupId != "" && state.AdditionalLocationProfile[0].VirtualMachineProfileOverride[0].CapacityReservationGroupId == "" {
 					return fmt.Errorf("`virtual_machine_profile_override.0.capacity_reservation_group_id` is required when `virtual_machine_profile.0.capacity_reservation_group_id` is specified")
 				}
+
+				dataDisks := state.AdditionalLocationProfile[0].VirtualMachineProfileOverride[0].DataDisks
+				if len(dataDisks) > 0 {
+					if dataDisks[0].CreateOption == string(fleets.DiskCreateOptionTypesEmpty) {
+						if dataDisks[0].DiskSizeInGB == 0 {
+							return fmt.Errorf("`disk_size_in_gb` is required when`create_option` is `Empty`")
+						}
+						lunExist := metadata.ResourceDiff.GetRawConfig().AsValueMap()["additional_location_profile"].AsValueSlice()[0].AsValueMap()["virtual_machine_profile_override"].AsValueSlice()[0].AsValueMap()["data_disk"].AsValueSlice()[0].AsValueMap()["lun"]
+						if lunExist.IsNull() {
+							return fmt.Errorf("`lun` is required when`create_option` is `Empty`")
+						}
+					}
+				}
 			}
 
 			err = validateSecuritySetting(state.VirtualMachineProfile)
@@ -1322,16 +1346,27 @@ func (r ComputeFleetResource) CustomizeDiff() sdk.ResourceFunc {
 				return err
 			}
 
-			err = validateWindowsSetting(state.VirtualMachineProfile, metadata.ResourceDiff)
+			err = validateWindowsSetting(state.VirtualMachineProfile, metadata.ResourceDiff, false)
 			if err != nil {
 				return err
 			}
 
-			err = validateLinuxSetting(state.VirtualMachineProfile, metadata.ResourceDiff)
+			err = validateLinuxSetting(state.VirtualMachineProfile, metadata.ResourceDiff, false)
 			if err != nil {
 				return err
 			}
 
+			if len(state.AdditionalLocationProfile) > 0 {
+				err = validateWindowsSetting(state.AdditionalLocationProfile[0].VirtualMachineProfileOverride, metadata.ResourceDiff, true)
+				if err != nil {
+					return err
+				}
+
+				err = validateLinuxSetting(state.AdditionalLocationProfile[0].VirtualMachineProfileOverride, metadata.ResourceDiff, true)
+				if err != nil {
+					return err
+				}
+			}
 			for _, v := range state.VirtualMachineProfile[0].Extension {
 				if v.ProtectedSettingsJson != "" {
 					if len(v.ProtectedSettingsFromKeyVault) > 0 {

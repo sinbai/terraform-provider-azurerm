@@ -121,7 +121,7 @@ resource "azurerm_compute_fleet" "example" {
   }
 
   compute_api_version = "2024-03-01"
-  
+
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -157,7 +157,7 @@ resource "azurerm_compute_fleet" "example" {
 
   additional_location_profile {
     location = "East US2"
-	
+
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       source_image_reference {
@@ -260,36 +260,38 @@ A `additional_unattend_content` block supports the following:
 
 A (Windows) `certificate` block supports the following:
 
-* `store` - (Optional) The certificate store on the Virtual Machine where the certificate should be added.
+* `store` - (Optional) The certificate store on the virtual machine where the certificate should be added.
 
-* `url` - (Required) The Secret URL of a Key Vault Certificate.
+* `url` - (Required) The Secret URL of a key vault certificate.
 
 ---
 
 
 A (Linux) `certificate` block supports the following:
 
-* `url` - (Required) The Secret URL of a Key Vault Certificate.
+* `url` - (Required) The secret URL of a key vault certificate.
 
 ---
 
 A `data_disk` block supports the following:
 
-* `create_option` - (Required) The create option which should be used for the Data Disk. Possible values are `Empty` and `FromImage`.
+* `create_option` - (Required) The create option which should be used for the data disk. Possible values are `Empty` and `FromImage`. 
 
-* `disk_size_in_gb` - (Required) The size of the Data Disk which should be created. Required if `create_option` is specified as `Empty`.
+-> **Note:** `FromImage` should only be used if the source image includes data disks.
 
-* `lun` - (Required) TODO.
-
-* `caching` - (Optional) TODO.
+* `caching` - (Optional) The type of caching which should be used for the data disk. Possible values are `ReadOnly` and `ReadWrite`.
 
 * `delete_option` - (Optional) Specify what happens to the data disk when the virtual machine is deleted. Possible values are `Delete` and `Detach`.
 
-* `disk_encryption_set_id` - (Optional) The ID of the TODO.
+* `disk_encryption_set_id` - (Optional) The ID of the disk encryption set which should be used to encrypt the data disk.
 
-* `storage_account_type` - (Optional) TODO.
+* `disk_size_in_gb` - (Optional) The size of the data disk which should be created. Required if `create_option` is specified as `Empty`.
 
-* `write_accelerator_enabled` - (Optional) Should the TODO be enabled? Defaults to `false`.
+* `lun` - (Optional) The logical unit number of the data disk, which must be unique within the virtual machine. Required if `create_option` is specified as `Empty`.
+
+* `storage_account_type` - (Optional)  The type of storage account which should back the data disk. Possible values include `Premium_LRS`, `PremiumV2_LRS`, `Premium_ZRS`, `Standard_LRS`, `StandardSSD_LRS`, `StandardSSD_ZRS` and `UltraSSD_LRS`.
+
+* `write_accelerator_enabled` - (Optional) Should the write accelerator be enabled on the data disk? Defaults to `false`.
 
 ---
 
@@ -303,45 +305,47 @@ A `data_disk_count` block supports the following:
 
 A `extension` block supports the following:
 
-* `name` - (Required) The name which should be used for this TODO.
+* `name` - (Required) The name for the Compute Fleet extension.
 
-* `publisher` - (Required) TODO.
+* `publisher` - (Required) Specifies the Publisher of the extension.
 
-* `type` - (Required) TODO.
+* `type` - (Required) Specifies the Type of the extension.
 
-* `type_handler_version` - (Required) TODO.
+* `type_handler_version` - (Required) Specifies the version of the extension to use, available versions can be found using the Azure CLI.
 
-* `auto_upgrade_minor_version_enabled` - (Optional) Should the TODO be enabled? Defaults to `false`.
+* `auto_upgrade_minor_version_enabled` - (Optional) Should the latest version of the extension be used at deployment time, if one is available? This won't auto-update the extension on existing installation. Defaults to `false`.
 
-* `automatic_upgrade_enabled` - (Optional) Should the TODO be enabled? Defaults to `false`.
+* `automatic_upgrade_enabled` - (Optional) Should the extension be automatically upgraded by the platform, if there is a newer version of the extension available? Defaults to `false`.
 
-* `extensions_to_provision_after_vm_creation` - (Optional) Specifies a list of TODO.
+* `extensions_to_provision_after_vm_creation` - (Optional) Specifies an ordered list of extension names which Compute Fleet should provision after VM creation.
 
-* `failure_suppression_enabled` - (Optional) Should the TODO be enabled? Defaults to `false`.
+* `failure_suppression_enabled` - (Optional) Should the failures from the extension be suppressed? Defaults to `false`.
 
-* `force_extension_execution_on_change` - (Optional) TODO.
+* `force_extension_execution_on_change` - (Optional) A value which, when different to the previous value can be used to force-run the extension even if the extension configuration hasn't changed.
 
 * `protected_settings_from_key_vault` - (Optional) A `protected_settings_from_key_vault` block as defined below.
 
-* `protected_settings_json` - (Optional) TODO.
+* `protected_settings_json` - (Optional) A JSON string which specifies sensitive settings (such as passwords) for the extension.
 
-* `settings_json` - (Optional) TODO.
+-> **Note:** Keys within the `protected_settings_json` block are notoriously case-sensitive, where the casing required (e.g. `TitleCase` vs `snakeCase`) depends on the extension being used. Please refer to the documentation for the specific virtual machine extension you're looking to use for more information.
+
+* `settings_json` - (Optional) A JSON string which specifies settings for the extension.
 
 ---
 
 A `gallery_application` block supports the following:
 
-* `version_id` - (Required) The ID of the TODO.
+* `version_id` - (Required) Specifies the gallery application version resource ID.
 
-* `automatic_upgrade_enabled` - (Optional) Should the TODO be enabled? Defaults to `false`.
+* `automatic_upgrade_enabled` - (Optional) Should the gallery application be automatically upgraded, if there is a newer version of the gallery application available? Defaults to `false`.
 
-* `configuration_blob_uri` - (Optional) TODO.
+* `configuration_blob_uri` - (Optional) Specifies the URI to an azure blob that will replace the default configuration for the package if provided.
 
-* `order` - (Optional) TODO. Defaults to `0`.
+* `order` - (Optional) Specifies the order in which the packages have to be installed. Defaults to `0`.
 
-* `tag` - (Optional) TODO.
+* `tag` - (Optional) Specifies a passthrough value for more generic context.
 
-* `treat_failure_as_deployment_failure_enabled` - (Optional) Should the TODO be enabled? Defaults to `false`.
+* `treat_failure_as_deployment_failure_enabled` - (Optional) Should any failure for any operation in the VM application will fail the deployment be enabled? Defaults to `false`.
 
 ---
 
@@ -355,29 +359,29 @@ A `identity` block supports the following:
 
 A `ip_configuration` block supports the following:
 
-* `name` - (Required) The name which should be used for this TODO.
+* `name` - (Required) The Name which should be used for the IP configuration.
 
-* `subnet_id` - (Required) The ID of the TODO.
+* `subnet_id` - (Required) The ID of the Subnet which the IP configuration should be connected to.
 
-* `application_gateway_backend_address_pool_ids` - (Optional) Specifies a list of TODO.
+* `application_gateway_backend_address_pool_ids` - (Optional) Specifies a list of backend address pools IDs from an application gateway which the Compute Fleet should be connected to.
 
-* `application_security_group_ids` - (Optional) Specifies a list of TODO.
+* `application_security_group_ids` - (Optional) Specifies a list of application security group IDs which the Compute Fleet should be connected to.
 
-* `load_balancer_backend_address_pool_ids` - (Optional) Specifies a list of TODO.
+* `load_balancer_backend_address_pool_ids` - (Optional) Specifies a list of backend address pools IDs from a load balancer which the Compute Fleet should be connected to.
 
 * `primary` - (Optional) Is this the primary IP configuration? Defaults to `false`.
 
 * `public_ip_address` - (Optional) One or more `public_ip_address` blocks as defined below.
 
-* `version` - (Optional) TODO. Defaults to `IPv4`.
+* `version` - (Optional) The internet protocol version which should be used for the IP configuration. Possible values are `IPv4` and `IPv6`. Defaults to `IPv4`.
 
 ---
 
 A `ip_tag` block supports the following:
 
-* `tag` - (Required) TODO.
+* `tag` - (Required) The IP Tag associated with the public IP.
 
-* `type` - (Required) TODO.
+* `type` - (Required) The Type of IP Tag.
 
 ---
 
@@ -451,7 +455,7 @@ A `network_interface` block supports the following:
 
 * `auxiliary_mode` - (Optional) Specifies the auxiliary mode for the network interface. Possible values are `AcceleratedConnections` and `Floating`.
 
-* `auxiliary_sku` - (Optional) TODO. Possible values are `A8`, `A4`, `A1` and `A2`.
+* `auxiliary_sku` - (Optional) Specifies the auxiliary sku for the network interface. Possible values are `A8`, `A4`, `A1` and `A2`.
 
 * `delete_option` - (Optional) Specify what happens to the network interface when the virtual machine is deleted. Possible values are `Delete` and `Detach`.
 
@@ -491,7 +495,7 @@ A `os_disk` block supports the following:
 
 * `security_encryption_type` - (Optional) Specifies the encryption type of the OS Disk. Possible values are `DiskWithVMGuestState`, `NonPersistedTPM` and `VMGuestStateOnly`.
 
-* `storage_account_type` - (Optional) The Type of Storage Account which should back the OS Disk. Defaults to `Premium_LRS`. Possible values include `Premium_LRS`, `PremiumV2_LRS`, `Premium_ZRS`, `Standard_LRS`, `StandardSSD_LRS`, `StandardSSD_ZRS` and `UltraSSD_LRS`.
+* `storage_account_type` - (Optional) The Type of Storage Account which should back the OS Disk. Possible values include `Premium_LRS`, `Premium_ZRS`, `Standard_LRS`, `StandardSSD_LRS` and `StandardSSD_ZRS`.
 
 * `write_accelerator_enabled` - (Optional) Should the write accelerator be enabled on the OS Disk? Defaults to `false`.
 
@@ -521,9 +525,9 @@ A `plan` block supports the following:
 
 A `protected_settings_from_key_vault` block supports the following:
 
-* `secret_url` - (Required) The URL to the Key Vault Secret which stores the protected settings.
+* `secret_url` - (Required) The URL to the key vault Secret which stores the protected settings.
 
-* `source_vault_id` - (Required) The ID of the source Key Vault.
+* `source_vault_id` - (Required) The ID of the source key vault.
 
 ---
 
@@ -571,15 +575,15 @@ A `secret` block supports the following:
 
 * `certificate` - (Required) One or more `certificate` blocks as defined above.
 
-* `key_vault_id` - (Required) The ID of the Key Vault from which all secrets should be sourced.
+* `key_vault_id` - (Required) The ID of the key vault from which all secrets should be sourced.
 
 ---
 
 A `source_image_reference` block supports the following:
 
-* `offer` - (Required) Specifies the offer of the image used to create the virtual machines.
+* `offer` - (Required) Specifies the offer of the image used to create the virtual machines. Changing this forces a new resource to be created.
 
-* `publisher` - (Required) Specifies the publisher of the image used to create the virtual machines.
+* `publisher` - (Required) Specifies the publisher of the image used to create the virtual machines. Changing this forces a new resource to be created.
 
 * `sku` - (Required) Specifies the SKU of the image used to create the virtual machines.
 

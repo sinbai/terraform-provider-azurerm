@@ -97,7 +97,7 @@ func TestAccComputeFleet_virtualMachineProfileOsProfile_linuxUpdate(t *testing.T
 	})
 }
 
-func TestAccComputeFleet_windowsBasic(t *testing.T) {
+func TestAccComputeFleet_virtualMachineProfileOsProfile_windowsBasic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
@@ -113,7 +113,7 @@ func TestAccComputeFleet_windowsBasic(t *testing.T) {
 	})
 }
 
-func TestAccComputeFleet_windowsComplete(t *testing.T) {
+func TestAccComputeFleet_virtualMachineProfileOsProfile_windowsComplete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
@@ -133,7 +133,7 @@ func TestAccComputeFleet_windowsComplete(t *testing.T) {
 	})
 }
 
-func TestAccComputeFleet_windowsUpdate(t *testing.T) {
+func TestAccComputeFleet_virtualMachineProfileOsProfile_windowsUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
 	data.ResourceTest(t, r, []acceptance.TestStep{
@@ -221,9 +221,9 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         windows_configuration {
-          computer_name_prefix            = "testvm"
-          admin_username                  = local.admin_username
-          admin_password                  = local.admin_password
+          computer_name_prefix = "testvm"
+          admin_username       = local.admin_username
+          admin_password       = local.admin_password
         }
       }
 
@@ -283,9 +283,9 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       windows_configuration {
-        computer_name_prefix            = "testvm"
-        admin_username                  = local.admin_username
-        admin_password                  = local.admin_password
+        computer_name_prefix = "testvm"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
         additional_unattend_content {
           setting = "FirstLogonCommands"
           content = "<FirstLogonCommands><SynchronousCommand><CommandLine>shutdown /r /t 0 /c \"initial reboot\"</CommandLine><Description>reboot</Description><Order>1</Order></SynchronousCommand></FirstLogonCommands>"
@@ -364,9 +364,9 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         windows_configuration {
-          computer_name_prefix            = "testvm"
-          admin_username                  = local.admin_username
-          admin_password                  = local.admin_password
+          computer_name_prefix = "testvm"
+          admin_username       = local.admin_username
+          admin_password       = local.admin_password
           additional_unattend_content {
             setting = "FirstLogonCommands"
             content = "<FirstLogonCommands><SynchronousCommand><CommandLine>shutdown /r /t 0 /c \"initial reboot\"</CommandLine><Description>reboot</Description><Order>1</Order></SynchronousCommand></FirstLogonCommands>"
@@ -466,9 +466,9 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       windows_configuration {
-        computer_name_prefix            = "testvm"
-        admin_username                  = local.admin_username
-        admin_password                  = local.admin_password
+        computer_name_prefix = "testvm"
+        admin_username       = local.admin_username
+        admin_password       = local.admin_password
 
         additional_unattend_content {
           setting = "AutoLogon"
@@ -548,9 +548,9 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         windows_configuration {
-          computer_name_prefix            = "testvm"
-          admin_username                  = local.admin_username
-          admin_password                  = local.admin_password
+          computer_name_prefix = "testvm"
+          admin_username       = local.admin_username
+          admin_password       = local.admin_password
           additional_unattend_content {
             setting = "AutoLogon"
             content = "<AutoLogon><Username>${local.admin_username}</Username><Domain>WORKGROUP</Domain><Password><Value>${local.admin_password}</Value><PlainText>true</PlainText></Password><Enabled>true</Enabled></AutoLogon>"

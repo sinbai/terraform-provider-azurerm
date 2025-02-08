@@ -822,18 +822,6 @@ func storageProfileDataDiskSchema() *pluginsdk.Schema {
 					}, false),
 				},
 
-				"disk_size_in_gb": {
-					Type:         pluginsdk.TypeInt,
-					Required:     true,
-					ValidateFunc: validation.IntBetween(1, 32767),
-				},
-
-				"lun": {
-					Type:         pluginsdk.TypeInt,
-					Required:     true,
-					ValidateFunc: validation.IntBetween(0, 2000),
-				},
-
 				"caching": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
@@ -854,6 +842,18 @@ func storageProfileDataDiskSchema() *pluginsdk.Schema {
 					Type:         pluginsdk.TypeString,
 					Optional:     true,
 					ValidateFunc: computeValidate.DiskEncryptionSetID,
+				},
+
+				"disk_size_in_gb": {
+					Type:         pluginsdk.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 32767),
+				},
+
+				"lun": {
+					Type:         pluginsdk.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 2000),
 				},
 
 				"storage_account_type": {
@@ -929,7 +929,6 @@ func storageProfileOsDiskSchema() *pluginsdk.Schema {
 				"storage_account_type": {
 					Type:     pluginsdk.TypeString,
 					Optional: true,
-					Default:  string(fleets.StorageAccountTypesPremiumLRS),
 					// NOTE: OS Disks don't support Ultra SSDs or PremiumV2_LRS
 					ValidateFunc: validation.StringInSlice([]string{
 						string(fleets.StorageAccountTypesPremiumLRS),
@@ -957,13 +956,13 @@ func storageProfileSourceImageReferenceSchema() *pluginsdk.Schema {
 		MaxItems: 1,
 		Elem: &pluginsdk.Resource{
 			Schema: map[string]*pluginsdk.Schema{
-				"publisher": {
+				"offer": {
 					Type:         pluginsdk.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
 				},
 
-				"offer": {
+				"publisher": {
 					Type:         pluginsdk.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringIsNotEmpty,
@@ -1514,7 +1513,7 @@ func expandOSProfileModel(inputList []VirtualMachineProfileModel) *fleets.Virtua
 	return &output
 }
 
-func validateWindowsSetting(inputList []VirtualMachineProfileModel, d *schema.ResourceDiff) error {
+func validateWindowsSetting(inputList []VirtualMachineProfileModel, d *schema.ResourceDiff, isAdditional bool) error {
 	if len(inputList) == 0 || len(inputList[0].OsProfile) == 0 {
 		return nil
 	}
@@ -1528,6 +1527,9 @@ func validateWindowsSetting(inputList []VirtualMachineProfileModel, d *schema.Re
 
 		rebootSetting := v[0].RebootSetting
 		bypassPlatformSafetyChecksEnabledExist := d.GetRawConfig().AsValueMap()["virtual_machine_profile"].AsValueSlice()[0].AsValueMap()["os_profile"].AsValueSlice()[0].AsValueMap()["windows_configuration"].AsValueSlice()[0].AsValueMap()["bypass_platform_safety_checks_enabled"]
+		if isAdditional {
+			bypassPlatformSafetyChecksEnabledExist = d.GetRawConfig().AsValueMap()["additional_location_profile"].AsValueSlice()[0].AsValueMap()["virtual_machine_profile_override"].AsValueSlice()[0].AsValueMap()["os_profile"].AsValueSlice()[0].AsValueMap()["windows_configuration"].AsValueSlice()[0].AsValueMap()["bypass_platform_safety_checks_enabled"]
+		}
 		if !bypassPlatformSafetyChecksEnabledExist.IsNull() || rebootSetting != "" {
 			if patchMode != string(fleets.WindowsVMGuestPatchModeAutomaticByPlatform) {
 				return fmt.Errorf("`bypass_platform_safety_checks_enabled` and `reboot_setting` cannot be set if the `PatchMode` is not `AutomaticByPlatform`")
@@ -1602,7 +1604,7 @@ func validateSecuritySetting(inputList []VirtualMachineProfileModel) error {
 	return nil
 }
 
-func validateLinuxSetting(inputList []VirtualMachineProfileModel, d *schema.ResourceDiff) error {
+func validateLinuxSetting(inputList []VirtualMachineProfileModel, d *schema.ResourceDiff, isAdditional bool) error {
 	if len(inputList) == 0 || len(inputList[0].OsProfile) == 0 {
 		return nil
 	}
@@ -1615,6 +1617,9 @@ func validateLinuxSetting(inputList []VirtualMachineProfileModel, d *schema.Reso
 
 		rebootSetting := v[0].RebootSetting
 		bypassPlatformSafetyChecksEnabledExist := d.GetRawConfig().AsValueMap()["virtual_machine_profile"].AsValueSlice()[0].AsValueMap()["os_profile"].AsValueSlice()[0].AsValueMap()["linux_configuration"].AsValueSlice()[0].AsValueMap()["bypass_platform_safety_checks_enabled"]
+		if isAdditional {
+			bypassPlatformSafetyChecksEnabledExist = d.GetRawConfig().AsValueMap()["additional_location_profile"].AsValueSlice()[0].AsValueMap()["virtual_machine_profile_override"].AsValueSlice()[0].AsValueMap()["os_profile"].AsValueSlice()[0].AsValueMap()["linux_configuration"].AsValueSlice()[0].AsValueMap()["bypass_platform_safety_checks_enabled"]
+		}
 		if !bypassPlatformSafetyChecksEnabledExist.IsNull() || rebootSetting != "" {
 			if patchMode != string(fleets.LinuxVMGuestPatchModeAutomaticByPlatform) {
 				return fmt.Errorf("`bypass_platform_safety_checks_enabled` and `reboot_setting` cannot be set if the `PatchMode` is not `AutomaticByPlatform`")

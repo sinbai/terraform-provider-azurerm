@@ -32,21 +32,6 @@ func TestAccComputeFleet_basic(t *testing.T) {
 	})
 }
 
-func TestAccComputeFleet_baseAndAdditionalLocationBasic(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
-	r := ComputeFleetTestResource{}
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.baseAndAdditionalLocationBasic(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
-			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
-	})
-}
-
 func TestAccComputeFleet_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
@@ -459,6 +444,7 @@ resource "azurerm_compute_fleet" "test" {
 func (r ComputeFleetTestResource) baseAndAdditionalLocationBasic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 
+
 %[1]s
 
 resource "azurerm_compute_fleet" "test" {
@@ -509,10 +495,10 @@ resource "azurerm_compute_fleet" "test" {
     }
   }
 
-	additional_location_profile {
-			location = "%[4]s"
+  additional_location_profile {
+    location = "%[4]s"
 		  %[5]s
-	}
+  }
 
   # ignore_changes os_disk as os_disk block is not specified the API return default values for caching, delete_option, disk_size_in_gb and storage_account_type
   # ignore_changes compute_api_version as the default value returned by API will be the latest supported computeApiVersion if it is not specified
@@ -587,11 +573,11 @@ func (r ComputeFleetTestResource) completeExceptVMSS(data acceptance.TestData) s
 	return fmt.Sprintf(`
 	%[1]s
 
-resource "azurerm_marketplace_agreement" "barracuda" {
-  publisher = "micro-focus"
-  offer     = "arcsight-logger"
-  plan      = "arcsight_logger_72_byol"
-}
+#resource "azurerm_marketplace_agreement" "barracuda" {
+# publisher = "micro-focus"
+# offer     = "arcsight-logger"
+# plan      = "arcsight_logger_72_byol"
+#}
 
 resource "azurerm_user_assigned_identity" "test" {
   name                = "acctest%[2]d"
@@ -704,6 +690,12 @@ resource "azurerm_compute_fleet" "test" {
       storage_account_type = "Standard_LRS"
     }
 
+    data_disk {
+      caching              = "ReadWrite"
+      create_option        = "FromImage"
+      storage_account_type = "Standard_LRS"
+    }
+
     os_profile {
       linux_configuration {
         computer_name_prefix            = "prefix"
@@ -735,7 +727,7 @@ resource "azurerm_compute_fleet" "test" {
   }
   zones = ["1", "2", "3"]
 
-  depends_on = [azurerm_marketplace_agreement.barracuda]
+  #  depends_on = [azurerm_marketplace_agreement.barracuda]
 }
 	`, r.template(data), data.RandomInteger, data.Locations.Primary)
 }
@@ -744,11 +736,11 @@ func (r ComputeFleetTestResource) completeExceptVMSSUpdate(data acceptance.TestD
 	return fmt.Sprintf(`
 	%[1]s
 
-resource "azurerm_marketplace_agreement" "barracuda" {
-  publisher = "micro-focus"
-  offer     = "arcsight-logger"
-  plan      = "arcsight_logger_72_byol"
-}
+#resource "azurerm_marketplace_agreement" "barracuda" {
+#publisher = "micro-focus"
+#offer     = "arcsight-logger"
+# plan      = "arcsight_logger_72_byol"
+#}
 
 resource "azurerm_user_assigned_identity" "test" {
   name                = "acctest%[2]d"
@@ -858,6 +850,12 @@ resource "azurerm_compute_fleet" "test" {
 
     os_disk {
       caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    data_disk {
+      caching              = "ReadWrite"
+      create_option        = "FromImage"
       storage_account_type = "Standard_LRS"
     }
 

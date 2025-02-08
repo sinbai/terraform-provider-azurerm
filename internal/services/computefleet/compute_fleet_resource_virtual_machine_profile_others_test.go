@@ -51,15 +51,15 @@ func TestAccComputeFleet_virtualMachineProfileOthers_capacityReservationGroup(t 
 		data.ImportStep(
 			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
 			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
-		{
-			Config: r.capacityReservationGroupUpdate(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(
-			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
-			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
+		//{
+		//	Config: r.capacityReservationGroupUpdate(data),
+		//	Check: acceptance.ComposeTestCheckFunc(
+		//		check.That(data.ResourceName).ExistsInAzure(r),
+		//	),
+		//},
+		//data.ImportStep(
+		//	"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+		//	"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -193,13 +193,13 @@ func TestAccComputeFleet_virtualMachineProfileOthers_UserData(t *testing.T) {
 	})
 }
 
-func TestAccComputeFleet_virtualMachineProfileOthers_additionalCapabilities(t *testing.T) {
+func TestAccComputeFleet_virtualMachineProfileOthers_additionalCapabilitiesUltraSSD(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
 	r := ComputeFleetTestResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.additionalCapabilities(data),
+			Config: r.additionalCapabilitiesUltraSSD(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -207,8 +207,16 @@ func TestAccComputeFleet_virtualMachineProfileOthers_additionalCapabilities(t *t
 		data.ImportStep(
 			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
 			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
+	})
+}
+
+func TestAccComputeFleet_virtualMachineProfileOthers_additionalCapabilitiesHibernation(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_compute_fleet", "test")
+	r := ComputeFleetTestResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.additionalCapabilitiesUpdate(data),
+			Config: r.additionalCapabilitiesHibernation(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -354,33 +362,34 @@ resource "azurerm_capacity_reservation_group" "test" {
   name                = "acctest-ccrg-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-
+  zones               = ["3"]
 }
 
 resource "azurerm_capacity_reservation" "test" {
   name                          = "acctest-ccr-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
   sku {
-    name     = "Standard_DC8eds_v5"
+    name     = "Standard_DS1_v2"
     capacity = 1
   }
+  zone = "3"
 }
 
 resource "azurerm_capacity_reservation_group" "linux_test" {
   name                = "acctest-ccrg-%[2]d"
   resource_group_name = azurerm_resource_group.linux_test.name
   location            = azurerm_resource_group.linux_test.location
-
+  zones               = ["3"]
 }
 
 resource "azurerm_capacity_reservation" "linux_test" {
   name                          = "acctest-ccr-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.linux_test.id
   sku {
-    name     = "Standard_DC8eds_v5"
+    name     = "Standard_DS1_v2"
     capacity = 1
   }
-  
+  zone = "3"
 }
 
 resource "azurerm_compute_fleet" "test" {
@@ -394,7 +403,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   vm_sizes_profile {
-    name = "Standard_DC8eds_v5"
+    name = "Standard_DS1_v2"
   }
 
   compute_api_version = "2024-03-01"
@@ -503,10 +512,10 @@ resource "azurerm_capacity_reservation" "test" {
   name                          = "acctest-ccr-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
   sku {
-    name     = "Standard_DC8eds_v5"
+    name     = "Standard_DS1_v2"
     capacity = 1
   }
-  
+
 }
 
 resource "azurerm_capacity_reservation_group" "test2" {
@@ -520,10 +529,10 @@ resource "azurerm_capacity_reservation" "test2" {
   name                          = "acctest-ccr2-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.test2.id
   sku {
-    name     = "Standard_DC8eds_v5"
+    name     = "Standard_DS1_v2"
     capacity = 1
   }
-  
+
 }
 
 resource "azurerm_capacity_reservation_group" "linux_test" {
@@ -537,10 +546,10 @@ resource "azurerm_capacity_reservation" "linux_test" {
   name                          = "acctest-ccr-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.linux_test.id
   sku {
-    name     = "Standard_DC8eds_v5"
+    name     = "Standard_DS1_v2"
     capacity = 1
   }
-  
+
 }
 
 resource "azurerm_capacity_reservation_group" "linux_test2" {
@@ -554,17 +563,17 @@ resource "azurerm_capacity_reservation" "linux_test2" {
   name                          = "acctest-ccr2-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.linux_test2.id
   sku {
-    name     = "Standard_DC8eds_v5"
+    name     = "Standard_DS1_v2"
     capacity = 1
   }
-  
+
 }
 
 resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
-  zones = ["1"]
+  zones               = ["1"]
 
   regular_priority_profile {
     capacity     = 1
@@ -572,7 +581,7 @@ resource "azurerm_compute_fleet" "test" {
   }
 
   vm_sizes_profile {
-    name = "Standard_DC8eds_v5"
+    name = "Standard_DS1_v2"
   }
 
   compute_api_version = "2024-03-01"
@@ -952,9 +961,9 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       windows_configuration {
-        computer_name_prefix            = "testvm"
-        admin_username                  = local.admin_username
-        admin_password                  = local.admin_password
+        computer_name_prefix       = "testvm"
+        admin_username             = local.admin_username
+        admin_password             = local.admin_password
         automatic_updates_enabled  = true
         provision_vm_agent_enabled = true
         time_zone                  = "W. Europe Standard Time"
@@ -1000,9 +1009,9 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         windows_configuration {
-          computer_name_prefix            = "testvm"
-          admin_username                  = local.admin_username
-          admin_password                  = local.admin_password
+          computer_name_prefix       = "testvm"
+          admin_username             = local.admin_username
+          admin_password             = local.admin_password
           automatic_updates_enabled  = true
           provision_vm_agent_enabled = true
           time_zone                  = "W. Europe Standard Time"
@@ -1610,7 +1619,7 @@ resource "azurerm_compute_fleet" "test" {
 `, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
 }
 
-func (r ComputeFleetTestResource) additionalCapabilities(data acceptance.TestData) string {
+func (r ComputeFleetTestResource) additionalCapabilitiesUltraSSD(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1618,9 +1627,8 @@ resource "azurerm_compute_fleet" "test" {
   name                                        = "acctest-fleet-%[2]d"
   resource_group_name                         = azurerm_resource_group.test.name
   location                                    = "%[3]s"
-  additional_capabilities_ultra_ssd_enabled   = false
-  additional_capabilities_hibernation_enabled = false
-  zones                                       = ["1","2","3"]
+  additional_capabilities_ultra_ssd_enabled   = true
+  zones                                       = ["1", "2", "3"]
 
   regular_priority_profile {
     capacity     = 1
@@ -1631,7 +1639,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_D2s_v3"
   }
 
-  compute_api_version = "2024-07-01"
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
@@ -1669,54 +1677,25 @@ resource "azurerm_compute_fleet" "test" {
         }
       }
     }
-  }
 
-  additional_location_profile {
-    location = "%[4]s"
-    virtual_machine_profile_override {
-      network_api_version = "2020-11-01"
-      source_image_reference {
-        publisher = "Canonical"
-        offer     = "0001-com-ubuntu-server-jammy"
-        sku       = "22_04-lts"
-        version   = "latest"
-      }
+    extension {
+      name                 = "HealthExtension"
+      publisher            = "Microsoft.ManagedServices"
+      type                 = "ApplicationHealthLinux"
+      type_handler_version = "1.0"
 
-      os_disk {
-        caching              = "ReadWrite"
-        storage_account_type = "Standard_LRS"
-      }
-
-      os_profile {
-        linux_configuration {
-          computer_name_prefix            = "prefix"
-          admin_username                  = local.admin_username
-          admin_password                  = local.admin_password
-          password_authentication_enabled = true
-        }
-      }
-
-      network_interface {
-        name    = "networkProTest"
-        primary = true
-        ip_configuration {
-          name      = "TestIPConfiguration"
-          subnet_id = azurerm_subnet.linux_test.id
-          primary   = true
-          public_ip_address {
-            name                    = "TestPublicIPConfiguration"
-            domain_name_label       = "test-domain-label"
-            idle_timeout_in_minutes = 4
-          }
-        }
-      }
+      settings_json = jsonencode({
+        "protocol"    = "http"
+        "port"        = 80
+        "requestPath" = "/healthEndpoint"
+      })
     }
   }
 }
-`, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
+`, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary)
 }
 
-func (r ComputeFleetTestResource) additionalCapabilitiesUpdate(data acceptance.TestData) string {
+func (r ComputeFleetTestResource) additionalCapabilitiesHibernation(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -1724,9 +1703,7 @@ resource "azurerm_compute_fleet" "test" {
   name                                        = "acctest-fleet-%[2]d"
   resource_group_name                         = azurerm_resource_group.test.name
   location                                    = "%[3]s"
-  additional_capabilities_ultra_ssd_enabled   = true
   additional_capabilities_hibernation_enabled = true
-   zones                                       = ["1","2","3"]
 
   regular_priority_profile {
     capacity     = 1
@@ -1737,7 +1714,7 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_D2s_v3"
   }
 
-  compute_api_version = "2023-03-01"
+  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {

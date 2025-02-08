@@ -329,73 +329,12 @@ resource "azurerm_compute_fleet" "test" {
     name = "Standard_DS1_v2"
   }
 
-  %[4]s
-
-  additional_location_profile {
-    location = "%[5]s"
-    virtual_machine_profile_override {
-      network_api_version = "2020-11-01"
-      source_image_reference {
-        offer     = "0001-com-ubuntu-server-focal"
-        publisher = "canonical"
-        sku       = "20_04-lts-gen2"
-        version   = "latest"
-      }
-
-      os_profile {
-        linux_configuration {
-          computer_name_prefix            = "prefix"
-          admin_username                  = local.admin_username
-          admin_password                  = local.admin_password
-          password_authentication_enabled = true
-        }
-      }
-
-      network_interface {
-        name    = "networkProTest"
-        primary = true
-        ip_configuration {
-          name      = "TestIPConfiguration"
-          subnet_id = azurerm_subnet.linux_test.id
-          primary   = true
-          public_ip_address {
-            name                    = "TestPublicIPConfiguration"
-            domain_name_label       = "test-domain-label"
-            idle_timeout_in_minutes = 4
-          }
-        }
-      }
-    }
-  }
-}
-`, r.imageFromExistingMachinePrep(data), data.RandomInteger, data.Locations.Primary, r.basicBaseLinuxVirtualMachineProfile(), data.Locations.Secondary)
-}
-
-func (r ComputeFleetTestResource) imageFromSourceImageReferenceUpdate(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azurerm_compute_fleet" "test" {
-  name                = "acctest-fleet-refer-%[2]d"
-  resource_group_name = azurerm_resource_group.test.name
-  location            = "%[3]s"
-
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
-  }
-
-  vm_sizes_profile {
-    name = "Standard_DS1_v2"
-  }
-
-  compute_api_version = "2024-03-01"
   virtual_machine_profile {
     network_api_version = "2020-11-01"
     source_image_reference {
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-jammy"
-      sku       = "22_04-lts"
+      offer     = "0001-com-ubuntu-server-focal"
+      publisher = "canonical"
+      sku       = "20_04-lts-gen2"
       version   = "latest"
     }
 
@@ -434,9 +373,112 @@ resource "azurerm_compute_fleet" "test" {
     virtual_machine_profile_override {
       network_api_version = "2020-11-01"
       source_image_reference {
-        publisher = "Canonical"
-        offer     = "0001-com-ubuntu-server-jammy"
-        sku       = "22_04-lts"
+        offer     = "0001-com-ubuntu-server-focal"
+        publisher = "canonical"
+        sku       = "20_04-lts-gen2"
+        version   = "latest"
+      }
+
+      os_disk {
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
+      }
+
+      os_profile {
+        linux_configuration {
+          computer_name_prefix            = "prefix"
+          admin_username                  = local.admin_username
+          admin_password                  = local.admin_password
+          password_authentication_enabled = true
+        }
+      }
+
+      network_interface {
+        name    = "networkProTest"
+        primary = true
+        ip_configuration {
+          name      = "TestIPConfiguration"
+          subnet_id = azurerm_subnet.linux_test.id
+          primary   = true
+          public_ip_address {
+            name                    = "TestPublicIPConfiguration"
+            domain_name_label       = "test-domain-label"
+            idle_timeout_in_minutes = 4
+          }
+        }
+      }
+    }
+  }
+}
+`, r.imageFromExistingMachinePrep(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
+}
+
+func (r ComputeFleetTestResource) imageFromSourceImageReferenceUpdate(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_compute_fleet" "test" {
+  name                = "acctest-fleet-refer-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = "%[3]s"
+
+  regular_priority_profile {
+    capacity     = 1
+    min_capacity = 1
+  }
+
+  vm_sizes_profile {
+    name = "Standard_DS1_v2"
+  }
+
+  compute_api_version = "2024-03-01"
+  virtual_machine_profile {
+    network_api_version = "2020-11-01"
+    source_image_reference {
+      offer     = "0001-com-ubuntu-server-focal"
+      publisher = "canonical"
+      sku       = "20_04-lts-gen2"
+      version   = "latest"
+    }
+
+    os_profile {
+      linux_configuration {
+        computer_name_prefix            = "prefix"
+        admin_username                  = local.admin_username
+        admin_password                  = local.admin_password
+        password_authentication_enabled = true
+      }
+    }
+
+    os_disk {
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+    }
+
+    network_interface {
+      name    = "networkProTest"
+      primary = true
+      ip_configuration {
+        name      = "TestIPConfiguration"
+        subnet_id = azurerm_subnet.test.id
+        primary   = true
+        public_ip_address {
+          name                    = "TestPublicIPConfiguration"
+          domain_name_label       = "test-domain-label"
+          idle_timeout_in_minutes = 4
+        }
+      }
+    }
+  }
+
+  additional_location_profile {
+    location = "%[4]s"
+    virtual_machine_profile_override {
+      network_api_version = "2020-11-01"
+      source_image_reference {
+        offer     = "0001-com-ubuntu-server-focal"
+        publisher = "canonical"
+        sku       = "20_04-lts-gen2"
         version   = "latest"
       }
 
