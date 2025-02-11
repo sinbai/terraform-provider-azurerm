@@ -155,9 +155,10 @@ resource "azurerm_compute_fleet" "test" {
   location                    = "%[3]s"
   platform_fault_domain_count = 1
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -169,7 +170,7 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -207,7 +208,7 @@ resource "azurerm_compute_fleet" "test" {
       network_api_version = "2020-11-01"
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -254,9 +255,10 @@ resource "azurerm_compute_fleet" "test" {
   platform_fault_domain_count = 1
   zones                       = ["1", "2"]
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -269,7 +271,7 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -318,9 +320,10 @@ resource "azurerm_compute_fleet" "test" {
 
   zones = ["1", "2"]
 
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
   }
 
   vm_sizes_profile {
@@ -333,7 +336,7 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2022-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -412,9 +415,10 @@ resource "azurerm_compute_fleet" "test" {
   location                    = "%[4]s"
   platform_fault_domain_count = 1
 
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
   }
 
   vm_sizes_profile {
@@ -427,7 +431,7 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2022-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -498,7 +502,7 @@ resource "azurerm_compute_fleet" "test" {
       network_api_version = "2022-11-01"
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -568,7 +572,6 @@ resource "azurerm_compute_fleet" "test" {
 
 func (r ComputeFleetTestResource) netWorkProfileCompleteForBaseVirtualMachineProfileUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-
 %[1]s
 
 %[2]s
@@ -581,9 +584,10 @@ resource "azurerm_compute_fleet" "test" {
 
   zones = ["1", "2"]
 
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
   }
 
   vm_sizes_profile {
@@ -596,7 +600,7 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2022-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -685,9 +689,10 @@ resource "azurerm_compute_fleet" "test" {
   location                    = "%[4]s"
   platform_fault_domain_count = 1
 
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
   }
 
   vm_sizes_profile {
@@ -700,7 +705,7 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2022-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -781,7 +786,7 @@ resource "azurerm_compute_fleet" "test" {
       network_api_version = "2022-11-01"
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true

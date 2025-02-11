@@ -117,7 +117,7 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -156,7 +156,7 @@ resource "azurerm_compute_fleet" "test" {
       network_api_version = "2020-11-01"
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -223,7 +223,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -277,7 +277,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -360,7 +360,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -410,7 +410,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true

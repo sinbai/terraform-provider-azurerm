@@ -133,9 +133,10 @@ resource "azurerm_compute_fleet" "test" {
   location                    = "%[3]s"
   platform_fault_domain_count = 2
 
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
   }
 
   vm_sizes_profile {
@@ -147,7 +148,7 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
         admin_ssh_keys                  = [local.first_public_key]
@@ -195,7 +196,7 @@ resource "azurerm_compute_fleet" "test" {
       network_api_version = "2020-11-01"
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           password_authentication_enabled = false
           admin_ssh_keys                  = [local.first_public_key]
@@ -252,9 +253,10 @@ resource "azurerm_compute_fleet" "test" {
   location                    = "%[3]s"
   platform_fault_domain_count = 2
 
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
   }
 
   vm_sizes_profile {
@@ -266,7 +268,7 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
         admin_ssh_keys                  = [local.first_public_key]
@@ -346,7 +348,7 @@ resource "azurerm_compute_fleet" "test" {
       network_api_version = "2020-11-01"
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           password_authentication_enabled = false
           admin_ssh_keys                  = [local.first_public_key]
@@ -434,9 +436,10 @@ resource "azurerm_compute_fleet" "test" {
   location                    = "%[3]s"
   platform_fault_domain_count = 2
 
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
   }
 
   vm_sizes_profile {
@@ -448,7 +451,7 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
         admin_ssh_keys                  = [local.first_public_key]
@@ -529,7 +532,7 @@ resource "azurerm_compute_fleet" "test" {
       network_api_version = "2020-11-01"
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           password_authentication_enabled = false
           admin_ssh_keys                  = [local.first_public_key]
@@ -682,9 +685,10 @@ resource "azurerm_compute_fleet" "test" {
   location                    = "%[3]s"
   platform_fault_domain_count = 2
 
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
   }
 
   vm_sizes_profile {
@@ -696,7 +700,7 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
         admin_ssh_keys                  = [local.first_public_key]
@@ -750,7 +754,7 @@ resource "azurerm_compute_fleet" "test" {
       network_api_version = "2020-11-01"
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           password_authentication_enabled = false
           admin_ssh_keys                  = [local.first_public_key]
@@ -929,9 +933,10 @@ resource "azurerm_compute_fleet" "test" {
   location                    = "%[3]s"
   platform_fault_domain_count = 2
 
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
   }
 
   vm_sizes_profile {
@@ -943,7 +948,7 @@ resource "azurerm_compute_fleet" "test" {
     network_api_version = "2020-11-01"
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
         admin_ssh_keys                  = [local.first_public_key]
@@ -997,7 +1002,7 @@ resource "azurerm_compute_fleet" "test" {
       network_api_version = "2020-11-01"
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           password_authentication_enabled = false
           admin_ssh_keys                  = [local.first_public_key]

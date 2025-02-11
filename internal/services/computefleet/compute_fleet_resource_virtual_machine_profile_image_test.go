@@ -340,7 +340,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -386,7 +386,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -443,7 +443,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -484,7 +484,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -561,7 +561,7 @@ resource "azurerm_compute_fleet" "image_id" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -594,7 +594,7 @@ resource "azurerm_compute_fleet" "image_id" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -716,7 +716,6 @@ resource "azurerm_compute_fleet" "image_id" {
     capacity     = 1
     min_capacity = 1
   }
-
   vm_sizes_profile {
     name = "Standard_DS1_v2"
   }
@@ -733,7 +732,7 @@ resource "azurerm_compute_fleet" "image_id" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -767,7 +766,7 @@ resource "azurerm_compute_fleet" "image_id" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -795,6 +794,8 @@ resource "azurerm_compute_fleet" "image_id" {
 
 func (r ComputeFleetTestResource) imageFromSharedImageGalleryVersion(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+
+
 
 
 %[1]s
@@ -909,7 +910,7 @@ resource "azurerm_compute_fleet" "image_id" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -942,7 +943,7 @@ resource "azurerm_compute_fleet" "image_id" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -1101,7 +1102,7 @@ resource "azurerm_compute_fleet" "image_id" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -1135,7 +1136,7 @@ resource "azurerm_compute_fleet" "image_id" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -1295,7 +1296,7 @@ resource "azurerm_compute_fleet" "image_id" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -1329,7 +1330,7 @@ resource "azurerm_compute_fleet" "image_id" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true

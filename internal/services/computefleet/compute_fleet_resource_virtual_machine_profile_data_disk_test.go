@@ -98,9 +98,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -131,7 +132,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -178,7 +179,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -215,9 +216,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[4]s"
 
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
   }
 
   vm_sizes_profile {
@@ -252,7 +254,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -303,7 +305,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -340,9 +342,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[4]s"
 
-  regular_priority_profile {
-    capacity     = 0
-    min_capacity = 0
+  spot_priority_profile {
+    min_capacity     = 0
+    maintain_enabled = false
+    capacity         = 0
   }
 
   vm_sizes_profile {
@@ -377,7 +380,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -428,7 +431,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true

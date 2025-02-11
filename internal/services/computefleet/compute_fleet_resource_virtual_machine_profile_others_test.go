@@ -51,15 +51,15 @@ func TestAccComputeFleet_virtualMachineProfileOthers_capacityReservationGroup(t 
 		data.ImportStep(
 			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
 			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
-		//{
-		//	Config: r.capacityReservationGroupUpdate(data),
-		//	Check: acceptance.ComposeTestCheckFunc(
-		//		check.That(data.ResourceName).ExistsInAzure(r),
-		//	),
-		//},
-		//data.ImportStep(
-		//	"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
-		//	"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
+		{
+			Config: r.capacityReservationGroupUpdate(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(
+			"virtual_machine_profile.0.os_profile.0.linux_configuration.0.admin_password",
+			"additional_location_profile.0.virtual_machine_profile_override.0.os_profile.0.linux_configuration.0.admin_password"),
 	})
 }
 
@@ -236,9 +236,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -265,7 +266,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -309,7 +310,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -362,34 +363,32 @@ resource "azurerm_capacity_reservation_group" "test" {
   name                = "acctest-ccrg-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-  zones               = ["3"]
+  zones               = ["1", "2", "3"]
 }
 
 resource "azurerm_capacity_reservation" "test" {
   name                          = "acctest-ccr-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
   sku {
-    name     = "Standard_DS1_v2"
-    capacity = 1
+    name     = "Standard_F2"
+    capacity = 2
   }
-  zone = "3"
 }
 
 resource "azurerm_capacity_reservation_group" "linux_test" {
   name                = "acctest-ccrg-%[2]d"
   resource_group_name = azurerm_resource_group.linux_test.name
   location            = azurerm_resource_group.linux_test.location
-  zones               = ["3"]
+  zones               = ["1", "2", "3"]
 }
 
 resource "azurerm_capacity_reservation" "linux_test" {
   name                          = "acctest-ccr-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.linux_test.id
   sku {
-    name     = "Standard_DS1_v2"
-    capacity = 1
+    name     = "Standard_F2"
+    capacity = 2
   }
-  zone = "3"
 }
 
 resource "azurerm_compute_fleet" "test" {
@@ -397,13 +396,14 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
-    name = "Standard_DS1_v2"
+    name = "Standard_F2"
   }
 
   compute_api_version = "2024-03-01"
@@ -425,7 +425,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -468,7 +468,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -505,6 +505,7 @@ resource "azurerm_capacity_reservation_group" "test" {
   name                = "acctest-ccrg-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
+  zones               = ["1", "2", "3"]
 
 }
 
@@ -512,76 +513,72 @@ resource "azurerm_capacity_reservation" "test" {
   name                          = "acctest-ccr-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.test.id
   sku {
-    name     = "Standard_DS1_v2"
-    capacity = 1
+    name     = "Standard_F2"
+    capacity = 2
   }
-
 }
 
 resource "azurerm_capacity_reservation_group" "test2" {
   name                = "acctest-ccrg2-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = azurerm_resource_group.test.location
-
+  zones               = ["1", "2", "3"]
 }
 
 resource "azurerm_capacity_reservation" "test2" {
   name                          = "acctest-ccr2-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.test2.id
   sku {
-    name     = "Standard_DS1_v2"
-    capacity = 1
+    name     = "Standard_F2"
+    capacity = 2
   }
-
 }
 
 resource "azurerm_capacity_reservation_group" "linux_test" {
   name                = "acctest-ccrg-%[2]d"
   resource_group_name = azurerm_resource_group.linux_test.name
   location            = azurerm_resource_group.linux_test.location
-
+  zones               = ["1", "2", "3"]
 }
 
 resource "azurerm_capacity_reservation" "linux_test" {
   name                          = "acctest-ccr-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.linux_test.id
   sku {
-    name     = "Standard_DS1_v2"
-    capacity = 1
+    name     = "Standard_F2"
+    capacity = 2
   }
-
 }
 
 resource "azurerm_capacity_reservation_group" "linux_test2" {
   name                = "acctest-ccrg2-%[2]d"
   resource_group_name = azurerm_resource_group.linux_test.name
   location            = azurerm_resource_group.linux_test.location
-
+  zones               = ["1", "2", "3"]
 }
 
 resource "azurerm_capacity_reservation" "linux_test2" {
   name                          = "acctest-ccr2-%[2]d"
   capacity_reservation_group_id = azurerm_capacity_reservation_group.linux_test2.id
   sku {
-    name     = "Standard_DS1_v2"
-    capacity = 1
+    name     = "Standard_F2"
+    capacity = 2
   }
-
 }
 
 resource "azurerm_compute_fleet" "test" {
   name                = "acctest-fleet-%[2]d"
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
-  zones               = ["1"]
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
-    name = "Standard_DS1_v2"
+    name = "Standard_F2"
   }
 
   compute_api_version = "2024-03-01"
@@ -604,7 +601,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -646,7 +643,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -669,7 +666,7 @@ resource "azurerm_compute_fleet" "test" {
       }
     }
   }
-  depends_on = [azurerm_capacity_reservation.test, azurerm_capacity_reservation.linux_test]
+  depends_on = [azurerm_capacity_reservation.test2, azurerm_capacity_reservation.linux_test2]
 }
 `, r.baseAndAdditionalLocationLinuxTemplate(data), data.RandomInteger, data.Locations.Primary, data.Locations.Secondary)
 }
@@ -814,13 +811,14 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
-    name = "Standard_D2s_v3"
+    name = "Standard_DS1_v2"
   }
 
   compute_api_version = "2024-03-01"
@@ -840,7 +838,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -890,7 +888,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -935,13 +933,14 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
-    name = "Standard_D2s_v3"
+    name = "Standard_DS1_v2"
   }
 
   compute_api_version = "2024-03-01"
@@ -1052,9 +1051,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -1162,9 +1162,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -1269,9 +1270,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -1374,9 +1376,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -1412,7 +1415,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -1465,7 +1468,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -1501,9 +1504,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -1539,7 +1543,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -1592,7 +1596,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true
@@ -1624,19 +1628,20 @@ func (r ComputeFleetTestResource) additionalCapabilitiesUltraSSD(data acceptance
 %[1]s
 
 resource "azurerm_compute_fleet" "test" {
-  name                                        = "acctest-fleet-%[2]d"
-  resource_group_name                         = azurerm_resource_group.test.name
-  location                                    = "%[3]s"
-  additional_capabilities_ultra_ssd_enabled   = true
-  zones                                       = ["1", "2", "3"]
+  name                                      = "acctest-fleet-%[2]d"
+  resource_group_name                       = azurerm_resource_group.test.name
+  location                                  = "%[3]s"
+  additional_capabilities_ultra_ssd_enabled = true
+  zones                                     = ["1", "2", "3"]
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
-    name = "Standard_D2s_v3"
+    name = "Standard_DS1_v2"
   }
 
   compute_api_version = "2024-03-01"
@@ -1656,7 +1661,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -1705,13 +1710,14 @@ resource "azurerm_compute_fleet" "test" {
   location                                    = "%[3]s"
   additional_capabilities_hibernation_enabled = true
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
-    name = "Standard_D2s_v3"
+    name = "Standard_DS1_v2"
   }
 
   compute_api_version = "2024-03-01"
@@ -1731,7 +1737,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         password_authentication_enabled = true
@@ -1785,7 +1791,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           password_authentication_enabled = true

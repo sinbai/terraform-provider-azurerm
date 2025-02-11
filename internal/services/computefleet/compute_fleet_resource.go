@@ -571,7 +571,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 				},
 
 				"accelerator_manufacturers": {
-					Type:     pluginsdk.TypeList,
+					Type:     pluginsdk.TypeSet,
 					Optional: true,
 					Elem: &pluginsdk.Schema{
 						Type: pluginsdk.TypeString,
@@ -589,7 +589,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 				},
 
 				"accelerator_types": {
-					Type:     pluginsdk.TypeList,
+					Type:     pluginsdk.TypeSet,
 					Optional: true,
 					Elem: &pluginsdk.Schema{
 						Type: pluginsdk.TypeString,
@@ -599,7 +599,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 				},
 
 				"architecture_types": {
-					Type:     pluginsdk.TypeList,
+					Type:     pluginsdk.TypeSet,
 					Optional: true,
 					Elem: &pluginsdk.Schema{
 						Type: pluginsdk.TypeString,
@@ -617,7 +617,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 				},
 
 				"cpu_manufacturers": {
-					Type:     pluginsdk.TypeList,
+					Type:     pluginsdk.TypeSet,
 					Optional: true,
 					Elem: &pluginsdk.Schema{
 						Type: pluginsdk.TypeString,
@@ -646,7 +646,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 				},
 
 				"local_storage_disk_types": {
-					Type:     pluginsdk.TypeList,
+					Type:     pluginsdk.TypeSet,
 					Optional: true,
 					Elem: &pluginsdk.Schema{
 						Type: pluginsdk.TypeString,
@@ -717,7 +717,7 @@ func vmAttributesSchema() *pluginsdk.Schema {
 				},
 
 				"vm_categories": {
-					Type:     pluginsdk.TypeList,
+					Type:     pluginsdk.TypeSet,
 					Optional: true,
 					Elem: &pluginsdk.Schema{
 						Type: pluginsdk.TypeString,
@@ -994,7 +994,7 @@ func (r ComputeFleetResource) Read() sdk.ResourceFunc {
 			resp, err := client.Get(ctx, *id)
 			if err != nil {
 				if response.WasNotFound(resp.HttpResponse) {
-					return metadata.MarkAsGone(id)
+					return metadata.MarkAsGone(*id)
 				}
 
 				return fmt.Errorf("retrieving %s: %+v", *id, err)
@@ -1082,7 +1082,7 @@ func customizeForVmAttributes(state ComputeFleetResourceModel, d sdk.ResourceMet
 		}
 	}
 	old, new = d.ResourceDiff.GetChange("vm_attributes.0.accelerator_manufacturers")
-	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+	if len(old.(*schema.Set).List()) > 0 && len(new.(*schema.Set).List()) == 0 {
 		if err := d.ResourceDiff.ForceNew("vm_attributes.0.accelerator_manufacturers"); err != nil {
 			return err
 		}
@@ -1094,13 +1094,13 @@ func customizeForVmAttributes(state ComputeFleetResourceModel, d sdk.ResourceMet
 		}
 	}
 	old, new = d.ResourceDiff.GetChange("vm_attributes.0.accelerator_types")
-	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+	if len(old.(*schema.Set).List()) > 0 && len(new.(*schema.Set).List()) == 0 {
 		if err := d.ResourceDiff.ForceNew("vm_attributes.0.accelerator_types"); err != nil {
 			return err
 		}
 	}
 	old, new = d.ResourceDiff.GetChange("vm_attributes.0.architecture_types")
-	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+	if len(old.(*schema.Set).List()) > 0 && len(new.(*schema.Set).List()) == 0 {
 		if err := d.ResourceDiff.ForceNew("vm_attributes.0.architecture_types"); err != nil {
 			return err
 		}
@@ -1112,7 +1112,7 @@ func customizeForVmAttributes(state ComputeFleetResourceModel, d sdk.ResourceMet
 		}
 	}
 	old, new = d.ResourceDiff.GetChange("vm_attributes.0.cpu_manufacturers")
-	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+	if len(old.(*schema.Set).List()) > 0 && len(new.(*schema.Set).List()) == 0 {
 		if err := d.ResourceDiff.ForceNew("vm_attributes.0.cpu_manufacturers"); err != nil {
 			return err
 		}
@@ -1130,7 +1130,7 @@ func customizeForVmAttributes(state ComputeFleetResourceModel, d sdk.ResourceMet
 		}
 	}
 	old, new = d.ResourceDiff.GetChange("vm_attributes.0.local_storage_disk_types")
-	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+	if len(old.(*schema.Set).List()) > 0 && len(new.(*schema.Set).List()) == 0 {
 		if err := d.ResourceDiff.ForceNew("vm_attributes.0.local_storage_disk_types"); err != nil {
 			return err
 		}
@@ -1178,7 +1178,7 @@ func customizeForVmAttributes(state ComputeFleetResourceModel, d sdk.ResourceMet
 		}
 	}
 	old, new = d.ResourceDiff.GetChange("vm_attributes.0.vm_categories")
-	if len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0 {
+	if len(old.(*schema.Set).List()) > 0 && len(new.(*schema.Set).List()) == 0 {
 		if err := d.ResourceDiff.ForceNew("vm_attributes.0.vm_categories"); err != nil {
 			return err
 		}

@@ -138,9 +138,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -164,7 +165,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       windows_configuration {
-        computer_name_prefix = "prefix"
+        computer_name_prefix = "testvm"
         admin_username       = local.admin_username
         admin_password       = local.admin_password
       }
@@ -200,7 +201,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         windows_configuration {
-          computer_name_prefix = "prefix"
+          computer_name_prefix = "testvm"
           admin_username       = local.admin_username
           admin_password       = local.admin_password
         }
@@ -231,9 +232,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -257,7 +259,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       windows_configuration {
-        computer_name_prefix = "prefix"
+        computer_name_prefix = "testvm"
         admin_username       = local.admin_username
         admin_password       = local.admin_password_update
       }
@@ -293,7 +295,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         windows_configuration {
-          computer_name_prefix = "prefix"
+          computer_name_prefix = "testvm"
           admin_username       = local.admin_username
           admin_password       = local.admin_password_update
         }
@@ -324,9 +326,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -348,7 +351,7 @@ resource "azurerm_compute_fleet" "test" {
     }
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
         admin_ssh_keys                  = [local.first_public_key]
@@ -383,7 +386,7 @@ resource "azurerm_compute_fleet" "test" {
       }
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           password_authentication_enabled = false
           admin_ssh_keys                  = [local.first_public_key]
@@ -415,9 +418,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -439,7 +443,7 @@ resource "azurerm_compute_fleet" "test" {
     }
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
         admin_ssh_keys                  = [local.second_public_key]
@@ -474,7 +478,7 @@ resource "azurerm_compute_fleet" "test" {
       }
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           password_authentication_enabled = false
           admin_ssh_keys                  = [local.second_public_key]
@@ -506,9 +510,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -530,7 +535,7 @@ resource "azurerm_compute_fleet" "test" {
     }
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
         admin_ssh_keys                  = [local.first_public_key, local.second_public_key]
@@ -564,7 +569,7 @@ resource "azurerm_compute_fleet" "test" {
       }
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           password_authentication_enabled = false
           admin_ssh_keys                  = [local.first_public_key, local.second_public_key]
@@ -595,9 +600,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -619,7 +625,7 @@ resource "azurerm_compute_fleet" "test" {
     }
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
         admin_ssh_keys                  = [local.second_public_key, local.first_public_key]
@@ -652,7 +658,7 @@ resource "azurerm_compute_fleet" "test" {
       }
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           password_authentication_enabled = false
           admin_ssh_keys                  = [local.second_public_key, local.first_public_key]
@@ -683,9 +689,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -707,7 +714,7 @@ resource "azurerm_compute_fleet" "test" {
     }
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password
         admin_ssh_keys                  = [local.first_public_key]
@@ -742,7 +749,7 @@ resource "azurerm_compute_fleet" "test" {
       }
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password
           admin_ssh_keys                  = [local.first_public_key]
@@ -775,9 +782,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -799,7 +807,7 @@ resource "azurerm_compute_fleet" "test" {
     }
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         admin_password                  = local.admin_password_update
         admin_ssh_keys                  = [local.second_public_key]
@@ -834,7 +842,7 @@ resource "azurerm_compute_fleet" "test" {
       }
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           admin_password                  = local.admin_password_update
           admin_ssh_keys                  = [local.second_public_key]
@@ -867,9 +875,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -892,7 +901,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
         admin_ssh_keys                  = [local.first_ed25519_public_key]
@@ -928,7 +937,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           password_authentication_enabled = false
           admin_ssh_keys                  = [local.first_ed25519_public_key]
@@ -960,9 +969,10 @@ resource "azurerm_compute_fleet" "test" {
   resource_group_name = azurerm_resource_group.test.name
   location            = "%[3]s"
 
-  regular_priority_profile {
-    capacity     = 1
-    min_capacity = 1
+  spot_priority_profile {
+    min_capacity     = 1
+    maintain_enabled = false
+    capacity         = 1
   }
 
   vm_sizes_profile {
@@ -985,7 +995,7 @@ resource "azurerm_compute_fleet" "test" {
 
     os_profile {
       linux_configuration {
-        computer_name_prefix            = "prefix"
+        computer_name_prefix            = "testvm"
         admin_username                  = local.admin_username
         password_authentication_enabled = false
         admin_ssh_keys                  = [local.second_ed25519_public_key]
@@ -1020,7 +1030,7 @@ resource "azurerm_compute_fleet" "test" {
 
       os_profile {
         linux_configuration {
-          computer_name_prefix            = "prefix"
+          computer_name_prefix            = "testvm"
           admin_username                  = local.admin_username
           password_authentication_enabled = false
           admin_ssh_keys                  = [local.second_ed25519_public_key]
