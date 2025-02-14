@@ -407,7 +407,7 @@ func resourceVirtualMachine() *pluginsdk.Resource {
 
 			// lintignore:S018
 			"os_profile": {
-				Type:     pluginsdk.TypeList,
+				Type:     pluginsdk.TypeSet,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &pluginsdk.Resource{
