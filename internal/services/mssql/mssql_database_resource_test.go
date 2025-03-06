@@ -443,7 +443,7 @@ func TestAccMsSqlDatabase_scaleReplicaSet(t *testing.T) {
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.scaleReplicaSet(data, "GP_Gen5_2"),
+			Config: r.scaleReplicaSet(data, "BC_Gen5_2"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -464,20 +464,6 @@ func TestAccMsSqlDatabase_scaleReplicaSet(t *testing.T) {
 		},
 		data.ImportStep("sample_name", "license_type"),
 		{
-			Config: r.scaleReplicaSet(data, "BC_Gen5_2"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("sample_name", "license_type"),
-		{
-			Config: r.scaleReplicaSet(data, "GP_Gen5_2"),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep("sample_name", "license_type"),
-		{
 			Config: r.scaleReplicaSet(data, "S2"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
@@ -485,14 +471,14 @@ func TestAccMsSqlDatabase_scaleReplicaSet(t *testing.T) {
 		},
 		data.ImportStep("sample_name", "license_type"),
 		{
-			Config: r.scaleReplicaSet(data, "Basic"),
+			Config: r.scaleReplicaSet(data, "S1"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("sample_name", "license_type"),
 		{
-			Config: r.scaleReplicaSet(data, "S1"),
+			Config: r.scaleReplicaSet(data, "Basic"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
