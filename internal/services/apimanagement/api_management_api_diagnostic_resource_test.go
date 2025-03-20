@@ -107,6 +107,21 @@ func TestAccApiManagementApiDiagnostic_completeUpdate(t *testing.T) {
 	})
 }
 
+func TestAccApiManagementApiDiagnostic_local(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_api_management_api_diagnostic", "test")
+	r := ApiManagementApiDiagnosticResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.local(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccApiManagementApiDiagnostic_dataMasking(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_api_management_api_diagnostic", "test")
 	r := ApiManagementApiDiagnosticResource{}
@@ -209,6 +224,124 @@ resource "azurerm_api_management_api_diagnostic" "test" {
   api_management_logger_id = azurerm_api_management_logger.test.id
 }
 `, r.template(data))
+}
+
+func (r ApiManagementApiDiagnosticResource) local(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_resource_group" "test" {
+  name     = "acctestRG-%[1]d"
+  location = "%[2]s"
+}
+
+resource "azurerm_api_management" "test" {
+  name                = "acctestAM-%[1]d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  publisher_name      = "pub1"
+  publisher_email     = "pub1@email.com"
+  sku_name            = "Consumption_0"
+}
+
+
+resource "azurerm_api_management_api" "test" {
+  name                = "acctestAMA-%[1]d"
+  resource_group_name = azurerm_resource_group.test.name
+  api_management_name = azurerm_api_management.test.name
+  revision            = "1"
+  display_name        = "Test API"
+  path                = "test"
+  protocols           = ["https"]
+
+  import {
+    content_format = "swagger-link-json"
+    content_value  = "https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/refs/heads/main/internal/services/apimanagement/testdata/api_management_api_swagger.json"
+  }
+}
+
+resource "azurerm_api_management_api_diagnostic" "test" {
+  identifier               = "local"
+  resource_group_name      = azurerm_resource_group.test.name
+  api_management_name      = azurerm_api_management.test.name
+  api_name                 = azurerm_api_management_api.test.name
+  sampling_percentage       = 1.0
+  always_log_errors         = true
+  verbosity                 = "information"
+
+  backend_request {
+    body_bytes     = 1
+    headers_to_log = ["Host"]
+    data_masking {
+      query_params {
+        mode  = "Hide"
+        value = "backend-Request-Test"
+      }
+      headers {
+        mode  = "Mask"
+        value = "backend-Request-Header"
+      }
+    }
+  }
+
+  backend_response {
+    body_bytes     = 2
+    headers_to_log = ["Content-Type"]
+    data_masking {
+      headers {
+        mode  = "Mask"
+        value = "backend-Response-Header"
+      }
+      query_params {
+        mode  = "Mask"
+        value = "backend-Resp-Test"
+      }
+    }
+  }
+
+  frontend_request {
+    body_bytes     = 3
+    headers_to_log = ["Accept"]
+    data_masking {
+      query_params {
+        mode  = "Hide"
+        value = "frontend-Request-Test"
+      }
+      headers {
+        mode  = "Mask"
+        value = "frontend-Request-Header"
+      }
+    }
+  }
+
+  frontend_response {
+    body_bytes     = 4
+    headers_to_log = ["Content-Length"]
+    data_masking {
+      query_params {
+        mode  = "Hide"
+        value = "frontend-Response-Test"
+      }
+
+      query_params {
+        mode  = "Mask"
+        value = "frontend-Response-Test-Alt"
+      }
+      headers {
+        mode  = "Mask"
+        value = "frontend-Response-Header"
+      }
+
+      headers {
+        mode  = "Mask"
+        value = "frontend-Response-Header-Alt"
+      }
+    }
+  }
+}
+`, data.RandomInteger, data.Locations.Primary)
 }
 
 func (r ApiManagementApiDiagnosticResource) update(data acceptance.TestData) string {

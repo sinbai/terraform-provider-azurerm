@@ -118,15 +118,15 @@ resource "azurerm_api_management_api_diagnostic" "example" {
 
 The following arguments are supported:
 
-* `api_management_logger_id` - (Required) The ID (name) of the Diagnostics Logger.
-
 * `api_management_name` - (Required) The name of the API Management Service instance. Changing this forces a new API Management Service API Diagnostics Logs to be created.
 
 * `api_name` - (Required) The name of the API on which to configure the Diagnostics Logs. Changing this forces a new API Management Service API Diagnostics Logs to be created.
 
-* `identifier` - (Required) Identifier of the Diagnostics Logs. Possible values are `applicationinsights` and `azuremonitor`. Changing this forces a new API Management Service API Diagnostics Logs to be created.
+* `identifier` - (Required) Identifier of the Diagnostics Logs. Possible values are `applicationinsights`, `local` and `azuremonitor`. Changing this forces a new API Management Service API Diagnostics Logs to be created.
 
 * `resource_group_name` - (Required) The name of the Resource Group where the API Management Service API Diagnostics Logs should exist. Changing this forces a new API Management Service API Diagnostics Logs to be created.
+
+* `api_management_logger_id` - (Optional) The ID (name) of the Diagnostics Logger.
 
 ---
 
@@ -149,6 +149,8 @@ The following arguments are supported:
 * `verbosity` - (Optional) Logging verbosity. Possible values are `verbose`, `information` or `error`.
 
 * `operation_name_format` - (Optional) The format of the Operation Name for Application Insights telemetries. Possible values are `Name`, and `Url`. Defaults to `Name`.
+
+~> **Note:** The `operation_name_format` is only supported for `applicationinsights` identifier.
 
 ---
 

@@ -50,6 +50,7 @@ func resourceApiManagementApiDiagnostic() *pluginsdk.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					"applicationinsights",
 					"azuremonitor",
+					"local",
 				}, false),
 			},
 
@@ -61,7 +62,7 @@ func resourceApiManagementApiDiagnostic() *pluginsdk.Resource {
 
 			"api_management_logger_id": {
 				Type:         pluginsdk.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: logger.ValidateLoggerID,
 			},
 
@@ -117,7 +118,6 @@ func resourceApiManagementApiDiagnostic() *pluginsdk.Resource {
 			"operation_name_format": {
 				Type:     pluginsdk.TypeString,
 				Optional: true,
-				Default:  string(apidiagnostic.OperationNameFormatName),
 				ValidateFunc: validation.StringInSlice([]string{
 					string(apidiagnostic.OperationNameFormatName),
 					string(apidiagnostic.OperationNameFormatURL),
@@ -197,15 +197,20 @@ func resourceApiManagementApiDiagnosticCreateUpdate(d *pluginsdk.ResourceData, m
 	}
 
 	parameters := apidiagnostic.DiagnosticContract{
-		Properties: &apidiagnostic.DiagnosticContractProperties{
-			LoggerId: d.Get("api_management_logger_id").(string),
-		},
+		Properties: &apidiagnostic.DiagnosticContractProperties{},
 	}
 
-	if operationNameFormat, ok := d.GetOk("operation_name_format"); ok {
-		if d.Get("identifier") == "applicationinsights" {
-			parameters.Properties.OperationNameFormat = pointer.To(apidiagnostic.OperationNameFormat(operationNameFormat.(string)))
+	if loggerId, ok := d.GetOk("api_management_logger_id"); ok {
+		parameters.Properties.LoggerId = loggerId.(string)
+	}
+
+	// API returns "Property 'OperationNameFormat' is only supported for Application Insights diagnostics."
+	if d.Get("identifier").(string) == "applicationinsights" {
+		operationNameFormat := apidiagnostic.OperationNameFormatName
+		if v := d.Get("operation_name_format").(string); v != "" {
+			operationNameFormat = apidiagnostic.OperationNameFormat(v)
 		}
+		parameters.Properties.OperationNameFormat = pointer.To(operationNameFormat)
 	}
 
 	samplingPercentage := d.GetRawConfig().AsValueMap()["sampling_percentage"]
