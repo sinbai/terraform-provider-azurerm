@@ -76,6 +76,13 @@ func TestAccQuota_update(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+		{
+			Config: r.complete(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
 	})
 }
 
@@ -102,8 +109,8 @@ resource "azurerm_quota" "test" {
   name               = "standardFSv2Family"
   location           = "%s"
   limit_object_type  = "LimitValue"
-  limit_value        = 289
-  provider_namespace = "Microsoft.Compute"
+  limit_value        = 22
+  resource_provider = "Microsoft.Compute"
 }
 `, data.Locations.Ternary)
 }
@@ -112,11 +119,15 @@ func (r QuotaResource) requiresImport(data acceptance.TestData) string {
 	config := r.basic(data)
 	return fmt.Sprintf(`
 %s
+
 resource "azurerm_quota" "import" {
   name                = azurerm_quota.test.name
-  location = "%s"
+  location            = azurerm_quota.test.location
+  limit_object_type   = azurerm_quota.test.limit_object_type
+  limit_value         = azurerm_quota.test.limit_value
+  resource_provider   = azurerm_quota.test.resource_provider
 }
-`, config, data.Locations.Primary)
+`, config)
 }
 
 func (r QuotaResource) complete(data acceptance.TestData) string {
@@ -129,8 +140,8 @@ resource "azurerm_quota" "test" {
   name               = "TotalLowPriorityCores"
   location           = "%s"
   limit_object_type  = "LimitValue"
-  limit_value        = 10
-  provider_namespace = "Microsoft.MachineLearningServices"
+  limit_value        = 26
+  resource_provider = "Microsoft.MachineLearningServices"
   resource_type  = "lowPriority"
   additional_properties = jsonencode({
       "region"= "eastus",
@@ -151,11 +162,20 @@ provider "azurerm" {
 }
 
 resource "azurerm_quota" "test" {
-  name               = "standardFSv2Family"
+  name               = "TotalLowPriorityCores"
   location           = "%s"
   limit_object_type  = "LimitValue"
-  limit_value        = 11
-  provider_namespace = "Microsoft.Compute"
+  limit_value        = 28
+  resource_provider = "Microsoft.MachineLearningServices"
+  resource_type  = "lowPriority"
+  additional_properties = jsonencode({
+      "region"= "eastus",
+      "sku"="Standard_D2_v2"
+  })
+
+ lifecycle {
+    ignore_changes = [resource_type, additional_properties]
+ }
 }
-`, data.Locations.Ternary)
+`, "eastus") //data.Locations.Ternary)
 }

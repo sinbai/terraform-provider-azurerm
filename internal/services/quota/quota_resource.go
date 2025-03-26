@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
 	"regexp"
 	"time"
 
@@ -14,13 +13,14 @@ import (
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/location"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/quota/2025-03-01/quotainformation"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/quota/2025-03-01/usagesinformation"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/validation"
 )
 
 type QuotaModel struct {
 	Name                 string `tfschema:"name"`
-	ProviderNamespace    string `tfschema:"provider_namespace"`
+	ResourceProvider     string `tfschema:"resource_provider"`
 	Location             string `tfschema:"location"`
 	LimitValue           int64  `tfschema:"limit_value"`
 	LimitType            string `tfschema:"limit_type"`
@@ -68,7 +68,7 @@ func (r QuotaResource) Arguments() map[string]*pluginsdk.Schema {
 			Required: true,
 		},
 
-		"provider_namespace": {
+		"resource_provider": {
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -76,9 +76,10 @@ func (r QuotaResource) Arguments() map[string]*pluginsdk.Schema {
 		},
 
 		"additional_properties": {
-			Type:         pluginsdk.TypeString,
-			Optional:     true,
-			ValidateFunc: validation.StringIsJSON,
+			Type:             pluginsdk.TypeString,
+			Optional:         true,
+			ValidateFunc:     validation.StringIsJSON,
+			DiffSuppressFunc: pluginsdk.SuppressJsonDiff,
 		},
 
 		"limit_type": {
@@ -113,7 +114,7 @@ func (r QuotaResource) Create() sdk.ResourceFunc {
 			client := metadata.Client.Quota.QuotaClient
 			subscriptionId := metadata.Client.Account.SubscriptionId
 
-			scope := fmt.Sprintf("subscriptions/%s/providers/%s/locations/%s", subscriptionId, model.ProviderNamespace, location.Normalize(model.Location))
+			scope := fmt.Sprintf("subscriptions/%s/providers/%s/locations/%s", subscriptionId, model.ResourceProvider, location.Normalize(model.Location))
 			id := quotainformation.NewScopedQuotaID(scope, model.Name)
 			existing, err := client.QuotaGet(ctx, id)
 			if err != nil {
@@ -238,9 +239,9 @@ func (r QuotaResource) Read() sdk.ResourceFunc {
 			}
 
 			state := QuotaModel{
-				Name:              id.QuotaName,
-				ProviderNamespace: privider,
-				Location:          location.Normalize(region),
+				Name:             id.QuotaName,
+				ResourceProvider: privider,
+				Location:         location.Normalize(region),
 			}
 
 			if model := resp.Model; model != nil {
@@ -249,12 +250,11 @@ func (r QuotaResource) Read() sdk.ResourceFunc {
 					state.LimitValue = limitObject.Value
 					state.LimitType = string(pointer.From(limitObject.LimitType))
 					state.LimitObjectType = string(limitObject.LimitObjectType)
-					state.ResourceType = pointer.From(properties.ResourceType)
-					raw, err := json.Marshal(properties.Properties)
-					if err != nil {
-						return fmt.Errorf("could not marshal `additional_properties`: %+v", err)
-					}
-					state.AdditionalProperties = string(raw)
+
+					// API does not return value of resource_type
+					state.ResourceType = metadata.ResourceData.Get("resource_type").(string)
+					// API does not return value of additional_properties
+					state.AdditionalProperties = metadata.ResourceData.Get("additional_properties").(string)
 				}
 			}
 
