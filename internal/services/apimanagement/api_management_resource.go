@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -29,12 +30,14 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/signinsettings"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/signupsettings"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/tenantaccess"
+	"github.com/hashicorp/go-azure-sdk/sdk/client/pollers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/azure"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/features"
+	"github.com/hashicorp/terraform-provider-azurerm/internal/services/apimanagement/custompollers"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/apimanagement/schemaz"
 	apimValidate "github.com/hashicorp/terraform-provider-azurerm/internal/services/apimanagement/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/tf/pluginsdk"
@@ -974,7 +977,7 @@ func resourceApiManagementServiceCreate(d *pluginsdk.ResourceData, meta interfac
 	if (sku.Name == apimanagementservice.SkuTypeConsumption || sku.Name == apimanagementservice.SkuTypeBasicVTwo || sku.Name == apimanagementservice.SkuTypeStandardVTwo) && len(signInSettingsRaw) > 0 {
 		return errors.New("`sign_in` is not support for sku tier `Consumption`")
 	}
-	if sku.Name != apimanagementservice.SkuTypeConsumption {
+	if sku.Name != apimanagementservice.SkuTypeConsumption && sku.Name != apimanagementservice.SkuTypeBasicVTwo && sku.Name != apimanagementservice.SkuTypeStandardVTwo {
 		signInSettingServiceId := signinsettings.NewServiceID(subscriptionId, id.ResourceGroupName, id.ServiceName)
 		signInSettings := expandApiManagementSignInSettings(signInSettingsRaw)
 		signInClient := meta.(*clients.Client).ApiManagement.SignInClient
@@ -987,7 +990,7 @@ func resourceApiManagementServiceCreate(d *pluginsdk.ResourceData, meta interfac
 	if (sku.Name == apimanagementservice.SkuTypeConsumption || sku.Name == apimanagementservice.SkuTypeBasicVTwo || sku.Name == apimanagementservice.SkuTypeStandardVTwo) && len(signUpSettingsRaw) > 0 {
 		return fmt.Errorf("`sign_up` is not support for sku tier `Consumption`")
 	}
-	if sku.Name != apimanagementservice.SkuTypeConsumption {
+	if sku.Name != apimanagementservice.SkuTypeConsumption && sku.Name != apimanagementservice.SkuTypeBasicVTwo && sku.Name != apimanagementservice.SkuTypeStandardVTwo {
 		signUpSettingServiceId := signupsettings.NewServiceID(subscriptionId, id.ResourceGroupName, id.ServiceName)
 		signUpSettings := expandApiManagementSignUpSettings(signUpSettingsRaw)
 		signUpClient := meta.(*clients.Client).ApiManagement.SignUpClient
@@ -1429,8 +1432,20 @@ func resourceApiManagementServiceDelete(d *pluginsdk.ResourceData, meta interfac
 	}
 
 	log.Printf("[DEBUG] Deleting %s", *id)
-	if err = client.DeleteThenPoll(ctx, *id); err != nil {
-		return fmt.Errorf("deleting %s: %+v", *id, err)
+	resp, err := client.Delete(ctx, *id)
+	if err != nil {
+		return fmt.Errorf("deleting %s: %v", *id, err)
+	}
+
+	pollerType, err := custompollers.NewAPIManagementPoller(client, resp.HttpResponse)
+	if err != nil {
+		return fmt.Errorf("polling deleting %s: %+v", id, err)
+	}
+	if pollerType != nil {
+		poller := pollers.NewPoller(pollerType, 20*time.Second, pollers.DefaultNumberOfDroppedConnectionsToAllow)
+		if err := poller.PollUntilDone(ctx); err != nil {
+			return fmt.Errorf("polling deleting %s: %+v", id, err)
+		}
 	}
 
 	if model := existing.Model; model != nil {
@@ -1460,6 +1475,14 @@ func resourceApiManagementServiceDelete(d *pluginsdk.ResourceData, meta interfac
 	}
 
 	return nil
+}
+
+func pollingUriForDeleteOperation(resp *http.Response) string {
+	pollingUrl := resp.Header.Get(http.CanonicalHeaderKey("Azure-AsyncOperation"))
+	if pollingUrl == "" {
+		pollingUrl = resp.Header.Get("Location")
+	}
+	return pollingUrl
 }
 
 func apiManagementRefreshFunc(ctx context.Context, client *apimanagementservice.ApiManagementServiceClient, id apimanagementservice.ServiceId) pluginsdk.StateRefreshFunc {
