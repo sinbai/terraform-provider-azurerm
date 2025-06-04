@@ -1,7 +1,7 @@
 
-## `github.com/hashicorp/go-azure-sdk/resource-manager/redisenterprise/2024-10-01/redisenterprise` Documentation
+## `github.com/hashicorp/go-azure-sdk/resource-manager/redisenterprise/2025-04-01/redisenterprise` Documentation
 
-The `redisenterprise` SDK allows for interaction with Azure Resource Manager `redisenterprise` (API Version `2024-10-01`).
+The `redisenterprise` SDK allows for interaction with Azure Resource Manager `redisenterprise` (API Version `2025-04-01`).
 
 This readme covers example usages, but further information on [using this SDK can be found in the project root](https://github.com/hashicorp/go-azure-sdk/tree/main/docs).
 
@@ -9,7 +9,7 @@ This readme covers example usages, but further information on [using this SDK ca
 
 ```go
 import "github.com/hashicorp/go-azure-helpers/resourcemanager/commonids"
-import "github.com/hashicorp/go-azure-sdk/resource-manager/redisenterprise/2024-10-01/redisenterprise"
+import "github.com/hashicorp/go-azure-sdk/resource-manager/redisenterprise/2025-04-01/redisenterprise"
 ```
 
 
@@ -18,6 +18,68 @@ import "github.com/hashicorp/go-azure-sdk/resource-manager/redisenterprise/2024-
 ```go
 client := redisenterprise.NewRedisEnterpriseClientWithBaseURI("https://management.azure.com")
 client.Client.Authorizer = authorizer
+```
+
+
+### Example Usage: `RedisEnterpriseClient.AccessPolicyAssignmentCreateUpdate`
+
+```go
+ctx := context.TODO()
+id := redisenterprise.NewAccessPolicyAssignmentID("12345678-1234-9876-4563-123456789012", "example-resource-group", "redisEnterpriseName", "databaseName", "accessPolicyAssignmentName")
+
+payload := redisenterprise.AccessPolicyAssignment{
+	// ...
+}
+
+
+if err := client.AccessPolicyAssignmentCreateUpdateThenPoll(ctx, id, payload); err != nil {
+	// handle the error
+}
+```
+
+
+### Example Usage: `RedisEnterpriseClient.AccessPolicyAssignmentDelete`
+
+```go
+ctx := context.TODO()
+id := redisenterprise.NewAccessPolicyAssignmentID("12345678-1234-9876-4563-123456789012", "example-resource-group", "redisEnterpriseName", "databaseName", "accessPolicyAssignmentName")
+
+if err := client.AccessPolicyAssignmentDeleteThenPoll(ctx, id); err != nil {
+	// handle the error
+}
+```
+
+
+### Example Usage: `RedisEnterpriseClient.AccessPolicyAssignmentGet`
+
+```go
+ctx := context.TODO()
+id := redisenterprise.NewAccessPolicyAssignmentID("12345678-1234-9876-4563-123456789012", "example-resource-group", "redisEnterpriseName", "databaseName", "accessPolicyAssignmentName")
+
+read, err := client.AccessPolicyAssignmentGet(ctx, id)
+if err != nil {
+	// handle the error
+}
+if model := read.Model; model != nil {
+	// do something with the model/response object
+}
+```
+
+
+### Example Usage: `RedisEnterpriseClient.AccessPolicyAssignmentList`
+
+```go
+ctx := context.TODO()
+id := redisenterprise.NewDatabaseID("12345678-1234-9876-4563-123456789012", "example-resource-group", "redisEnterpriseName", "databaseName")
+
+// alternatively `client.AccessPolicyAssignmentList(ctx, id)` can be used to do batched pagination
+items, err := client.AccessPolicyAssignmentListComplete(ctx, id)
+if err != nil {
+	// handle the error
+}
+for _, item := range items {
+	// do something
+}
 ```
 
 
@@ -230,6 +292,18 @@ payload := redisenterprise.DatabaseUpdate{
 
 
 if err := client.DatabasesUpdateThenPoll(ctx, id, payload); err != nil {
+	// handle the error
+}
+```
+
+
+### Example Usage: `RedisEnterpriseClient.DatabasesUpgradeDBRedisVersion`
+
+```go
+ctx := context.TODO()
+id := redisenterprise.NewDatabaseID("12345678-1234-9876-4563-123456789012", "example-resource-group", "redisEnterpriseName", "databaseName")
+
+if err := client.DatabasesUpgradeDBRedisVersionThenPoll(ctx, id); err != nil {
 	// handle the error
 }
 ```

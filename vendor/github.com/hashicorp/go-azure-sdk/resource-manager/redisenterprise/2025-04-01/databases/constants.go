@@ -50,6 +50,47 @@ func parseAccessKeyType(input string) (*AccessKeyType, error) {
 	return &out, nil
 }
 
+type AccessKeysAuthentication string
+
+const (
+	AccessKeysAuthenticationDisabled AccessKeysAuthentication = "Disabled"
+	AccessKeysAuthenticationEnabled  AccessKeysAuthentication = "Enabled"
+)
+
+func PossibleValuesForAccessKeysAuthentication() []string {
+	return []string{
+		string(AccessKeysAuthenticationDisabled),
+		string(AccessKeysAuthenticationEnabled),
+	}
+}
+
+func (s *AccessKeysAuthentication) UnmarshalJSON(bytes []byte) error {
+	var decoded string
+	if err := json.Unmarshal(bytes, &decoded); err != nil {
+		return fmt.Errorf("unmarshaling: %+v", err)
+	}
+	out, err := parseAccessKeysAuthentication(decoded)
+	if err != nil {
+		return fmt.Errorf("parsing %q: %+v", decoded, err)
+	}
+	*s = *out
+	return nil
+}
+
+func parseAccessKeysAuthentication(input string) (*AccessKeysAuthentication, error) {
+	vals := map[string]AccessKeysAuthentication{
+		"disabled": AccessKeysAuthenticationDisabled,
+		"enabled":  AccessKeysAuthenticationEnabled,
+	}
+	if v, ok := vals[strings.ToLower(input)]; ok {
+		return &v, nil
+	}
+
+	// otherwise presume it's an undefined value and best-effort it
+	out := AccessKeysAuthentication(input)
+	return &out, nil
+}
+
 type AofFrequency string
 
 const (
@@ -129,6 +170,47 @@ func parseClusteringPolicy(input string) (*ClusteringPolicy, error) {
 
 	// otherwise presume it's an undefined value and best-effort it
 	out := ClusteringPolicy(input)
+	return &out, nil
+}
+
+type DeferUpgradeSetting string
+
+const (
+	DeferUpgradeSettingDeferred    DeferUpgradeSetting = "Deferred"
+	DeferUpgradeSettingNotDeferred DeferUpgradeSetting = "NotDeferred"
+)
+
+func PossibleValuesForDeferUpgradeSetting() []string {
+	return []string{
+		string(DeferUpgradeSettingDeferred),
+		string(DeferUpgradeSettingNotDeferred),
+	}
+}
+
+func (s *DeferUpgradeSetting) UnmarshalJSON(bytes []byte) error {
+	var decoded string
+	if err := json.Unmarshal(bytes, &decoded); err != nil {
+		return fmt.Errorf("unmarshaling: %+v", err)
+	}
+	out, err := parseDeferUpgradeSetting(decoded)
+	if err != nil {
+		return fmt.Errorf("parsing %q: %+v", decoded, err)
+	}
+	*s = *out
+	return nil
+}
+
+func parseDeferUpgradeSetting(input string) (*DeferUpgradeSetting, error) {
+	vals := map[string]DeferUpgradeSetting{
+		"deferred":    DeferUpgradeSettingDeferred,
+		"notdeferred": DeferUpgradeSettingNotDeferred,
+	}
+	if v, ok := vals[strings.ToLower(input)]; ok {
+		return &v, nil
+	}
+
+	// otherwise presume it's an undefined value and best-effort it
+	out := DeferUpgradeSetting(input)
 	return &out, nil
 }
 
@@ -391,6 +473,7 @@ const (
 	ResourceStateDisabling     ResourceState = "Disabling"
 	ResourceStateEnableFailed  ResourceState = "EnableFailed"
 	ResourceStateEnabling      ResourceState = "Enabling"
+	ResourceStateMoving        ResourceState = "Moving"
 	ResourceStateRunning       ResourceState = "Running"
 	ResourceStateScaling       ResourceState = "Scaling"
 	ResourceStateScalingFailed ResourceState = "ScalingFailed"
@@ -409,6 +492,7 @@ func PossibleValuesForResourceState() []string {
 		string(ResourceStateDisabling),
 		string(ResourceStateEnableFailed),
 		string(ResourceStateEnabling),
+		string(ResourceStateMoving),
 		string(ResourceStateRunning),
 		string(ResourceStateScaling),
 		string(ResourceStateScalingFailed),
@@ -441,6 +525,7 @@ func parseResourceState(input string) (*ResourceState, error) {
 		"disabling":     ResourceStateDisabling,
 		"enablefailed":  ResourceStateEnableFailed,
 		"enabling":      ResourceStateEnabling,
+		"moving":        ResourceStateMoving,
 		"running":       ResourceStateRunning,
 		"scaling":       ResourceStateScaling,
 		"scalingfailed": ResourceStateScalingFailed,

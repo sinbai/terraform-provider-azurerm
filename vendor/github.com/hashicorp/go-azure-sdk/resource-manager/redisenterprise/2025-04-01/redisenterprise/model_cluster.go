@@ -11,6 +11,7 @@ import (
 type Cluster struct {
 	Id         *string                            `json:"id,omitempty"`
 	Identity   *identity.SystemAndUserAssignedMap `json:"identity,omitempty"`
+	Kind       *Kind                              `json:"kind,omitempty"`
 	Location   string                             `json:"location"`
 	Name       *string                            `json:"name,omitempty"`
 	Properties *ClusterProperties                 `json:"properties,omitempty"`

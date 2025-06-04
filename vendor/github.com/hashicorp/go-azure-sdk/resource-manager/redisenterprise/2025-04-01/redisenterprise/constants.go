@@ -50,6 +50,47 @@ func parseAccessKeyType(input string) (*AccessKeyType, error) {
 	return &out, nil
 }
 
+type AccessKeysAuthentication string
+
+const (
+	AccessKeysAuthenticationDisabled AccessKeysAuthentication = "Disabled"
+	AccessKeysAuthenticationEnabled  AccessKeysAuthentication = "Enabled"
+)
+
+func PossibleValuesForAccessKeysAuthentication() []string {
+	return []string{
+		string(AccessKeysAuthenticationDisabled),
+		string(AccessKeysAuthenticationEnabled),
+	}
+}
+
+func (s *AccessKeysAuthentication) UnmarshalJSON(bytes []byte) error {
+	var decoded string
+	if err := json.Unmarshal(bytes, &decoded); err != nil {
+		return fmt.Errorf("unmarshaling: %+v", err)
+	}
+	out, err := parseAccessKeysAuthentication(decoded)
+	if err != nil {
+		return fmt.Errorf("parsing %q: %+v", decoded, err)
+	}
+	*s = *out
+	return nil
+}
+
+func parseAccessKeysAuthentication(input string) (*AccessKeysAuthentication, error) {
+	vals := map[string]AccessKeysAuthentication{
+		"disabled": AccessKeysAuthenticationDisabled,
+		"enabled":  AccessKeysAuthenticationEnabled,
+	}
+	if v, ok := vals[strings.ToLower(input)]; ok {
+		return &v, nil
+	}
+
+	// otherwise presume it's an undefined value and best-effort it
+	out := AccessKeysAuthentication(input)
+	return &out, nil
+}
+
 type AofFrequency string
 
 const (
@@ -173,6 +214,47 @@ func parseCmkIdentityType(input string) (*CmkIdentityType, error) {
 	return &out, nil
 }
 
+type DeferUpgradeSetting string
+
+const (
+	DeferUpgradeSettingDeferred    DeferUpgradeSetting = "Deferred"
+	DeferUpgradeSettingNotDeferred DeferUpgradeSetting = "NotDeferred"
+)
+
+func PossibleValuesForDeferUpgradeSetting() []string {
+	return []string{
+		string(DeferUpgradeSettingDeferred),
+		string(DeferUpgradeSettingNotDeferred),
+	}
+}
+
+func (s *DeferUpgradeSetting) UnmarshalJSON(bytes []byte) error {
+	var decoded string
+	if err := json.Unmarshal(bytes, &decoded); err != nil {
+		return fmt.Errorf("unmarshaling: %+v", err)
+	}
+	out, err := parseDeferUpgradeSetting(decoded)
+	if err != nil {
+		return fmt.Errorf("parsing %q: %+v", decoded, err)
+	}
+	*s = *out
+	return nil
+}
+
+func parseDeferUpgradeSetting(input string) (*DeferUpgradeSetting, error) {
+	vals := map[string]DeferUpgradeSetting{
+		"deferred":    DeferUpgradeSettingDeferred,
+		"notdeferred": DeferUpgradeSettingNotDeferred,
+	}
+	if v, ok := vals[strings.ToLower(input)]; ok {
+		return &v, nil
+	}
+
+	// otherwise presume it's an undefined value and best-effort it
+	out := DeferUpgradeSetting(input)
+	return &out, nil
+}
+
 type EvictionPolicy string
 
 const (
@@ -229,6 +311,88 @@ func parseEvictionPolicy(input string) (*EvictionPolicy, error) {
 
 	// otherwise presume it's an undefined value and best-effort it
 	out := EvictionPolicy(input)
+	return &out, nil
+}
+
+type HighAvailability string
+
+const (
+	HighAvailabilityDisabled HighAvailability = "Disabled"
+	HighAvailabilityEnabled  HighAvailability = "Enabled"
+)
+
+func PossibleValuesForHighAvailability() []string {
+	return []string{
+		string(HighAvailabilityDisabled),
+		string(HighAvailabilityEnabled),
+	}
+}
+
+func (s *HighAvailability) UnmarshalJSON(bytes []byte) error {
+	var decoded string
+	if err := json.Unmarshal(bytes, &decoded); err != nil {
+		return fmt.Errorf("unmarshaling: %+v", err)
+	}
+	out, err := parseHighAvailability(decoded)
+	if err != nil {
+		return fmt.Errorf("parsing %q: %+v", decoded, err)
+	}
+	*s = *out
+	return nil
+}
+
+func parseHighAvailability(input string) (*HighAvailability, error) {
+	vals := map[string]HighAvailability{
+		"disabled": HighAvailabilityDisabled,
+		"enabled":  HighAvailabilityEnabled,
+	}
+	if v, ok := vals[strings.ToLower(input)]; ok {
+		return &v, nil
+	}
+
+	// otherwise presume it's an undefined value and best-effort it
+	out := HighAvailability(input)
+	return &out, nil
+}
+
+type Kind string
+
+const (
+	KindVOne Kind = "v1"
+	KindVTwo Kind = "v2"
+)
+
+func PossibleValuesForKind() []string {
+	return []string{
+		string(KindVOne),
+		string(KindVTwo),
+	}
+}
+
+func (s *Kind) UnmarshalJSON(bytes []byte) error {
+	var decoded string
+	if err := json.Unmarshal(bytes, &decoded); err != nil {
+		return fmt.Errorf("unmarshaling: %+v", err)
+	}
+	out, err := parseKind(decoded)
+	if err != nil {
+		return fmt.Errorf("parsing %q: %+v", decoded, err)
+	}
+	*s = *out
+	return nil
+}
+
+func parseKind(input string) (*Kind, error) {
+	vals := map[string]Kind{
+		"v1": KindVOne,
+		"v2": KindVTwo,
+	}
+	if v, ok := vals[strings.ToLower(input)]; ok {
+		return &v, nil
+	}
+
+	// otherwise presume it's an undefined value and best-effort it
+	out := Kind(input)
 	return &out, nil
 }
 
@@ -511,6 +675,50 @@ func parseRdbFrequency(input string) (*RdbFrequency, error) {
 	return &out, nil
 }
 
+type RedundancyMode string
+
+const (
+	RedundancyModeLR   RedundancyMode = "LR"
+	RedundancyModeNone RedundancyMode = "None"
+	RedundancyModeZR   RedundancyMode = "ZR"
+)
+
+func PossibleValuesForRedundancyMode() []string {
+	return []string{
+		string(RedundancyModeLR),
+		string(RedundancyModeNone),
+		string(RedundancyModeZR),
+	}
+}
+
+func (s *RedundancyMode) UnmarshalJSON(bytes []byte) error {
+	var decoded string
+	if err := json.Unmarshal(bytes, &decoded); err != nil {
+		return fmt.Errorf("unmarshaling: %+v", err)
+	}
+	out, err := parseRedundancyMode(decoded)
+	if err != nil {
+		return fmt.Errorf("parsing %q: %+v", decoded, err)
+	}
+	*s = *out
+	return nil
+}
+
+func parseRedundancyMode(input string) (*RedundancyMode, error) {
+	vals := map[string]RedundancyMode{
+		"lr":   RedundancyModeLR,
+		"none": RedundancyModeNone,
+		"zr":   RedundancyModeZR,
+	}
+	if v, ok := vals[strings.ToLower(input)]; ok {
+		return &v, nil
+	}
+
+	// otherwise presume it's an undefined value and best-effort it
+	out := RedundancyMode(input)
+	return &out, nil
+}
+
 type ResourceState string
 
 const (
@@ -523,6 +731,7 @@ const (
 	ResourceStateDisabling     ResourceState = "Disabling"
 	ResourceStateEnableFailed  ResourceState = "EnableFailed"
 	ResourceStateEnabling      ResourceState = "Enabling"
+	ResourceStateMoving        ResourceState = "Moving"
 	ResourceStateRunning       ResourceState = "Running"
 	ResourceStateScaling       ResourceState = "Scaling"
 	ResourceStateScalingFailed ResourceState = "ScalingFailed"
@@ -541,6 +750,7 @@ func PossibleValuesForResourceState() []string {
 		string(ResourceStateDisabling),
 		string(ResourceStateEnableFailed),
 		string(ResourceStateEnabling),
+		string(ResourceStateMoving),
 		string(ResourceStateRunning),
 		string(ResourceStateScaling),
 		string(ResourceStateScalingFailed),
@@ -573,6 +783,7 @@ func parseResourceState(input string) (*ResourceState, error) {
 		"disabling":     ResourceStateDisabling,
 		"enablefailed":  ResourceStateEnableFailed,
 		"enabling":      ResourceStateEnabling,
+		"moving":        ResourceStateMoving,
 		"running":       ResourceStateRunning,
 		"scaling":       ResourceStateScaling,
 		"scalingfailed": ResourceStateScalingFailed,
@@ -591,6 +802,31 @@ func parseResourceState(input string) (*ResourceState, error) {
 type SkuName string
 
 const (
+	SkuNameBalancedBFive                  SkuName = "Balanced_B5"
+	SkuNameBalancedBFiveHundred           SkuName = "Balanced_B500"
+	SkuNameBalancedBFiveZero              SkuName = "Balanced_B50"
+	SkuNameBalancedBOne                   SkuName = "Balanced_B1"
+	SkuNameBalancedBOneFiveZero           SkuName = "Balanced_B150"
+	SkuNameBalancedBOneHundred            SkuName = "Balanced_B100"
+	SkuNameBalancedBOneThousand           SkuName = "Balanced_B1000"
+	SkuNameBalancedBOneZero               SkuName = "Balanced_B10"
+	SkuNameBalancedBSevenHundred          SkuName = "Balanced_B700"
+	SkuNameBalancedBThree                 SkuName = "Balanced_B3"
+	SkuNameBalancedBThreeFiveZero         SkuName = "Balanced_B350"
+	SkuNameBalancedBTwoFiveZero           SkuName = "Balanced_B250"
+	SkuNameBalancedBTwoZero               SkuName = "Balanced_B20"
+	SkuNameBalancedBZero                  SkuName = "Balanced_B0"
+	SkuNameComputeOptimizedXFive          SkuName = "ComputeOptimized_X5"
+	SkuNameComputeOptimizedXFiveHundred   SkuName = "ComputeOptimized_X500"
+	SkuNameComputeOptimizedXFiveZero      SkuName = "ComputeOptimized_X50"
+	SkuNameComputeOptimizedXOneFiveZero   SkuName = "ComputeOptimized_X150"
+	SkuNameComputeOptimizedXOneHundred    SkuName = "ComputeOptimized_X100"
+	SkuNameComputeOptimizedXOneZero       SkuName = "ComputeOptimized_X10"
+	SkuNameComputeOptimizedXSevenHundred  SkuName = "ComputeOptimized_X700"
+	SkuNameComputeOptimizedXThree         SkuName = "ComputeOptimized_X3"
+	SkuNameComputeOptimizedXThreeFiveZero SkuName = "ComputeOptimized_X350"
+	SkuNameComputeOptimizedXTwoFiveZero   SkuName = "ComputeOptimized_X250"
+	SkuNameComputeOptimizedXTwoZero       SkuName = "ComputeOptimized_X20"
 	SkuNameEnterpriseEFive                SkuName = "Enterprise_E5"
 	SkuNameEnterpriseEFiveZero            SkuName = "Enterprise_E50"
 	SkuNameEnterpriseEFourHundred         SkuName = "Enterprise_E400"
@@ -602,10 +838,54 @@ const (
 	SkuNameEnterpriseFlashFOneFiveHundred SkuName = "EnterpriseFlash_F1500"
 	SkuNameEnterpriseFlashFSevenHundred   SkuName = "EnterpriseFlash_F700"
 	SkuNameEnterpriseFlashFThreeHundred   SkuName = "EnterpriseFlash_F300"
+	SkuNameFlashOptimizedAFiveHundred     SkuName = "FlashOptimized_A500"
+	SkuNameFlashOptimizedAFourFiveHundred SkuName = "FlashOptimized_A4500"
+	SkuNameFlashOptimizedAOneFiveHundred  SkuName = "FlashOptimized_A1500"
+	SkuNameFlashOptimizedAOneThousand     SkuName = "FlashOptimized_A1000"
+	SkuNameFlashOptimizedASevenHundred    SkuName = "FlashOptimized_A700"
+	SkuNameFlashOptimizedATwoFiveZero     SkuName = "FlashOptimized_A250"
+	SkuNameFlashOptimizedATwoThousand     SkuName = "FlashOptimized_A2000"
+	SkuNameMemoryOptimizedMFiveHundred    SkuName = "MemoryOptimized_M500"
+	SkuNameMemoryOptimizedMFiveZero       SkuName = "MemoryOptimized_M50"
+	SkuNameMemoryOptimizedMOneFiveHundred SkuName = "MemoryOptimized_M1500"
+	SkuNameMemoryOptimizedMOneFiveZero    SkuName = "MemoryOptimized_M150"
+	SkuNameMemoryOptimizedMOneHundred     SkuName = "MemoryOptimized_M100"
+	SkuNameMemoryOptimizedMOneThousand    SkuName = "MemoryOptimized_M1000"
+	SkuNameMemoryOptimizedMOneZero        SkuName = "MemoryOptimized_M10"
+	SkuNameMemoryOptimizedMSevenHundred   SkuName = "MemoryOptimized_M700"
+	SkuNameMemoryOptimizedMThreeFiveZero  SkuName = "MemoryOptimized_M350"
+	SkuNameMemoryOptimizedMTwoFiveZero    SkuName = "MemoryOptimized_M250"
+	SkuNameMemoryOptimizedMTwoThousand    SkuName = "MemoryOptimized_M2000"
+	SkuNameMemoryOptimizedMTwoZero        SkuName = "MemoryOptimized_M20"
 )
 
 func PossibleValuesForSkuName() []string {
 	return []string{
+		string(SkuNameBalancedBFive),
+		string(SkuNameBalancedBFiveHundred),
+		string(SkuNameBalancedBFiveZero),
+		string(SkuNameBalancedBOne),
+		string(SkuNameBalancedBOneFiveZero),
+		string(SkuNameBalancedBOneHundred),
+		string(SkuNameBalancedBOneThousand),
+		string(SkuNameBalancedBOneZero),
+		string(SkuNameBalancedBSevenHundred),
+		string(SkuNameBalancedBThree),
+		string(SkuNameBalancedBThreeFiveZero),
+		string(SkuNameBalancedBTwoFiveZero),
+		string(SkuNameBalancedBTwoZero),
+		string(SkuNameBalancedBZero),
+		string(SkuNameComputeOptimizedXFive),
+		string(SkuNameComputeOptimizedXFiveHundred),
+		string(SkuNameComputeOptimizedXFiveZero),
+		string(SkuNameComputeOptimizedXOneFiveZero),
+		string(SkuNameComputeOptimizedXOneHundred),
+		string(SkuNameComputeOptimizedXOneZero),
+		string(SkuNameComputeOptimizedXSevenHundred),
+		string(SkuNameComputeOptimizedXThree),
+		string(SkuNameComputeOptimizedXThreeFiveZero),
+		string(SkuNameComputeOptimizedXTwoFiveZero),
+		string(SkuNameComputeOptimizedXTwoZero),
 		string(SkuNameEnterpriseEFive),
 		string(SkuNameEnterpriseEFiveZero),
 		string(SkuNameEnterpriseEFourHundred),
@@ -617,6 +897,25 @@ func PossibleValuesForSkuName() []string {
 		string(SkuNameEnterpriseFlashFOneFiveHundred),
 		string(SkuNameEnterpriseFlashFSevenHundred),
 		string(SkuNameEnterpriseFlashFThreeHundred),
+		string(SkuNameFlashOptimizedAFiveHundred),
+		string(SkuNameFlashOptimizedAFourFiveHundred),
+		string(SkuNameFlashOptimizedAOneFiveHundred),
+		string(SkuNameFlashOptimizedAOneThousand),
+		string(SkuNameFlashOptimizedASevenHundred),
+		string(SkuNameFlashOptimizedATwoFiveZero),
+		string(SkuNameFlashOptimizedATwoThousand),
+		string(SkuNameMemoryOptimizedMFiveHundred),
+		string(SkuNameMemoryOptimizedMFiveZero),
+		string(SkuNameMemoryOptimizedMOneFiveHundred),
+		string(SkuNameMemoryOptimizedMOneFiveZero),
+		string(SkuNameMemoryOptimizedMOneHundred),
+		string(SkuNameMemoryOptimizedMOneThousand),
+		string(SkuNameMemoryOptimizedMOneZero),
+		string(SkuNameMemoryOptimizedMSevenHundred),
+		string(SkuNameMemoryOptimizedMThreeFiveZero),
+		string(SkuNameMemoryOptimizedMTwoFiveZero),
+		string(SkuNameMemoryOptimizedMTwoThousand),
+		string(SkuNameMemoryOptimizedMTwoZero),
 	}
 }
 
@@ -635,6 +934,31 @@ func (s *SkuName) UnmarshalJSON(bytes []byte) error {
 
 func parseSkuName(input string) (*SkuName, error) {
 	vals := map[string]SkuName{
+		"balanced_b5":           SkuNameBalancedBFive,
+		"balanced_b500":         SkuNameBalancedBFiveHundred,
+		"balanced_b50":          SkuNameBalancedBFiveZero,
+		"balanced_b1":           SkuNameBalancedBOne,
+		"balanced_b150":         SkuNameBalancedBOneFiveZero,
+		"balanced_b100":         SkuNameBalancedBOneHundred,
+		"balanced_b1000":        SkuNameBalancedBOneThousand,
+		"balanced_b10":          SkuNameBalancedBOneZero,
+		"balanced_b700":         SkuNameBalancedBSevenHundred,
+		"balanced_b3":           SkuNameBalancedBThree,
+		"balanced_b350":         SkuNameBalancedBThreeFiveZero,
+		"balanced_b250":         SkuNameBalancedBTwoFiveZero,
+		"balanced_b20":          SkuNameBalancedBTwoZero,
+		"balanced_b0":           SkuNameBalancedBZero,
+		"computeoptimized_x5":   SkuNameComputeOptimizedXFive,
+		"computeoptimized_x500": SkuNameComputeOptimizedXFiveHundred,
+		"computeoptimized_x50":  SkuNameComputeOptimizedXFiveZero,
+		"computeoptimized_x150": SkuNameComputeOptimizedXOneFiveZero,
+		"computeoptimized_x100": SkuNameComputeOptimizedXOneHundred,
+		"computeoptimized_x10":  SkuNameComputeOptimizedXOneZero,
+		"computeoptimized_x700": SkuNameComputeOptimizedXSevenHundred,
+		"computeoptimized_x3":   SkuNameComputeOptimizedXThree,
+		"computeoptimized_x350": SkuNameComputeOptimizedXThreeFiveZero,
+		"computeoptimized_x250": SkuNameComputeOptimizedXTwoFiveZero,
+		"computeoptimized_x20":  SkuNameComputeOptimizedXTwoZero,
 		"enterprise_e5":         SkuNameEnterpriseEFive,
 		"enterprise_e50":        SkuNameEnterpriseEFiveZero,
 		"enterprise_e400":       SkuNameEnterpriseEFourHundred,
@@ -646,6 +970,25 @@ func parseSkuName(input string) (*SkuName, error) {
 		"enterpriseflash_f1500": SkuNameEnterpriseFlashFOneFiveHundred,
 		"enterpriseflash_f700":  SkuNameEnterpriseFlashFSevenHundred,
 		"enterpriseflash_f300":  SkuNameEnterpriseFlashFThreeHundred,
+		"flashoptimized_a500":   SkuNameFlashOptimizedAFiveHundred,
+		"flashoptimized_a4500":  SkuNameFlashOptimizedAFourFiveHundred,
+		"flashoptimized_a1500":  SkuNameFlashOptimizedAOneFiveHundred,
+		"flashoptimized_a1000":  SkuNameFlashOptimizedAOneThousand,
+		"flashoptimized_a700":   SkuNameFlashOptimizedASevenHundred,
+		"flashoptimized_a250":   SkuNameFlashOptimizedATwoFiveZero,
+		"flashoptimized_a2000":  SkuNameFlashOptimizedATwoThousand,
+		"memoryoptimized_m500":  SkuNameMemoryOptimizedMFiveHundred,
+		"memoryoptimized_m50":   SkuNameMemoryOptimizedMFiveZero,
+		"memoryoptimized_m1500": SkuNameMemoryOptimizedMOneFiveHundred,
+		"memoryoptimized_m150":  SkuNameMemoryOptimizedMOneFiveZero,
+		"memoryoptimized_m100":  SkuNameMemoryOptimizedMOneHundred,
+		"memoryoptimized_m1000": SkuNameMemoryOptimizedMOneThousand,
+		"memoryoptimized_m10":   SkuNameMemoryOptimizedMOneZero,
+		"memoryoptimized_m700":  SkuNameMemoryOptimizedMSevenHundred,
+		"memoryoptimized_m350":  SkuNameMemoryOptimizedMThreeFiveZero,
+		"memoryoptimized_m250":  SkuNameMemoryOptimizedMTwoFiveZero,
+		"memoryoptimized_m2000": SkuNameMemoryOptimizedMTwoThousand,
+		"memoryoptimized_m20":   SkuNameMemoryOptimizedMTwoZero,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

@@ -5,10 +5,12 @@ package redisenterprise
 
 type ClusterProperties struct {
 	Encryption                 *ClusterPropertiesEncryption `json:"encryption,omitempty"`
+	HighAvailability           *HighAvailability            `json:"highAvailability,omitempty"`
 	HostName                   *string                      `json:"hostName,omitempty"`
 	MinimumTlsVersion          *TlsVersion                  `json:"minimumTlsVersion,omitempty"`
 	PrivateEndpointConnections *[]PrivateEndpointConnection `json:"privateEndpointConnections,omitempty"`
 	ProvisioningState          *ProvisioningState           `json:"provisioningState,omitempty"`
 	RedisVersion               *string                      `json:"redisVersion,omitempty"`
+	RedundancyMode             *RedundancyMode              `json:"redundancyMode,omitempty"`
 	ResourceState              *ResourceState               `json:"resourceState,omitempty"`
 }
