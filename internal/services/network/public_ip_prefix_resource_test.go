@@ -79,6 +79,21 @@ func TestAccPublicIpPrefix_globalTier(t *testing.T) {
 	})
 }
 
+func TestAccPublicIpPrefix_customIpPrefix(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_public_ip_prefix", "test")
+	r := PublicIPPrefixResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.customIpPrefix(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccPublicIpPrefix_regionalTier(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_public_ip_prefix", "test")
 	r := PublicIPPrefixResource{}
@@ -430,6 +445,39 @@ resource "azurerm_public_ip_prefix" "test" {
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   zones               = ["1", "2", "3"]
+}
+`, data.RandomInteger, data.Locations.Primary)
+}
+
+func (PublicIPPrefixResource) customIpPrefix(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_resource_group" "test" {
+  name     = "acctestRG-%[1]d"
+  location = "%[2]s"
+}
+
+resource "azurerm_custom_ip_prefix" "test" {
+  name                = "acctest-%[1]d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+
+  cidr  = "194.41.20.0/24"
+  zones = ["1"]
+
+  roa_validity_end_date         = "2099-12-12"
+  wan_validation_signed_message = "signed message for WAN validation"
+}
+
+resource "azurerm_public_ip_prefix" "test" {
+  resource_group_name = azurerm_resource_group.test.name
+  name                = "acctestpublicipprefix-%[1]d"
+  location            = azurerm_resource_group.test.location
+  custom_ip_prefix_id = azurerm_custom_ip_prefix.test.id
+  prefix_length       = 31
 }
 `, data.RandomInteger, data.Locations.Primary)
 }
