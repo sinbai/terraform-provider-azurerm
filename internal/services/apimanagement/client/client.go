@@ -52,6 +52,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2022-08-01/tag"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2022-08-01/tenantaccess"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2022-08-01/user"
+	V20240501_api "github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/api"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/apigateway"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/apimanagementservice"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/workspace"
@@ -60,6 +61,7 @@ import (
 
 type Client struct {
 	ApiClient                          *api.ApiClient
+	V20240501ApiClient                 *V20240501_api.ApiClient
 	ApiDiagnosticClient                *apidiagnostic.ApiDiagnosticClient
 	ApiGatewayClient                   *apigateway.ApiGatewayClient
 	ApiOperationPoliciesClient         *apioperationpolicy.ApiOperationPolicyClient
@@ -116,6 +118,12 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 		return nil, fmt.Errorf("building Api client: %+v", err)
 	}
 	o.Configure(apiClient.Client, o.Authorizers.ResourceManager)
+
+	v20240501ApiClient, err := V20240501_api.NewApiClientWithBaseURI(o.Environment.ResourceManager)
+	if err != nil {
+		return nil, fmt.Errorf("building Api client: %+v", err)
+	}
+	o.Configure(v20240501ApiClient.Client, o.Authorizers.ResourceManager)
 
 	apiDiagnosticClient, err := apidiagnostic.NewApiDiagnosticClientWithBaseURI(o.Environment.ResourceManager)
 	if err != nil {
@@ -407,6 +415,7 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 
 	return &Client{
 		ApiClient:                          apiClient,
+		V20240501ApiClient:                 v20240501ApiClient,
 		ApiDiagnosticClient:                apiDiagnosticClient,
 		ApiGatewayClient:                   apiGatewayClient,
 		ApiOperationPoliciesClient:         apiOperationPoliciesClient,
