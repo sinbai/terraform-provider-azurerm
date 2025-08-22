@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
-	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2022-08-01/backend"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/backend"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
@@ -206,6 +206,92 @@ func TestAccApiManagementBackend_requiresImport(t *testing.T) {
 	})
 }
 
+func TestAccApiManagementBackend_circuitBreakerRule(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_api_management_backend", "test")
+	r := ApiManagementAuthorizationBackendResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.circuitBreakerRule(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApiManagementBackend_pool(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_api_management_backend", "test")
+	r := ApiManagementAuthorizationBackendResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.pool(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func (r ApiManagementAuthorizationBackendResource) circuitBreakerRule(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_api_management_backend" "test" {
+  name                = "acctestapi-%d"
+  resource_group_name = azurerm_resource_group.test.name
+  api_management_name = azurerm_api_management.test.name
+  protocol            = "http"
+  url                 = "https://acctest"
+  description         = "Test backend with circuit breaker rule"
+  
+  circuit_breaker_rule {
+    name                           = "test-circuit-breaker"
+    trip_duration                  = "PT30S"
+    accept_retry_after_enabled             = true
+    failure_condition_count        = 5
+    failure_condition_interval_duration     = "PT1M"
+    failure_condition_status_code_range {
+      min = 200
+      max = 599
+    }
+    failure_condition_error_reasons = ["ConnectionError", "Timeout"]
+  }
+}
+`, r.template(data, "circuitbreaker"), data.RandomInteger)
+}
+
+func (r ApiManagementAuthorizationBackendResource) pool(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azurerm_api_management_backend" "test2" {
+  name                = "acctestapi2-%[2]d"
+   resource_group_name = azurerm_resource_group.test.name
+  api_management_name = azurerm_api_management.test.name
+  protocol            = "http"
+  url                 = "https://acctest"
+}
+
+resource "azurerm_api_management_backend" "test" {
+  name                = "acctestapi-%[2]d"
+  resource_group_name = azurerm_resource_group.test.name
+  api_management_name = azurerm_api_management.test.name
+  description         = "Test backend with pool configuration"
+  type                = "Pool"
+
+  pool {
+    id       = azurerm_api_management_backend.test2.id
+    weight   = 80
+    priority = 1
+  }
+}
+`, r.template(data, "pool"), data.RandomInteger)
+}
+
 func (ApiManagementAuthorizationBackendResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	id, err := backend.ParseBackendID(state.ID)
 	if err != nil {
@@ -246,7 +332,7 @@ resource "azurerm_api_management_backend" "test" {
   resource_group_name = azurerm_resource_group.test.name
   api_management_name = azurerm_api_management.test.name
   protocol            = "http"
-  url                 = "https://acctest"
+  #url                 = "https://acctest"
 }
 `, r.template(data, testName), data.RandomInteger)
 }

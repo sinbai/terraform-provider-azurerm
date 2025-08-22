@@ -4,6 +4,7 @@
 package apimanagement
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -13,8 +14,9 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/commonschema"
-	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2022-08-01/backend"
+	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/backend"
 	"github.com/hashicorp/terraform-provider-azurerm/helpers/tf"
+	azValidate "github.com/hashicorp/terraform-provider-azurerm/helpers/validate"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/clients"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/apimanagement/schemaz"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/services/apimanagement/validate"
@@ -53,6 +55,73 @@ func resourceApiManagementBackend() *pluginsdk.Resource {
 			"api_management_name": schemaz.SchemaApiManagementName(),
 
 			"resource_group_name": commonschema.ResourceGroupName(),
+
+			"circuit_breaker_rule": {
+				Type:     pluginsdk.TypeList,
+				Optional: true,
+				MaxItems: 15,
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
+						"name": {
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 80),
+						},
+						"accept_retry_after_enabled": {
+							Type:     pluginsdk.TypeBool,
+							Optional: true,
+						},
+						"failure_condition_count": {
+							Type:         pluginsdk.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(1),
+						},
+						"failure_condition_error_reasons": {
+							Type:     pluginsdk.TypeSet,
+							Optional: true,
+							MaxItems: 10,
+							Elem: &pluginsdk.Schema{
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 200),
+							},
+						},
+						"failure_condition_interval_duration": {
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							ValidateFunc: azValidate.ISO8601Duration,
+						},
+						"failure_condition_percentage": {
+							Type:         pluginsdk.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 100),
+						},
+						"failure_condition_status_code_range": {
+							Type:     pluginsdk.TypeSet,
+							Optional: true,
+							MaxItems: 10,
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
+									"min": {
+										Type:         pluginsdk.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(200, 599),
+									},
+									"max": {
+										Type:         pluginsdk.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(200, 599),
+									},
+								},
+							},
+						},
+						"trip_duration": {
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							ValidateFunc: azValidate.ISO8601Duration,
+						},
+					},
+				},
+			},
 
 			"credentials": {
 				Type:     pluginsdk.TypeList,
@@ -121,11 +190,43 @@ func resourceApiManagementBackend() *pluginsdk.Resource {
 
 			"protocol": {
 				Type:     pluginsdk.TypeString,
-				Required: true,
+				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					string(backend.BackendProtocolHTTP),
 					string(backend.BackendProtocolSoap),
 				}, false),
+			},
+
+			"type": {
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(backend.PossibleValuesForBackendType(), false),
+			},
+
+			"pool": {
+				Type:     pluginsdk.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
+						"id": {
+							Type:         pluginsdk.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
+						},
+						"weight": {
+							Type:         pluginsdk.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+						},
+						"priority": {
+							Type:         pluginsdk.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+						},
+					},
+				},
 			},
 
 			"proxy": {
@@ -251,10 +352,37 @@ func resourceApiManagementBackend() *pluginsdk.Resource {
 
 			"url": {
 				Type:         pluginsdk.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 		},
+
+		CustomizeDiff: pluginsdk.CustomizeDiffShim(func(ctx context.Context, d *pluginsdk.ResourceDiff, v interface{}) error {
+			t := d.Get("type").(string)
+			if t == string(backend.BackendTypeSingle) || t == "" {
+				if d.Get("url").(string) == "" {
+					return fmt.Errorf("`url` is required when `type` is not specified or set to 'Single'")
+				}
+				if d.Get("protocol").(string) == "" {
+					return fmt.Errorf("`protocol` is required when `type` is not specified or set to 'Single'")
+				}
+			}
+
+			if v, ok := d.GetOk("circuit_breaker_rule"); ok {
+				circuitBreakerRule := expandApiManagementBackendCircuitBreaker(v.([]interface{}))
+				if circuitBreakerRule != nil {
+					for _, v := range *circuitBreakerRule.Rules {
+						if condition := v.FailureCondition; condition != nil {
+							if pointer.From(condition.Count) > 0 && pointer.From(condition.Percentage) > 0 {
+								return fmt.Errorf("only one of `failure_condition_count` or `failure_condition_percentage` can be specified")
+							}
+						}
+					}
+				}
+			}
+
+			return nil
+		}),
 	}
 }
 
@@ -281,22 +409,38 @@ func resourceApiManagementBackendCreateUpdate(d *pluginsdk.ResourceData, meta in
 
 	credentialsRaw := d.Get("credentials").([]interface{})
 	credentials := expandApiManagementBackendCredentials(credentialsRaw)
-	protocol := d.Get("protocol").(string)
 	proxyRaw := d.Get("proxy").([]interface{})
 	proxy := expandApiManagementBackendProxy(proxyRaw)
 	tlsRaw := d.Get("tls").([]interface{})
 	tls := expandApiManagementBackendTls(tlsRaw)
-	url := d.Get("url").(string)
 
 	backendContract := backend.BackendContract{
 		Properties: &backend.BackendContractProperties{
 			Credentials: credentials,
-			Protocol:    backend.BackendProtocol(protocol),
 			Proxy:       proxy,
 			Tls:         tls,
-			Url:         url,
 		},
 	}
+
+	if v, ok := d.GetOk("protocol"); ok {
+		backendContract.Properties.Protocol = backend.BackendProtocol(v.(string))
+	}
+	if v, ok := d.GetOk("url"); ok {
+		backendContract.Properties.Url = v.(string)
+	}
+
+	if v, ok := d.GetOk("type"); ok {
+		backendContract.Properties.Type = pointer.To(backend.BackendType(v.(string)))
+	}
+
+	if v, ok := d.GetOk("pool"); ok {
+		backendContract.Properties.Pool = expandApiManagementBackendPool(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("circuit_breaker_rule"); ok {
+		backendContract.Properties.CircuitBreaker = expandApiManagementBackendCircuitBreaker(v.([]interface{}))
+	}
+
 	if description, ok := d.GetOk("description"); ok {
 		backendContract.Properties.Description = pointer.To(description.(string))
 	}
@@ -356,6 +500,13 @@ func resourceApiManagementBackendRead(d *pluginsdk.ResourceData, meta interface{
 			d.Set("resource_id", pointer.From(props.ResourceId))
 			d.Set("title", pointer.From(props.Title))
 			d.Set("url", props.Url)
+			d.Set("type", string(pointer.From(props.Type)))
+			if err := d.Set("circuit_breaker_rule", flattenApiManagementBackendCircuitBreaker(props.CircuitBreaker)); err != nil {
+				return fmt.Errorf("setting `circuit_breaker_rule`: %s", err)
+			}
+			if err := d.Set("pool", flattenApiManagementBackendPool(props.Pool)); err != nil {
+				return fmt.Errorf("setting `pool`: %s", err)
+			}
 			if err := d.Set("credentials", flattenApiManagementBackendCredentials(props.Credentials)); err != nil {
 				return fmt.Errorf("setting `credentials`: %s", err)
 			}
@@ -531,6 +682,122 @@ func expandApiManagementBackendTls(input []interface{}) *backend.BackendTlsPrope
 	return &properties
 }
 
+func expandApiManagementBackendCircuitBreaker(input []interface{}) *backend.BackendCircuitBreaker {
+	if len(input) == 0 {
+		return nil
+	}
+
+	rules := make([]backend.CircuitBreakerRule, 0)
+
+	for _, item := range input {
+		v := item.(map[string]interface{})
+		rule := backend.CircuitBreakerRule{}
+
+		if name := v["name"]; name != nil && name.(string) != "" {
+			rule.Name = pointer.To(name.(string))
+		}
+
+		if tripDuration := v["trip_duration"]; tripDuration != nil && tripDuration.(string) != "" {
+			rule.TripDuration = pointer.To(tripDuration.(string))
+		}
+
+		if acceptRetryAfter := v["accept_retry_after_enabled"]; acceptRetryAfter != nil {
+			rule.AcceptRetryAfter = pointer.To(acceptRetryAfter.(bool))
+		}
+
+		condition := backend.CircuitBreakerFailureCondition{}
+		hasCondition := false
+
+		if count := v["failure_condition_count"]; count != nil && count.(int) > 0 {
+			condition.Count = pointer.To(int64(count.(int)))
+			hasCondition = true
+		}
+
+		if percentage := v["failure_condition_percentage"]; percentage != nil && percentage.(int) > 0 {
+			condition.Percentage = pointer.To(int64(percentage.(int)))
+			hasCondition = true
+		}
+
+		if interval := v["failure_condition_interval_duration"]; interval != nil && interval.(string) != "" {
+			condition.Interval = pointer.To(interval.(string))
+			hasCondition = true
+		}
+
+		if statusCodeRanges := v["failure_condition_status_code_range"]; statusCodeRanges != nil {
+			ranges := statusCodeRanges.(*pluginsdk.Set).List()
+			if len(ranges) > 0 {
+				condition.StatusCodeRanges = expandApiManagementBackendCircuitBreakerStatusCodeRanges(ranges)
+				hasCondition = true
+			}
+		}
+
+		if errorReasons := v["failure_condition_error_reasons"]; errorReasons != nil {
+			reasons := errorReasons.(*pluginsdk.Set).List()
+			if len(reasons) > 0 {
+				condition.ErrorReasons = utils.ExpandStringSlice(reasons)
+				hasCondition = true
+			}
+		}
+
+		if hasCondition {
+			rule.FailureCondition = pointer.To(condition)
+		}
+
+		rules = append(rules, rule)
+	}
+
+	return &backend.BackendCircuitBreaker{
+		Rules: &rules,
+	}
+}
+
+func expandApiManagementBackendCircuitBreakerStatusCodeRanges(input []interface{}) *[]backend.FailureStatusCodeRange {
+	if len(input) == 0 {
+		return nil
+	}
+
+	results := make([]backend.FailureStatusCodeRange, 0)
+	for _, item := range input {
+		v := item.(map[string]interface{})
+		statusCodeRange := backend.FailureStatusCodeRange{}
+
+		if min, ok := v["min"]; ok {
+			statusCodeRange.Min = pointer.To(int64(min.(int)))
+		}
+
+		if max, ok := v["max"]; ok {
+			statusCodeRange.Max = pointer.To(int64(max.(int)))
+		}
+
+		results = append(results, statusCodeRange)
+	}
+
+	return &results
+}
+
+func expandApiManagementBackendPool(input []interface{}) *backend.BackendBaseParametersPool {
+	if len(input) == 0 {
+		return nil
+	}
+	v := input[0].(map[string]interface{})
+
+	service := backend.BackendPoolItem{
+		Id: v["id"].(string),
+	}
+
+	if weight, ok := v["weight"]; ok {
+		service.Weight = pointer.To(int64(weight.(int)))
+	}
+
+	if priority, ok := v["priority"]; ok {
+		service.Priority = pointer.To(int64(priority.(int)))
+	}
+
+	return &backend.BackendBaseParametersPool{
+		Services: &[]backend.BackendPoolItem{service},
+	}
+}
+
 func flattenApiManagementBackendCredentials(input *backend.BackendCredentialsContract) []interface{} {
 	results := make([]interface{}, 0)
 	if input == nil {
@@ -639,5 +906,65 @@ func flattenApiManagementBackendTls(input *backend.BackendTlsProperties) []inter
 	result := make(map[string]interface{})
 	result["validate_certificate_chain"] = pointer.From(input.ValidateCertificateChain)
 	result["validate_certificate_name"] = pointer.From(input.ValidateCertificateName)
+	return append(results, result)
+}
+
+func flattenApiManagementBackendCircuitBreaker(input *backend.BackendCircuitBreaker) []interface{} {
+	results := make([]interface{}, 0)
+	if input == nil || input.Rules == nil || len(*input.Rules) == 0 {
+		return results
+	}
+
+	for _, rule := range *input.Rules {
+		result := make(map[string]interface{})
+
+		result["name"] = pointer.From(rule.Name)
+		result["trip_duration"] = pointer.From(rule.TripDuration)
+		result["accept_retry_after_enabled"] = pointer.From(rule.AcceptRetryAfter)
+
+		if rule.FailureCondition != nil {
+			condition := rule.FailureCondition
+
+			result["failure_condition_count"] = pointer.From(condition.Count)
+			result["failure_condition_percentage"] = pointer.From(condition.Percentage)
+			result["failure_condition_interval_duration"] = pointer.From(condition.Interval)
+			result["failure_condition_status_code_range"] = flattenApiManagementBackendCircuitBreakerStatusCodeRanges(condition.StatusCodeRanges)
+			result["failure_condition_error_reasons"] = pointer.From(condition.ErrorReasons)
+		}
+
+		results = append(results, result)
+	}
+
+	return results
+}
+
+func flattenApiManagementBackendCircuitBreakerStatusCodeRanges(input *[]backend.FailureStatusCodeRange) []interface{} {
+	results := make([]interface{}, 0)
+	if input == nil || len(*input) == 0 {
+		return results
+	}
+
+	for _, item := range *input {
+		result := make(map[string]interface{})
+		result["min"] = pointer.From(item.Min)
+		result["max"] = pointer.From(item.Max)
+		results = append(results, result)
+	}
+
+	return results
+}
+
+func flattenApiManagementBackendPool(input *backend.BackendBaseParametersPool) []interface{} {
+	results := make([]interface{}, 0)
+	if input == nil || input.Services == nil || len(*input.Services) == 0 {
+		return results
+	}
+
+	service := (*input.Services)[0]
+	result := make(map[string]interface{})
+	result["id"] = service.Id
+	result["weight"] = pointer.From(service.Weight)
+	result["priority"] = pointer.From(service.Priority)
+
 	return append(results, result)
 }
