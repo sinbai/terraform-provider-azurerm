@@ -47,8 +47,6 @@ The following arguments are supported:
 
 * `resource_group_name` - (Required) The Name of the Resource Group where the API Management Service exists. Changing this forces a new resource to be created.
 
-* `circuit_breaker_rule` - (Optional) One or more `circuit_breaker_rule` blocks as defined below.
-
 * `credentials` - (Optional) A `credentials` block as documented below.
 
 * `description` - (Optional) The description of the backend.
@@ -67,7 +65,7 @@ The following arguments are supported:
 
 * `tls` - (Optional) A `tls` block as documented below.
 
-* `type` - (Optional) Specifies the type of the API Management backend. Possible values are `Pool` and `Single`. Changing this forces a new resource to be created.
+* `type` - (Optional) Specifies the type of the API Management backend. Possible values are `Pool` and `Single`.
 
 * `url` - (Optional) The backend host URL should be specified in the format `"https://backend.com/api"`, avoiding trailing slashes (/) to minimize misconfiguration risks. Azure API Management instance will append the backend resource name to this URL. This URL typically serves as the `base-url` in the [`set-backend-service`](https://learn.microsoft.com/azure/api-management/set-backend-service-policy) policy, enabling seamless transitions from frontend to backend.
 
@@ -134,34 +132,6 @@ A `tls` block supports the following:
 * `validate_certificate_chain` - (Optional) Flag indicating whether SSL certificate chain validation should be done when using self-signed certificates for the backend host.
 
 * `validate_certificate_name` - (Optional) Flag indicating whether SSL certificate name validation should be done when using self-signed certificates for the backend host.
-
----
-
-A `circuit_breaker_rule` block supports the following:
-
-* `name` - (Optional) The name of the circuit breaker rule. Possible values are between `1` and `80` characters.
-
-* `accept_retry_after_enabled` - (Optional) Specifies whether the circuit breaker should honor `Retry-After` requests. Defaults to `false`.
-
-* `failure_condition_count` - (Optional) Specifies the number of failures within the specified interval that will trigger the circuit breaker. Possible values are `1` or higher.
-
-* `failure_condition_error_reasons` - (Optional) Specifies a list of error reasons to consider as failures. Possible values are between `1` and `200` characters per item.
-
-* `failure_condition_interval_duration` - (Optional) Specifies the time window over which failures are counted, in ISO 8601 format.
-
-* `failure_condition_percentage` - (Optional) Specifies the percentage of failures within the specified interval that will trigger the circuit breaker. Possible values are between `1` and `100`.
-
-* `failure_condition_status_code_range` - (Optional) One or more `failure_condition_status_code_range` blocks as defined below.
-
-* `trip_duration` - (Optional) Specifies the duration for which the circuit remains open before retrying, in ISO 8601 format.
-
----
-
-A `failure_condition_status_code_range` block supports the following:
-
-* `min` - (Optional) Specifies the minimum HTTP status code to consider as a failure. Possible values are between `100` and `599`.
-
-* `max` - (Optional) Specifies the maximum HTTP status code to consider as a failure. Possible values are between `100` and `599`.
 
 ---
 

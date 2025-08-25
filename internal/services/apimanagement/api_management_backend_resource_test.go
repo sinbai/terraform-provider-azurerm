@@ -206,21 +206,6 @@ func TestAccApiManagementBackend_requiresImport(t *testing.T) {
 	})
 }
 
-func TestAccApiManagementBackend_circuitBreakerRule(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azurerm_api_management_backend", "test")
-	r := ApiManagementAuthorizationBackendResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.circuitBreakerRule(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-	})
-}
-
 func TestAccApiManagementBackend_pool(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_api_management_backend", "test")
 	r := ApiManagementAuthorizationBackendResource{}
@@ -234,34 +219,6 @@ func TestAccApiManagementBackend_pool(t *testing.T) {
 		},
 		data.ImportStep(),
 	})
-}
-
-func (r ApiManagementAuthorizationBackendResource) circuitBreakerRule(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azurerm_api_management_backend" "test" {
-  name                = "acctestapi-%d"
-  resource_group_name = azurerm_resource_group.test.name
-  api_management_name = azurerm_api_management.test.name
-  protocol            = "http"
-  url                 = "https://acctest"
-  description         = "Test backend with circuit breaker rule"
-  
-  circuit_breaker_rule {
-    name                           = "test-circuit-breaker"
-    trip_duration                  = "PT30S"
-    accept_retry_after_enabled             = true
-    failure_condition_count        = 5
-    failure_condition_interval_duration     = "PT1M"
-    failure_condition_status_code_range {
-      min = 200
-      max = 599
-    }
-    failure_condition_error_reasons = ["ConnectionError", "Timeout"]
-  }
-}
-`, r.template(data, "circuitbreaker"), data.RandomInteger)
 }
 
 func (r ApiManagementAuthorizationBackendResource) pool(data acceptance.TestData) string {
@@ -282,7 +239,6 @@ resource "azurerm_api_management_backend" "test" {
   api_management_name = azurerm_api_management.test.name
   description         = "Test backend with pool configuration"
   type                = "Pool"
-
   pool {
     id       = azurerm_api_management_backend.test2.id
     weight   = 80
@@ -332,7 +288,7 @@ resource "azurerm_api_management_backend" "test" {
   resource_group_name = azurerm_resource_group.test.name
   api_management_name = azurerm_api_management.test.name
   protocol            = "http"
-  #url                 = "https://acctest"
+  url                 = "https://acctest"
 }
 `, r.template(data, testName), data.RandomInteger)
 }
