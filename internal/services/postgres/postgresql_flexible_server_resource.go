@@ -182,6 +182,8 @@ func resourcePostgresqlFlexibleServer() *pluginsdk.Resource {
 			"create_mode": {
 				Type:     pluginsdk.TypeString,
 				Optional: true,
+				// Azure API actual default behavior
+				Default: string(servers.CreateModeDefault),
 				ValidateFunc: validation.StringInSlice([]string{
 					string(servers.CreateModeDefault),
 					string(servers.CreateModePointInTimeRestore),
@@ -190,6 +192,28 @@ func resourcePostgresqlFlexibleServer() *pluginsdk.Resource {
 					string(servers.CreateModeGeoRestore),
 					string(servers.CreateModeUpdate),
 				}, false),
+				DiffSuppressFunc: func(k, old, new string, d *pluginsdk.ResourceData) bool {
+					// API doesn't return `create_mode` by design
+					// Suppress diffs only for imported resources with empty state
+
+					if old == "" && d.Id() != "" {
+						// Imported resource: API didn't return `create_mode`
+						validModes := map[string]struct{}{
+							string(servers.CreateModeDefault):            {},
+							string(servers.CreateModePointInTimeRestore): {},
+							string(servers.CreateModeReplica):            {},
+							string(servers.CreateModeReviveDropped):      {},
+							string(servers.CreateModeGeoRestore):         {},
+							string(servers.CreateModeUpdate):             {},
+						}
+						if _, ok := validModes[new]; ok {
+							return true
+						}
+					}
+
+					// For create/update, always honor the user-provided value
+					return false
+				},
 			},
 
 			"delegated_subnet_id": {
@@ -683,6 +707,12 @@ func resourcePostgresqlFlexibleServerRead(d *pluginsdk.ResourceData, meta interf
 	d.Set("name", id.FlexibleServerName)
 	d.Set("resource_group_name", id.ResourceGroupName)
 	d.Set("administrator_password_wo_version", d.Get("administrator_password_wo_version").(int))
+
+	// API doesn't return `create_mode`
+	// Set the state value of `create_mode` to default during import if missing
+	if _, ok := d.GetOk("create_mode"); !ok {
+		d.Set("create_mode", string(servers.CreateModeDefault))
+	}
 
 	if model := resp.Model; model != nil {
 		d.Set("location", location.Normalize(model.Location))

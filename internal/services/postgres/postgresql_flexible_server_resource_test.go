@@ -39,7 +39,7 @@ func TestAccPostgresqlFlexibleServer_basic(t *testing.T) {
 				check.That(data.ResourceName).Key("storage_tier").HasValue("P4"),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -69,7 +69,7 @@ func TestAccPostgresqlFlexibleServer_complete(t *testing.T) {
 				check.That(data.ResourceName).Key("public_network_access_enabled").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -87,7 +87,7 @@ func TestAccPostgresqlFlexibleServer_completeUpdate(t *testing.T) {
 				check.That(data.ResourceName).Key("storage_mb").HasValue("32768"),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.completeUpdate(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -98,7 +98,7 @@ func TestAccPostgresqlFlexibleServer_completeUpdate(t *testing.T) {
 				check.That(data.ResourceName).Key("storage_mb").HasValue("65536"),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -114,7 +114,7 @@ func TestAccPostgresqlFlexibleServer_updateMaintenanceWindow(t *testing.T) {
 				check.That(data.ResourceName).Key("public_network_access_enabled").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.updateMaintenanceWindow(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -123,7 +123,7 @@ func TestAccPostgresqlFlexibleServer_updateMaintenanceWindow(t *testing.T) {
 				check.That(data.ResourceName).Key("public_network_access_enabled").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.updateMaintenanceWindowUpdated(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -132,7 +132,7 @@ func TestAccPostgresqlFlexibleServer_updateMaintenanceWindow(t *testing.T) {
 				check.That(data.ResourceName).Key("public_network_access_enabled").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -141,7 +141,7 @@ func TestAccPostgresqlFlexibleServer_updateMaintenanceWindow(t *testing.T) {
 				check.That(data.ResourceName).Key("public_network_access_enabled").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -157,7 +157,7 @@ func TestAccPostgresqlFlexibleServer_updateSku(t *testing.T) {
 				check.That(data.ResourceName).Key("public_network_access_enabled").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.updateSku(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -166,7 +166,7 @@ func TestAccPostgresqlFlexibleServer_updateSku(t *testing.T) {
 				check.That(data.ResourceName).Key("public_network_access_enabled").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -175,7 +175,7 @@ func TestAccPostgresqlFlexibleServer_updateSku(t *testing.T) {
 				check.That(data.ResourceName).Key("public_network_access_enabled").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -189,7 +189,7 @@ func TestAccPostgresqlFlexibleServer_updateVersion(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.withVersion(data, 13, ""),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -202,14 +202,14 @@ func TestAccPostgresqlFlexibleServer_updateVersion(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.withVersion(data, 14, "Default"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -223,13 +223,13 @@ func TestAccPostgresqlFlexibleServer_geoRestore(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			PreConfig: func() { time.Sleep(30 * time.Minute) },
 			Config:    r.geoRestore(data),
 			Check:     acceptance.ComposeTestCheckFunc(),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -245,7 +245,7 @@ func TestAccPostgresqlFlexibleServer_pointInTimeRestore(t *testing.T) {
 				check.That(data.ResourceName).Key("public_network_access_enabled").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			PreConfig: func() { time.Sleep(15 * time.Minute) },
 			Config:    r.pointInTimeRestore(data),
@@ -255,7 +255,7 @@ func TestAccPostgresqlFlexibleServer_pointInTimeRestore(t *testing.T) {
 				check.That("azurerm_postgresql_flexible_server.pitr").Key("public_network_access_enabled").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode", "point_in_time_restore_time_in_utc"),
+		data.ImportStep("administrator_password", "point_in_time_restore_time_in_utc"),
 	})
 }
 
@@ -270,14 +270,14 @@ func TestAccPostgresqlFlexibleServer_failover(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.failover(data, "2", "1"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.failoverRemoveHA(data, "2"),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -290,7 +290,7 @@ func TestAccPostgresqlFlexibleServer_failover(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -305,7 +305,7 @@ func TestAccPostgresqlFlexibleServer_geoRedundantBackupEnabled(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -319,14 +319,14 @@ func TestAccPostgresqlFlexibleServer_authConfig(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.authConfig(data, true, false),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -341,14 +341,14 @@ func TestAccPostgresqlFlexibleServer_disablePwdAuth(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.authConfig(data, true, false),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -365,7 +365,7 @@ func TestAccPostgresqlFlexibleServer_createWithCustomerManagedKey(t *testing.T) 
 				check.That("azurerm_postgresql_flexible_server.test").Key("customer_managed_key.0.primary_user_assigned_identity_id").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -382,7 +382,7 @@ func TestAccPostgresqlFlexibleServer_createWithCustomerManagedKeyVersionless(t *
 				check.That("azurerm_postgresql_flexible_server.test").Key("customer_managed_key.0.primary_user_assigned_identity_id").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -397,7 +397,7 @@ func TestAccPostgresqlFlexibleServer_replica(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			PreConfig: func() { time.Sleep(15 * time.Minute) },
 			Config:    r.replica(data),
@@ -405,14 +405,14 @@ func TestAccPostgresqlFlexibleServer_replica(t *testing.T) {
 				check.That("azurerm_postgresql_flexible_server.replica").ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.updateReplicationRole(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That("azurerm_postgresql_flexible_server.replica").ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -427,28 +427,28 @@ func TestAccPostgresqlFlexibleServer_upgradeVersion(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.upgradeVersion(data, "13"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.upgradeVersion(data, "14"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.upgradeVersion(data, "15"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -463,28 +463,28 @@ func TestAccPostgresqlFlexibleServer_identity(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.identity(data, identity.TypeSystemAssigned),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.identity(data, identity.TypeUserAssigned),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.identity(data, identity.TypeSystemAssignedUserAssigned),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -499,7 +499,7 @@ func TestAccPostgresqlFlexibleServer_enableGeoRedundantBackup(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -514,7 +514,7 @@ func TestAccPostgresqlFlexibleServer_geoRedundantBackupWithVersionlessId(t *test
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -531,7 +531,7 @@ func TestAccPostgresqlFlexibleServer_autoGrowEnabled(t *testing.T) {
 				check.That(data.ResourceName).Key("public_network_access_enabled").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.autoGrowEnabled(data, false),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -540,7 +540,7 @@ func TestAccPostgresqlFlexibleServer_autoGrowEnabled(t *testing.T) {
 				check.That(data.ResourceName).Key("public_network_access_enabled").Exists(),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
@@ -566,7 +566,7 @@ func TestAccPostgresqlFlexibleServer_invalidStorageTierScalingStorageMb(t *testi
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config:      r.invalidStorageTierScaling(data, "P4", "262144"),
 			ExpectError: regexp.MustCompile("invalid 'storage_tier'"),
@@ -585,7 +585,7 @@ func TestAccPostgresqlFlexibleServer_invalidStorageTierScalingStorageTier(t *tes
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config:      r.invalidStorageTierScaling(data, "P80", "32768"),
 			ExpectError: regexp.MustCompile("invalid 'storage_tier'"),
@@ -604,7 +604,7 @@ func TestAccPostgresqlFlexibleServer_invalidStorageTierScalingStorageMbStorageTi
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config:      r.invalidStorageTierScaling(data, "P6", "131072"),
 			ExpectError: regexp.MustCompile("invalid 'storage_tier'"),
@@ -623,7 +623,7 @@ func TestAccPostgresqlFlexibleServer_updateOnlyWithStorageMb(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.updateOnlyWithStorageMb(data, "65536"),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -644,14 +644,14 @@ func TestAccPostgresqlFlexibleServer_updateOnlyWithStorageTier(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.updateOnlyWithStorageTier(data, "P10"),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.updateStorageTierWithoutProperty(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -660,7 +660,7 @@ func TestAccPostgresqlFlexibleServer_updateOnlyWithStorageTier(t *testing.T) {
 				check.That(data.ResourceName).Key("storage_tier").HasValue("P10"),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.updateOnlyWithStorageMb(data, "262144"),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -681,14 +681,14 @@ func TestAccPostgresqlFlexibleServer_publicNetworkAccessEnabled(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 		{
 			Config: r.publicNetworkAccessEnabled(data, true),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("administrator_password", "create_mode"),
+		data.ImportStep("administrator_password"),
 	})
 }
 
