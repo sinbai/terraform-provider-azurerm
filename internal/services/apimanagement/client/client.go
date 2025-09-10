@@ -54,6 +54,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/apigateway"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/apimanagementservice"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/backend"
+	subscription_v2024_05_01 "github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/subscription"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/workspace"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/common"
 )
@@ -104,6 +105,7 @@ type Client struct {
 	SignInClient                       *signinsettings.SignInSettingsClient
 	SignUpClient                       *signupsettings.SignUpSettingsClient
 	SubscriptionsClient                *subscription.SubscriptionClient
+	SubscriptionClient_v2024_05_01     *subscription_v2024_05_01.SubscriptionClient
 	TagClient                          *tag.TagClient
 	TenantAccessClient                 *tenantaccess.TenantAccessClient
 	UsersClient                        *user.UserClient
@@ -399,6 +401,12 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	}
 	o.Configure(usersClient.Client, o.Authorizers.ResourceManager)
 
+	subscriptionClient_v2024_05_01, err := subscription_v2024_05_01.NewSubscriptionClientWithBaseURI(o.Environment.ResourceManager)
+	if err != nil {
+		return nil, fmt.Errorf("building subscription client v2024-05-01: %+v", err)
+	}
+	o.Configure(subscriptionClient_v2024_05_01.Client, o.Authorizers.ResourceManager)
+
 	workspaceClient, err := workspace.NewWorkspaceClientWithBaseURI(o.Environment.ResourceManager)
 	if err != nil {
 		return nil, fmt.Errorf("building workspace client: %+v", err)
@@ -451,6 +459,7 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 		SignInClient:                       signInClient,
 		SignUpClient:                       signUpClient,
 		SubscriptionsClient:                subscriptionsClient,
+		SubscriptionClient_v2024_05_01:     subscriptionClient_v2024_05_01,
 		TagClient:                          tagClient,
 		TenantAccessClient:                 tenantAccessClient,
 		UsersClient:                        usersClient,
