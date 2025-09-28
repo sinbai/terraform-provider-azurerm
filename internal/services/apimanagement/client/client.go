@@ -54,6 +54,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/apigateway"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/apimanagementservice"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/backend"
+	schema_v2024_05_01 "github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/schema"
 	"github.com/hashicorp/go-azure-sdk/resource-manager/apimanagement/2024-05-01/workspace"
 	"github.com/hashicorp/terraform-provider-azurerm/internal/common"
 )
@@ -85,6 +86,7 @@ type Client struct {
 	GatewayClient                      *gateway.GatewayClient
 	GatewayHostNameConfigurationClient *gatewayhostnameconfiguration.GatewayHostnameConfigurationClient
 	GlobalSchemaClient                 *schema.SchemaClient
+	GlobalSchemaClient_v2024_05_01     *schema_v2024_05_01.SchemaClient
 	GroupClient                        *group.GroupClient
 	GroupUsersClient                   *groupuser.GroupUserClient
 	IdentityProviderClient             *identityprovider.IdentityProviderClient
@@ -267,6 +269,12 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	}
 	o.Configure(globalSchemaClient.Client, o.Authorizers.ResourceManager)
 
+	globalSchemaClient_v2024_05_01, err := schema_v2024_05_01.NewSchemaClientWithBaseURI(o.Environment.ResourceManager)
+	if err != nil {
+		return nil, fmt.Errorf("building GlobalSchema_v2024_05_01 client: %+v", err)
+	}
+	o.Configure(globalSchemaClient_v2024_05_01.Client, o.Authorizers.ResourceManager)
+
 	groupClient, err := group.NewGroupClientWithBaseURI(o.Environment.ResourceManager)
 	if err != nil {
 		return nil, fmt.Errorf("building Group client: %+v", err)
@@ -432,6 +440,7 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 		GatewayClient:                      gatewayClient,
 		GatewayHostNameConfigurationClient: gatewayHostnameConfigurationClient,
 		GlobalSchemaClient:                 globalSchemaClient,
+		GlobalSchemaClient_v2024_05_01:     globalSchemaClient_v2024_05_01,
 		GroupClient:                        groupClient,
 		GroupUsersClient:                   groupUsersClient,
 		IdentityProviderClient:             identityProviderClient,
